@@ -24,6 +24,166 @@
             overflow: hidden;
         }
 
+        .sun {
+            position: absolute;
+            top: 50px;
+            right: 100px;
+            width: 110px;
+            height: 100px;
+            background-image: url(sun.png);
+            background-size: cover;
+            border-radius: 0%;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .sun {
+                width: 60px;
+                height: 60px;
+                top: 15px;
+                right: 15px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .sun {
+                width: 50px;
+                height: 50px;
+                top: 10px;
+                right: 10px;
+            }
+        }
+
+        .grass-field {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to top, #15803d 0%, #16a34a 30%, #22c55e 60%, #4ade80 100%);
+            z-index: 1;
+        }
+
+        .grass-field::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 8px at 10px 5px, #059669, transparent),
+                radial-gradient(1px 6px at 25px 8px, #16a34a, transparent),
+                radial-gradient(2px 10px at 40px 3px, #15803d, transparent),
+                radial-gradient(1px 7px at 60px 6px, #059669, transparent),
+                radial-gradient(2px 9px at 80px 4px, #16a34a, transparent),
+                radial-gradient(1px 8px at 100px 7px, #15803d, transparent),
+                radial-gradient(2px 6px at 120px 5px, #059669, transparent),
+                radial-gradient(1px 9px at 140px 3px, #16a34a, transparent),
+                radial-gradient(2px 7px at 160px 6px, #15803d, transparent),
+                radial-gradient(1px 10px at 180px 4px, #059669, transparent);
+            background-size: 200px 15px;
+            background-repeat: repeat-x;
+            animation: sway 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes sway {
+            0% { transform: translateX(0px) scaleX(1); }
+            100% { transform: translateX(-5px) scaleX(1.02); }
+        }
+
+        .tree {
+            position: absolute;
+            bottom: 40px;
+            z-index: 1;
+        }
+
+        .tree-trunk {
+            background: linear-gradient(to right, #92400e, #a16207);
+            border-radius: 2px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .tree-leaves {
+            background: radial-gradient(circle, #16a34a 20%, #15803d 60%, #166534 100%);
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tree1 {
+            left: 8%;
+        }
+        .tree1 .tree-trunk {
+            width: 8px;
+            height: 35px;
+        }
+        .tree1 .tree-leaves {
+            width: 40px;
+            height: 40px;
+            bottom: 25px;
+        }
+
+        .tree2 {
+            right: 12%;
+        }
+        .tree2 .tree-trunk {
+            width: 6px;
+            height: 25px;
+        }
+        .tree2 .tree-leaves {
+            width: 30px;
+            height: 30px;
+            bottom: 18px;
+        }
+
+        .tree3 {
+            left: 25%;
+        }
+        .tree3 .tree-trunk {
+            width: 10px;
+            height: 45px;
+        }
+        .tree3 .tree-leaves {
+            width: 50px;
+            height: 50px;
+            bottom: 35px;
+        }
+
+        .tree4 {
+            right: 30%;
+        }
+        .tree4 .tree-trunk {
+            width: 5px;
+            height: 20px;
+        }
+        .tree4 .tree-leaves {
+            width: 25px;
+            height: 25px;
+            bottom: 15px;
+        }
+
+        .tree5 {
+            left: 70%;
+        }
+        .tree5 .tree-trunk {
+            width: 7px;
+            height: 30px;
+        }
+        .tree5 .tree-leaves {
+            width: 35px;
+            height: 35px;
+            bottom: 22px;
+        }
+
+        @media (max-width: 768px) {
+            .tree {
+                transform: scale(0.8);
+            }
+        }
+
         .cloud {
             position: absolute;
             background: rgba(255, 255, 255, 0.15);
@@ -180,9 +340,11 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
             animation: fadeInUp 0.8s ease-out;
-            max-height: 90vh;
+            max-height: calc(100vh - 120px);
             overflow-y: auto;
             color: #1e40af;
+            position: relative;
+            z-index: 2;
         }
 
         @keyframes fadeInUp {
@@ -325,11 +487,12 @@
         @media (max-width: 768px) {
             body {
                 padding: 0.5rem;
+                max-height: calc(100vh - 100px);
             }
             
             .container {
                 padding: 1.2rem;
-                max-height: 95vh;
+                max-height: calc(100vh - 80px);
             }
             
             h1 {
@@ -397,6 +560,30 @@
     </style>
 </head>
 <body>
+    <div class="sun"></div>
+    <div class="grass-field"></div>
+    
+    <div class="tree tree1">
+        <div class="tree-trunk"></div>
+        <div class="tree-leaves"></div>
+    </div>
+    <div class="tree tree2">
+        <div class="tree-trunk"></div>
+        <div class="tree-leaves"></div>
+    </div>
+    <div class="tree tree3">
+        <div class="tree-trunk"></div>
+        <div class="tree-leaves"></div>
+    </div>
+    <div class="tree tree4">
+        <div class="tree-trunk"></div>
+        <div class="tree-leaves"></div>
+    </div>
+    <div class="tree tree5">
+        <div class="tree-trunk"></div>
+        <div class="tree-leaves"></div>
+    </div>
+    
     <div class="cloud cloud1"></div>
     <div class="cloud cloud2"></div>
     <div class="cloud cloud3"></div>
@@ -405,15 +592,9 @@
     <div class="cloud cloud6"></div>
     
     <div class="container">
-        <div class="logo">⚡</div>
         <h1>AkademiTrack</h1>
         <p class="subtitle">A powerful utility that makes your life easier. Never forget study time ever agian.</p>
         
-        <div class="os-info">
-            <div class="os-detected" id="osDetected">Detecting your system...</div>
-            <div id="osMessage">Getting the perfect version for you</div>
-        </div>
-
         <div id="primaryDownload">
             <!-- Primary download button will be inserted here -->
         </div>
@@ -500,16 +681,10 @@
 
         function updateUI() {
             const detectedOS = detectOS();
-            const osDetectedEl = document.getElementById('osDetected');
-            const osMessageEl = document.getElementById('osMessage');
             const primaryDownloadEl = document.getElementById('primaryDownload');
             const otherDownloadsEl = document.getElementById('otherDownloads');
             
             if (detectedOS) {
-                const icon = getOSIcon(detectedOS);
-                osDetectedEl.innerHTML = `${icon} ${detectedOS} detected`;
-                osMessageEl.innerHTML = `Perfect! We've got the right version for your ${detectedOS} system.`;
-                
                 // Primary download button
                 primaryDownloadEl.innerHTML = createDownloadButton(detectedOS, true);
                 
@@ -519,9 +694,6 @@
                 otherDownloadsEl.innerHTML = otherOS.map(os => createDownloadButton(os)).join('');
                 
             } else {
-                osDetectedEl.innerHTML = '💻 System detected';
-                osMessageEl.innerHTML = 'Choose your platform below to download.';
-                
                 // Show all download buttons
                 const allOS = ['Windows', 'macOS', 'Linux'];
                 primaryDownloadEl.innerHTML = '';
