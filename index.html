@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AkademiTrack</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="shortcut icon" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     <style>
         * {
             margin: 0;
@@ -359,18 +362,25 @@
         }
 
         .logo {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(45deg, #2563eb, #60a5fa);
-            border-radius: 16px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 1.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 12px;
         }
 
         h1 {
@@ -392,7 +402,7 @@
             color: #374151;
         }
 
-        .os-info {
+        .macos-only {
             background: rgba(59, 130, 246, 0.1);
             padding: 1rem;
             border-radius: 10px;
@@ -400,7 +410,7 @@
             border: 1px solid rgba(59, 130, 246, 0.2);
         }
 
-        .os-detected {
+        .macos-info {
             font-size: 1rem;
             margin-bottom: 0.3rem;
             font-weight: 600;
@@ -433,23 +443,12 @@
             background: linear-gradient(45deg, #1e40af, #3b82f6);
             transform: scale(1.05);
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            font-size: 1.1rem;
+            padding: 1rem 2.5rem;
         }
 
         .download-btn.primary:hover {
             transform: scale(1.05) translateY(-2px);
-        }
-
-        .other-downloads {
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .other-downloads h3 {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-            color: #374151;
         }
 
         .os-icon {
@@ -483,6 +482,14 @@
         .feature-text {
             font-size: 0.9rem;
             color: #374151;
+        }
+
+        .macos-requirement {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 0.9rem;
+            color: #6b7280;
         }
 
         .modal {
@@ -638,6 +645,11 @@
                 max-width: 250px;
             }
             
+            .download-btn.primary {
+                font-size: 1rem;
+                padding: 0.9rem 2rem;
+            }
+            
             .features {
                 gap: 0.8rem;
             }
@@ -666,10 +678,14 @@
             }
             
             .logo {
-                width: 50px;
-                height: 50px;
-                font-size: 1.3rem;
+                width: 60px;
+                height: 60px;
                 margin-bottom: 1rem;
+            }
+            
+            .logo img {
+                width: 45px;
+                height: 45px;
             }
             
             h1 {
@@ -682,7 +698,7 @@
                 margin-bottom: 1rem;
             }
             
-            .os-info {
+            .macos-only {
                 padding: 0.8rem;
                 margin-bottom: 1rem;
             }
@@ -691,7 +707,7 @@
                 margin-top: 1rem;
             }
             
-            .other-downloads {
+            .macos-requirement {
                 margin-top: 1rem;
                 padding-top: 1rem;
             }
@@ -734,8 +750,15 @@
         <h1>AkademiTrack</h1>
         <p class="subtitle">A powerful utility that makes your life easier. Never forget study time ever again.</p>
         
+        <div class="macos-only">
+            <div class="macos-info">🍎 Available exclusively for macOS</div>
+        </div>
+
         <div id="primaryDownload">
-            <!-- Primary download button will be inserted here -->
+            <a href="#" class="download-btn primary" onclick="showTermsModal('https://github.com/yourusername/yourtool/releases/download/v1.0.0/yourtool-macos.dmg')">
+                <span class="os-icon">🍎</span>
+                Download for macOS
+            </a>
         </div>
 
         <div class="features">
@@ -753,11 +776,8 @@
             </div>
         </div>
 
-        <div class="other-downloads">
-            <h3>Download for other platforms</h3>
-            <div id="otherDownloads">
-                <!-- Other download buttons will be inserted here -->
-            </div>
+        <div class="macos-requirement">
+            <p><strong>System Requirements:</strong> macOS 10.14 Mojave or later</p>
         </div>
     </div>
 
@@ -766,13 +786,13 @@
             <div class="modal-body">
                 <h2>AkademiTrack Terms of Service</h2>
                 <p><strong>Effective Date: August 24, 2025</strong></p>
-                <p>Welcome to AkademiTrack™ (“the App,” “we,” “our,” or “us”). By downloading, installing, or using AkademiTrack on any platform (Windows, Linux, or macOS), you (“User,” “you”) agree to these Terms of Service (“Terms”). If you do not agree, you must immediately uninstall and stop using the App.</p>
+                <p>Welcome to AkademiTrack™ ("the App," "we," "our," or "us"). By downloading, installing, or using AkademiTrack on macOS, you ("User," "you") agree to these Terms of Service ("Terms"). If you do not agree, you must immediately uninstall and stop using the App.</p>
                 <h3>1. Eligibility</h3>
                 <p>You must be at least 13 years old to use the App. By using AkademiTrack, you represent and warrant that you have the legal capacity to enter into this agreement.</p>
                 <h3>2. Description of Service</h3>
-                <p>AkademiTrack automates the tracking and registering of study time for students. While we strive to provide accurate time-tracking, we do not guarantee completeness, accuracy, or uninterrupted service.</p>
+                <p>AkademiTrack automates the tracking and registering of study time for students on macOS. While we strive to provide accurate time-tracking, we do not guarantee completeness, accuracy, or uninterrupted service.</p>
                 <h3>3. License Grant</h3>
-                <p>We grant you a limited, non-exclusive, non-transferable, revocable license to install and use AkademiTrack solely for your personal, non-commercial use. You may not:</p>
+                <p>We grant you a limited, non-exclusive, non-transferable, revocable license to install and use AkademiTrack solely for your personal, non-commercial use on macOS devices. You may not:</p>
                 <ul>
                     <li>Modify, copy, or reverse-engineer the App;</li>
                     <li>Use the App for unlawful purposes;</li>
@@ -788,7 +808,7 @@
                     <li>By using the App, you consent to our handling of your data as described.</li>
                 </ul>
                 <h3>6. No Warranties</h3>
-                <p>THE APP IS PROVIDED “AS IS” AND “AS AVAILABLE,” WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, OR NON-INFRINGEMENT.</p>
+                <p>THE APP IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, OR NON-INFRINGEMENT.</p>
                 <h3>7. Limitation of Liability</h3>
                 <p>To the fullest extent permitted by law:</p>
                 <ul>
@@ -822,62 +842,6 @@
     <script>
         let currentDownloadLink = '';
 
-        function detectOS() {
-            const userAgent = window.navigator.userAgent;
-            const platform = window.navigator.platform;
-            const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-            const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
-            const iosPlatforms = ['iPhone', 'iPad', 'iPod'];
-            
-            let os = null;
-            
-            if (macosPlatforms.indexOf(platform) !== -1) {
-                os = 'macOS';
-            } else if (iosPlatforms.indexOf(platform) !== -1) {
-                os = 'iOS';
-            } else if (windowsPlatforms.indexOf(platform) !== -1) {
-                os = 'Windows';
-            } else if (/Android/.test(userAgent)) {
-                os = 'Android';
-            } else if (/Linux/.test(platform)) {
-                os = 'Linux';
-            }
-            
-            return os;
-        }
-
-        function getOSIcon(os) {
-            const icons = {
-                'Windows': '🪟',
-                'macOS': '🍎',
-                'Linux': '🐧',
-                'iOS': '📱',
-                'Android': '🤖'
-            };
-            return icons[os] || '💻';
-        }
-
-        function getDownloadLink(os) {
-            // Replace these with your actual download links
-            const links = {
-                'Windows': 'https://github.com/yourusername/yourtool/releases/download/v1.0.0/yourtool-windows.exe',
-                'macOS': 'https://github.com/yourusername/yourtool/releases/download/v1.0.0/yourtool-macos.dmg',
-                'Linux': 'https://github.com/yourusername/yourtool/releases/download/v1.0.0/yourtool-linux.tar.gz'
-            };
-            return links[os] || '#';
-        }
-
-        function createDownloadButton(os, isPrimary = false) {
-            const icon = getOSIcon(os);
-            const link = getDownloadLink(os);
-            const className = isPrimary ? 'download-btn primary' : 'download-btn';
-            
-            return `<a href="#" class="${className}" onclick="showTermsModal('${link}')">
-                <span class="os-icon">${icon}</span>
-                Download for ${os}
-            </a>`;
-        }
-
         function showTermsModal(link) {
             currentDownloadLink = link;
             const modal = document.getElementById('termsModal');
@@ -902,21 +866,6 @@
         }
 
         function updateUI() {
-            const detectedOS = detectOS();
-            const primaryDownloadEl = document.getElementById('primaryDownload');
-            const otherDownloadsEl = document.getElementById('otherDownloads');
-            
-            if (detectedOS) {
-                primaryDownloadEl.innerHTML = createDownloadButton(detectedOS, true);
-                const allOS = ['Windows', 'macOS', 'Linux'];
-                const otherOS = allOS.filter(os => os !== detectedOS);
-                otherDownloadsEl.innerHTML = otherOS.map(os => createDownloadButton(os)).join('');
-            } else {
-                const allOS = ['Windows', 'macOS', 'Linux'];
-                primaryDownloadEl.innerHTML = '';
-                otherDownloadsEl.innerHTML = allOS.map(os => createDownloadButton(os)).join('');
-            }
-
             const checkbox = document.getElementById('termsCheckbox');
             const acceptBtn = document.getElementById('acceptTermsBtn');
             if (checkbox) {
