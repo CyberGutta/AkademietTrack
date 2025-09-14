@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkademiTrack - Dashbord</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+            min-height: 100vh;
+            color: white;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Parallax Background Elements */
+        .parallax-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .sun {
+            position: absolute;
+            top: 50px;
+            right: 100px;
+            width: 110px;
+            height: 100px;
+            background-image: url(sun.png);
+            background-size: cover;
+            border-radius: 0%;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .sun {
+                width: 60px;
+                height: 60px;
+                top: 15px;
+                right: 15px;
+            }
+        }
+
+        .grass-field {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to top, #15803d 0%, #16a34a 30%, #22c55e 60%, #4ade80 100%);
+            z-index: 1;
+        }
+
+        .grass-field::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 8px at 10px 5px, #059669, transparent),
+                radial-gradient(1px 6px at 25px 8px, #16a34a, transparent),
+                radial-gradient(2px 10px at 40px 3px, #15803d, transparent),
+                radial-gradient(1px 7px at 60px 6px, #059669, transparent),
+                radial-gradient(2px 9px at 80px 4px, #16a34a, transparent),
+                radial-gradient(1px 8px at 100px 7px, #15803d, transparent),
+                radial-gradient(2px 6px at 120px 5px, #059669, transparent),
+                radial-gradient(1px 9px at 140px 3px, #16a34a, transparent),
+                radial-gradient(2px 7px at 160px 6px, #15803d, transparent),
+                radial-gradient(1px 10px at 180px 4px, #059669, transparent);
+            background-size: 200px 15px;
+            background-repeat: repeat-x;
+            animation: sway 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes sway {
+            0% { transform: translateX(0px) scaleX(1); }
+            100% { transform: translateX(-5px) scaleX(1.02); }
+        }
+
+        .tree {
+            position: absolute;
+            bottom: 40px;
+            z-index: 1;
+        }
+
+        .tree-trunk {
+            background: linear-gradient(to right, #92400e, #a16207);
+            border-radius: 2px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .tree-leaves {
+            background: radial-gradient(circle, #16a34a 20%, #15803d 60%, #166534 100%);
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .tree1 {
+            left: 8%;
+        }
+        .tree1 .tree-trunk {
+            width: 8px;
+            height: 35px;
+        }
+        .tree1 .tree-leaves {
+            width: 40px;
+            height: 40px;
+            bottom: 25px;
+        }
+
+        .tree2 {
+            right: 12%;
+        }
+        .tree2 .tree-trunk {
+            width: 6px;
+            height: 25px;
+        }
+        .tree2 .tree-leaves {
+            width: 30px;
+            height: 30px;
+            bottom: 18px;
+        }
+
+        .tree3 {
+            left: 25%;
+        }
+        .tree3 .tree-trunk {
+            width: 10px;
+            height: 45px;
+        }
+        .tree3 .tree-leaves {
+            width: 50px;
+            height: 50px;
+            bottom: 35px;
+        }
+
+        .tree4 {
+            right: 50%;
+        }
+        .tree4 .tree-trunk {
+            width: 5px;
+            height: 20px;
+        }
+        .tree4 .tree-leaves {
+            width: 25px;
+            height: 25px;
+            bottom: 15px;
+        }
+
+        .tree5 {
+            left: 70%;
+        }
+        .tree5 .tree-trunk {
+            width: 7px;
+            height: 30px;
+        }
+        .tree5 .tree-leaves {
+            width: 35px;
+            height: 35px;
+            bottom: 22px;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            opacity: 0.4;
+            animation: float 20s infinite linear;
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+        }
+
+        .cloud1 {
+            width: 60px;
+            height: 20px;
+            top: 20%;
+            left: -80px;
+            animation-delay: -2s;
+        }
+        .cloud1::before {
+            width: 30px;
+            height: 30px;
+            top: -10px;
+            left: 5px;
+        }
+        .cloud1::after {
+            width: 40px;
+            height: 25px;
+            top: -8px;
+            right: 5px;
+        }
+
+        .cloud2 {
+            width: 40px;
+            height: 15px;
+            top: 60%;
+            left: -60px;
+            animation-delay: -8s;
+        }
+        .cloud2::before {
+            width: 20px;
+            height: 20px;
+            top: -8px;
+            left: 3px;
+        }
+        .cloud2::after {
+            width: 25px;
+            height: 18px;
+            top: -6px;
+            right: 3px;
+        }
+
+        .cloud3 {
+            width: 80px;
+            height: 25px;
+            top: 35%;
+            left: -100px;
+            animation-delay: -15s;
+        }
+        .cloud3::before {
+            width: 35px;
+            height: 35px;
+            top: -12px;
+            left: 8px;
+        }
+        .cloud3::after {
+            width: 45px;
+            height: 30px;
+            top: -10px;
+            right: 8px;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(100vw + 100px));
+            }
+        }
+
+        /* Content Layers */
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled {
+            padding: 0.5rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled .logo {
+            width: 50px;
+            height: 50px;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled .logo img {
+            width: 35px;
+            height: 35px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled h1 {
+            font-size: 1.3rem;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 50px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled .user-info {
+            padding: 0.4rem 0.8rem;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled .user-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            color: #374151;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .header.scrolled .user-email {
+            font-size: 0.85rem;
+        }
+
+        .sign-out-btn {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .header.scrolled .sign-out-btn {
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .sign-out-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 2rem 8rem;
+        }
+
+        /* Welcome Section - Similar to index styling */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 4rem 0 2rem;
+        }
+
+        .welcome-container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            animation: fadeInUp 0.8s ease-out;
+            color: #1e40af;
+            position: relative;
+        }
+
+        .welcome-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .welcome-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .welcome-subtitle {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.7;
+            line-height: 1.5;
+            color: #374151;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 40px rgba(31, 38, 135, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            color: #374151;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+        }
+
+        .card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 30px 60px rgba(31, 38, 135, 0.3);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+
+        .card p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #16a34a, #22c55e);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(34, 197, 94, 0.4);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            color: #374151;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Message Styles */
+        .success-message, .error-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Features Section */
+        .features-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 3rem;
+            margin: 3rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.1);
+        }
+
+        .features-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover .feature-icon {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-description {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 0 1rem;
+            }
+
+            .header.scrolled .header-content {
+                gap: 0.8rem;
+            }
+
+            .user-section {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .main-container {
+                padding: 2rem 1rem 6rem;
+            }
+
+            .welcome-container {
+                padding: 1.5rem;
+            }
+
+            .welcome-title {
+                font-size: 1.8rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .card {
+                padding: 2rem;
+            }
+
+            .features-section {
+                padding: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .stat-card {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Parallax Background -->
+    <div class="parallax-container">
+        <div class="sun"></div>
+        <div class="grass-field"></div>
+        
+        <div class="tree tree1">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree2">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree3">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree4">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree5">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+    </div>
+
+    <!-- Content Layer -->
+    <div class="content-layer">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo">
+                        <img src="logo.png" alt="AkademiTrack Logo">
+                    </div>
+                    <h1>AkademiTrack Dashbord</h1>
+                </div>
+                <div class="user-section">
+                    <div class="user-info">
+                        <div class="user-avatar" id="user-avatar">B</div>
+                        <span class="user-email" id="user-email">bruker@eksempel.com</span>
+                    </div>
+                    <button class="sign-out-btn" onclick="signOut()">Logg Ut</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-container">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-container">
+                    <div class="welcome-logo">
+                        <img src="logo.png" alt="AkademiTrack Logo">
+                    </div>
+                    <h2 class="welcome-title">Velkommen Tilbake!</h2>
+                    <p class="welcome-subtitle">
+                        Din akademiske reise fortsetter her. Spor fremgangen din, hold deg organisert, og oppnå målene dine med AkademiTrack.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card fade-in">
+                    <span class="stat-number">24</span>
+                    <span class="stat-label">Studieøkter</span>
+                </div>
+                <div class="stat-card fade-in">
+                    <span class="stat-number">156</span>
+                    <span class="stat-label">Timer Studert</span>
+                </div>
+                <div class="stat-card fade-in">
+                    <span class="stat-number">12</span>
+                    <span class="stat-label">Fag</span>
+                </div>
+                <div class="stat-card fade-in">
+                    <span class="stat-number">98%</span>
+                    <span class="stat-label">Måloppnåelse</span>
+                </div>
+            </div>
+
+            <!-- Main Cards -->
+            <div class="cards-grid">
+                <div class="card fade-in">
+                    <div class="card-icon">📱</div>
+                    <h2>Last Ned AkademiTrack</h2>
+                    <p>Få den nyeste versjonen av AkademiTrack og glem aldri studietiden din igjen. Vårt kraftige verktøy hjelper deg med å holde deg organisert og fokusert på dine akademiske mål med avanserte sporingsfunksjoner.</p>
+                    <button class="download-btn" onclick="downloadApp()">
+                        <span>⬇️</span>
+                        Last Ned Nyeste Versjon
+                    </button>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-icon">📝</div>
+                    <h2>Kontakt & Tilbakemelding</h2>
+                    <p>Har du spørsmål, forslag eller trenger du støtte? Send oss en melding så kommer vi tilbake til deg så snart som mulig. Dine tilbakemeldinger hjelper oss med å forbedre tjenesten.</p>
+                    
+                    <div id="success-message" class="success-message"></div>
+                    <div id="error-message" class="error-message"></div>
+                    
+                    <form id="contact-form">
+                        <div class="form-group">
+                            <label for="subject">Emne</label>
+                            <select id="subject" required>
+                                <option value="">Velg et emne</option>
+                                <option value="support">Teknisk Støtte</option>
+                                <option value="feature">Funksjonsforespørsel</option>
+                                <option value="bug">Feilrapport</option>
+                                <option value="feedback">Generell Tilbakemelding</option>
+                                <option value="other">Annet</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="name">Ditt Navn</label>
+                            <input type="text" id="name" placeholder="Skriv inn ditt navn" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Din E-post</label>
+                            <input type="email" id="email" placeholder="Skriv inn din e-post" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Melding</label>
+                            <textarea id="message" placeholder="Fortell oss hva du tenker på..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn" id="submit-btn">Send Melding</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <section class="features-section fade-in">
+                <h3 class="features-title">Hvorfor Velge AkademiTrack?</h3>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">⏰</div>
+                        <div class="feature-title">Smart Tidssporing</div>
+                        <div class="feature-description">Spor dine studieøkter automatisk med intelligente tidsadministrasjonsfunksjoner.</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Fremgangsanalyse</div>
+                        <div class="feature-description">Visualiser læringsfremgangen din med detaljerte diagrammer og innsikt.</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        <div class="feature-title">Målsetting</div>
+                        <div class="feature-description">Sett og oppnå dine akademiske mål med vår strukturerte tilnærming.</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔔</div>
+                        <div class="feature-title">Smarte Påminnelser</div>
+                        <div class="feature-description">Gå aldri glipp av en studieøkt med vårt intelligente varslingssystem.</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Parallax effect
+        function handleParallax() {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.3;
+            
+            // Move background elements at different speeds
+            const sun = document.querySelector('.sun');
+            const clouds = document.querySelectorAll('.cloud');
+            const trees = document.querySelectorAll('.tree');
+            
+            if (sun) {
+                sun.style.transform = `translateY(${rate * 0.5}px)`;
+            }
+            
+            clouds.forEach((cloud, index) => {
+                const speed = (index + 1) * 0.15;
+                cloud.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+
+            // Trees stay fixed to the ground - no parallax movement
+        }
+
+        // Scroll animations
+        function handleScrollAnimations() {
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        // Handle navbar shrinking on scroll
+        function handleNavbarShrink() {
+            const header = document.querySelector('.header');
+            const scrolled = window.pageYOffset;
+            
+            if (scrolled > 100) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        }
+
+        // Check authentication and load user info
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                window.location.href = '/';
+                return;
+            }
+            
+            const userEmail = session.user.email;
+            const userAvatar = document.getElementById('user-avatar');
+            const userEmailElement = document.getElementById('user-email');
+            const contactEmailField = document.getElementById('email');
+            
+            userEmailElement.textContent = userEmail;
+            userAvatar.textContent = userEmail.charAt(0).toUpperCase();
+            contactEmailField.value = userEmail;
+        }
+
+        // Sign out functionality
+        async function signOut() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Feil ved utlogging:', error);
+            }
+        }
+
+        // Download functionality
+        function downloadApp() {
+            const link = document.createElement('a');
+            link.href = '#';
+            link.download = 'AkademiTrack-Setup.exe';
+            
+            showSuccess('Nedlasting starter snart! (Demo - ingen faktisk fil tilgjengelig)');
+            console.log('Nedlasting startet for bruker:', document.getElementById('user-email').textContent);
+        }
+
+        // Contact form functionality
+        document.getElementById('contact-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const subject = document.getElementById('subject').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const submitBtn = document.getElementById('submit-btn');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sender...';
+            hideMessages();
+            
+            try {
+                const formSubmission = {
+                    subject,
+                    name,
+                    email,
+                    message,
+                    timestamp: new Date().toISOString(),
+                    user_id: (await supabase.auth.getSession()).data.session.user.id
+                };
+                
+                console.log('Skjemainnsending:', formSubmission);
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showSuccess('Takk! Meldingen din har blitt sendt. Vi kommer tilbake til deg snart.');
+                
+                document.getElementById('contact-form').reset();
+                document.getElementById('email').value = email;
+                
+            } catch (error) {
+                showError('Beklager, det oppstod en feil ved sending av meldingen. Prøv igjen.');
+                console.error('Feil ved innsending av skjema:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Melding';
+            }
+        });
+
+        // Message handling functions
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            handleScrollAnimations();
+            handleParallax();
+        });
+
+        // Scroll event listeners with throttling for better performance
+        let ticking = false;
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    handleScrollAnimations();
+                    handleParallax();
+                    handleNavbarShrink();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+
+        window.addEventListener('scroll', requestTick);
+
+        // Listen for auth state changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>
