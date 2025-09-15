@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AkademiTrack - Logg Inn</title>
+    <title>AkademiTrack - Automatisk STU Oppmøteregistrering</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="shortcut icon" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -19,13 +18,20 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             color: white;
-            padding: 1rem;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+        }
+
+        /* Parallax Background Elements */
+        .parallax-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
         }
 
         .sun {
@@ -38,6 +44,12 @@
             background-size: cover;
             border-radius: 0%;
             z-index: 1;
+            animation: sunGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes sunGlow {
+            0% { filter: drop-shadow(0 0 20px rgba(255, 193, 7, 0.3)); }
+            100% { filter: drop-shadow(0 0 40px rgba(255, 193, 7, 0.6)); }
         }
 
         @media (max-width: 768px) {
@@ -106,6 +118,12 @@
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
+            animation: leafSway 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes leafSway {
+            0% { transform: translateX(-50%) rotate(-2deg); }
+            100% { transform: translateX(-50%) rotate(2deg); }
         }
 
         .tree1 {
@@ -258,28 +276,643 @@
             }
         }
 
-        .container {
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
-            animation: fadeInUp 0.8s ease-out;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
-            color: #1e40af;
+        /* Content Layer */
+        .content-layer {
             position: relative;
-            z-index: 2;
+            z-index: 10;
         }
 
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1e40af;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .nav-logo-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3); /* Increased opacity from 0.2 to 0.3 */
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); /* Add subtle glow */
+        }
+
+        .navbar.scrolled .nav-logo-icon {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-logo-icon img {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .nav-logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled .nav-logo-text {
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.75rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            background: transparent;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(45deg, #16a34a, #22c55e) !important;
+            border: 2px solid transparent !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+
+        .nav-btn.primary:hover {
+            background: linear-gradient(45deg, #15803d, #16a34a) !important;
+            color: white !important;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+        }
+
+        .navbar.scrolled .nav-btn:not(.primary) {
+            color: #1e40af;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .navbar.scrolled .nav-btn:not(.primary):hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 14rem 22rem 6rem; /* Increased to 14rem */
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            width: 100%;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            margin-top: 2rem; /* Add top margin */
+            padding-bottom: 1rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            line-height: 1.2; /* Increase line height slightly */
+            background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 50%, #b3e5fc 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .hero-btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-btn.primary {
+            background: linear-gradient(45deg, #16a34a, #22c55e);
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .hero-btn.primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(34, 197, 94, 0.4);
+        }
+
+        .hero-btn.secondary {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-demo {
+            margin-top: 4rem;
+            opacity: 0.8;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-demo .demo-placeholder {
+            width: 100%;
+            max-width: 600px;
+            height: 350px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(255,255,255,0.3);
+            box-sizing: border-box;
+        }
+
+        .hero-demo img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .hero-demo img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .features-header {
+            margin-bottom: 4rem;
+        }
+
+        .features-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .features-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: translateX(0);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 2rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .feature-description {
+            font-size: 1rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 8rem 2rem;
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.8) 0%, rgba(59, 130, 246, 0.6) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .how-it-works-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .how-it-works-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .steps-container {
+            display: grid;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .step:nth-child(even):hover {
+            transform: translateX(-10px);
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #16a34a, #22c55e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+
+        .step-content h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+
+        .step-content p {
+            font-size: 1rem;
+            opacity: 0.85;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 8rem 2rem;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-subtitle {
+            font-size: 1.3rem;
+            opacity: 0.8;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 4rem 2rem 4rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            margin-bottom: 2rem;
+        }
+
+        .footer-logo img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.7);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-link:hover::before {
+            left: 100%;
+        }
+
+        .footer-link:active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Special styling for different button types */
+        .footer-link[href*="github"] {
+            background: linear-gradient(45deg, rgba(88, 166, 255, 0.2), rgba(59, 130, 246, 0.3));
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .footer-link[href*="github"]:hover {
+            background: linear-gradient(45deg, rgba(88, 166, 255, 0.4), rgba(59, 130, 246, 0.5));
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+
+        .footer-link[href*="login"] {
+            background: linear-gradient(45deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.3));
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .footer-link[href*="login"]:hover {
+            background: linear-gradient(45deg, rgba(34, 197, 94, 0.4), rgba(22, 163, 74, 0.5));
+            border-color: rgba(34, 197, 94, 0.8);
+        }
+
+        .footer-link[href*="mailto"] {
+            background: linear-gradient(45deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        .footer-link[href*="mailto"]:hover {
+            background: linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.5));
+            border-color: rgba(245, 158, 11, 0.8);
+        }
+
+        .footer-bottom {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Animations */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(50px);
             }
             to {
                 opacity: 1;
@@ -287,514 +920,452 @@
             }
         }
 
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
         }
 
-        .logo img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-            border-radius: 12px;
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.8rem;
-            background: linear-gradient(45deg, #1e40af, #3b82f6);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-        }
-
-        .subtitle {
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.7;
-            line-height: 1.5;
-            color: #374151;
-        }
-
-        .auth-container {
-            margin: 1.5rem 0;
-        }
-
-        .form-tabs {
-            display: flex;
-            background: rgba(59, 130, 246, 0.1);
-            border-radius: 10px;
-            padding: 0.3rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-tab {
-            flex: 1;
-            padding: 0.6rem 1rem;
-            background: transparent;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #1e40af;
-            
-        }
-
-        .form-tab.active {
-            background: linear-gradient(45deg, #1e40af, #3b82f6);
-            color: white;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
-
-        .auth-form {
-            display: none;
-        }
-
-        .auth-form.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 10px;
-            font-size: 1rem;
-            background: rgba(255, 255, 255, 0.8);
-            color: #374151;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        .form-group input::placeholder {
-            color: #9ca3af;
-        }
-
-        .auth-btn {
-            width: 100%;
-            padding: 0.8rem 2rem;
-            background: linear-gradient(45deg, #1e40af, #3b82f6);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .auth-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-            filter: brightness(1.1);
-        }
-
-        .auth-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .divider {
-            margin: 1.5rem 0;
-            text-align: center;
-            position: relative;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: rgba(59, 130, 246, 0.2);
-        }
-
-        .divider span {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 0 1rem;
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        .social-btn {
-            width: 100%;
-            padding: 0.8rem 2rem;
-            background: white;
-            color: #374151;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .social-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-color: #3b82f6;
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            color: #dc2626;
-            padding: 0.8rem;
-            border-radius: 10px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .success-message {
-            background: rgba(34, 197, 94, 0.1);
-            color: #16a34a;
-            padding: 0.8rem;
-            border-radius: 10px;
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .forgot-password {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .forgot-password a {
-            color: #3b82f6;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .forgot-password a:hover {
-            text-decoration: underline;
-        }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
-            body {
-                padding: 0.5rem;
+            .navbar {
+                padding: 1rem;
             }
-            
-            .container {
-                padding: 1.2rem;
+
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
             }
-            
-            h1 {
-                font-size: 1.8rem;
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
             }
-            
-            .subtitle {
-                font-size: 0.95rem;
+
+            .nav-btn {
+                white-space: nowrap;
+                min-width: auto;
+                padding: 0.6rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .hero {
+                padding: 8rem 1rem 4rem; /* Increased from 6rem to 8rem */
+            }
+
+            .hero-demo .demo-placeholder {
+                height: 200px;
+                margin: 0 1rem;
+            }
+
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .features {
+                padding: 4rem 1rem;
+            }
+
+            .features-title {
+                font-size: 2.2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .how-it-works {
+                padding: 4rem 1rem;
+            }
+
+            .how-it-works-title {
+                font-size: 2.2rem;
+            }
+
+            .step {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .step:nth-child(even) {
+                flex-direction: column;
+            }
+
+            .step:hover,
+            .step:nth-child(even):hover {
+                transform: translateY(-10px);
+            }
+
+            .cta {
+                padding: 4rem 1rem;
+            }
+
+            .cta-title {
+                font-size: 2.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            .footer-link {
+                width: 100%;
+                max-width: 250px;
+                padding: 1rem 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-demo .demo-placeholder {
+                height: 150px;
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="sun"></div>
-    <div class="grass-field"></div>
-    
-    <div class="tree tree1">
-        <div class="tree-trunk"></div>
-        <div class="tree-leaves"></div>
-    </div>
-    <div class="tree tree2">
-        <div class="tree-trunk"></div>
-        <div class="tree-leaves"></div>
-    </div>
-    <div class="tree tree3">
-        <div class="tree-trunk"></div>
-        <div class="tree-leaves"></div>
-    </div>
-    <div class="tree tree4">
-        <div class="tree-trunk"></div>
-        <div class="tree-leaves"></div>
-    </div>
-    <div class="tree tree5">
-        <div class="tree-trunk"></div>
-        <div class="tree-leaves"></div>
-    </div>
-    
-    <div class="cloud cloud1"></div>
-    <div class="cloud cloud2"></div>
-    <div class="cloud cloud3"></div>
-    
-    <div class="container">
-        <h1>AkademiTrack</h1>
-        <p class="subtitle">Et kraftig verktøy som gjør livet ditt enklere. Glem aldri studietid igjen.</p>
+    <!-- Parallax Background -->
+    <div class="parallax-container">
+        <div class="sun"></div>
+        <div class="grass-field"></div>
         
-        <div class="auth-container">
-            <div class="form-tabs">
-                <button class="form-tab active" onclick="switchTab('signin')">Logg Inn</button>
-                <button class="form-tab" onclick="switchTab('signup')">Registrer Deg</button>
-            </div>
-
-            <div id="error-message" class="error-message" style="display: none;"></div>
-            <div id="success-message" class="success-message" style="display: none;"></div>
-
-            <!-- Sign In Form -->
-            <form id="signin-form" class="auth-form active">
-                <div class="form-group">
-                    <label for="signin-email">E-post</label>
-                    <input type="email" id="signin-email" name="email" placeholder="Skriv inn din e-post" required>
-                </div>
-                <div class="form-group">
-                    <label for="signin-password">Passord</label>
-                    <input type="password" id="signin-password" name="password" placeholder="Skriv inn ditt passord" required>
-                </div>
-                <button type="submit" class="auth-btn" id="signin-btn">Logg Inn</button>
-                <div class="forgot-password">
-                    <a href="#" onclick="resetPassword()">Glemt passord?</a>
-                </div>
-            </form>
-
-            <!-- Sign Up Form -->
-            <form id="signup-form" class="auth-form">
-                <div class="form-group">
-                    <label for="signup-email">E-post</label>
-                    <input type="email" id="signup-email" name="email" placeholder="Skriv inn din e-post" required>
-                </div>
-                <div class="form-group">
-                    <label for="signup-password">Passord</label>
-                    <input type="password" id="signup-password" name="password" placeholder="Lag et passord" required>
-                </div>
-                <div class="form-group">
-                    <label for="signup-confirm">Bekreft Passord</label>
-                    <input type="password" id="signup-confirm" name="confirmPassword" placeholder="Bekreft passordet ditt" required>
-                </div>
-                <button type="submit" class="auth-btn" id="signup-btn">Opprett Konto</button>
-            </form>
-
-            <button class="social-btn" onclick="signInWithGoogle()">
-                <span>🔍</span>
-                Fortsett med Google
-            </button>
+        <div class="tree tree1">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
         </div>
+        <div class="tree tree2">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree3">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree4">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        <div class="tree tree5">
+            <div class="tree-trunk"></div>
+            <div class="tree-leaves"></div>
+        </div>
+        
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+    </div>
+
+    <!-- Content Layer -->
+    <div class="content-layer">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="#" class="nav-logo">
+                    <div class="nav-logo-icon">
+                        <img src="logo.png" alt="AkademiTrack Logo">
+                    </div>
+                    <span class="nav-logo-text">AkademiTrack</span>
+                </a>
+                <div class="nav-buttons">
+                    <a href="#features" class="nav-btn">Funksjoner</a>
+                    <a href="#how-it-works" class="nav-btn">Hvordan Det Fungerer</a>
+                    <a href="login.html" class="nav-btn primary">Logg Inn</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span>🚀</span>
+                    Automatisk STU Oppmøteregistrering
+                </div>
+                <h1 class="hero-title">Glem aldri studietiden din igjen</h1>
+                <p class="hero-subtitle">
+                    AkademiTrack er et kraftig automatiseringsverktøy som hjelper studenter ved Akademiet med å registrere oppmøte for STU-økter automatisk. Spar tid og fokuser på det som virkelig betyr noe - læringen.
+                </p>
+                <div class="hero-buttons">
+                    <a href="login.html" class="hero-btn primary">
+                        <span>🎯</span>
+                        Kom i gang
+                    </a>
+                    <a href="#features" class="hero-btn secondary">
+                        <span>📖</span>
+                        Lær mer
+                    </a>
+                </div>
+                <div class="hero-demo">
+                    <img src="program.png" alt="AkademiTrack Program Screenshot" style="max-width: 80%; height: auto; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+                </div>
+                
+        </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features fade-in">
+            <div class="features-container">
+                <div class="features-header">
+                    <h2 class="features-title">Kraftige Funksjoner</h2>
+                    <p class="features-subtitle">
+                        Opplev automatisering på sitt beste med avanserte funksjoner designet for studenter ved Akademiet
+                    </p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔐</div>
+                        <h3 class="feature-title">Automatisk Innlogging</h3>
+                        <p class="feature-description">
+                            Sikker autentisering gjennom nettleseren mot iSkole systemet. Dine innloggingsdetaljer lagres trygt lokalt på din maskin.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h3 class="feature-title">Intelligent Overvåking</h3>
+                        <p class="feature-description">
+                            Overvåker kun aktuelle STU-økter for gjeldende dag med optimalisert ytelse.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="feature-title">Sanntids Registrering</h3>
+                        <p class="feature-description">
+                            Registrerer oppmøte automatisk når registreringsvinduene åpner seg, så du slipper å huske på det selv.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3 class="feature-title">Detaljert Logging</h3>
+                        <p class="feature-description">
+                            Omfattende loggføring med mulighet for detaljerte debug-meldinger for full transparens i prosessen.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔔</div>
+                        <h3 class="feature-title">System Notifikasjoner</h3>
+                        <p class="feature-description">
+                            Diskrete overlay-notifikasjoner holder deg informert om viktige hendelser uten å forstyrre arbeidsflyten din.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3 class="feature-title">Sikkerhet & Personvern</h3>
+                        <p class="feature-description">
+                            All data lagres kun lokalt på din maskin. Personopplysninger sendes til utvikleren sånn som epost og antall studietimer registrert.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="how-it-works fade-in">
+            <div class="how-it-works-container">
+                <h2 class="how-it-works-title">Hvordan Det Fungerer</h2>
+                <div class="steps-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Start Automatisering</h3>
+                            <p>Klikk på "Start Automatisering" knappen i programmet. Første gang åpnes nettleseren for sikker pålogging til iSkole systemet.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Sikker Autentisering</h3>
+                            <p>Logg inn med dine vanlige iSkole legitimasjonssaker. Autentiseringen lagres sikkert for fremtidige økter på din lokale maskin.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Intelligent Overvåking</h3>
+                            <p>Programmet henter dagens STU-økter og begynner å overvåke registreringsvinduene for hver økt automatisk.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Automatisk Registrering</h3>
+                            <p>Når et registreringsvindu åpner, registreres oppmøtet automatisk. Du får diskrete notifikasjoner om statusen.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h3>Fullføring</h3>
+                            <p>Programmet stopper automatisk når alle økter for dagen er behandlet. Du kan følge hele prosessen i loggene.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta fade-in">
+            <div class="cta-container">
+                <h2 class="cta-title">Klar til å Komme i Gang?</h2>
+                <p class="cta-subtitle">
+                    Aldri glem studietid igjen!
+                </p>
+                <div class="cta-buttons">
+                    <a href="login.html" class="hero-btn primary">
+                        <span>🚀</span>
+                        Start Nå
+                    </a>
+                    <a href="https://github.com/CyberGutta/AkademiTrack" class="hero-btn secondary" target="_blank">
+                        <span>⭐</span>
+                        Se på GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="logo.png" alt="AkademiTrack Logo">
+                    <h3>AkademiTrack</h3>
+                </div>
+                <p class="footer-text">
+                    Automatisk oppmøteregistrering for STU-økter på Akademiet. Et kraftig verktøy som gjør studentlivet enklere.
+                </p>
+                <div class="footer-links">
+                    <a href="https://github.com/CyberGutta/AkademiTrack" class="footer-link" target="_blank">GitHub</a>
+                    <a href="login.html" class="footer-link">Logg Inn</a>
+                    <a href="#features" class="footer-link">Funksjoner</a>
+                    <a href="mailto:support@akademitrack.no" class="footer-link">Støtte</a>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 AkademiTrack. Laget med ❤️ for studenter ved Akademiet.</p>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <script>
-        // Initialize Supabase client
-        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // Tab switching functionality
-        function switchTab(tab) {
-            const tabs = document.querySelectorAll('.form-tab');
-            const forms = document.querySelectorAll('.auth-form');
+        // Parallax effect
+        function handleParallax() {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.3;
             
-            tabs.forEach(t => t.classList.remove('active'));
-            forms.forEach(f => f.classList.remove('active'));
+            // Move background elements at different speeds
+            const sun = document.querySelector('.sun');
+            const clouds = document.querySelectorAll('.cloud');
             
-            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-            document.getElementById(`${tab}-form`).classList.add('active');
-            
-            hideMessages();
-        }
-
-        // Message handling
-        function showError(message) {
-            const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            document.getElementById('success-message').style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            const successDiv = document.getElementById('success-message');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            document.getElementById('error-message').style.display = 'none';
-        }
-
-        function hideMessages() {
-            document.getElementById('error-message').style.display = 'none';
-            document.getElementById('success-message').style.display = 'none';
-        }
-
-        // Sign In functionality
-        document.getElementById('signin-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
-            const btn = document.getElementById('signin-btn');
-            
-            btn.disabled = true;
-            btn.textContent = 'Logger inn...';
-            hideMessages();
-            
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                
-                if (error) throw error;
-                
-                showSuccess('Vellykket innlogging! Omdirigerer...');
-                
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
-                
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Logg Inn';
-            }
-        });
-
-        // Sign Up functionality
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirmPassword = document.getElementById('signup-confirm').value;
-            const btn = document.getElementById('signup-btn');
-            
-            if (password !== confirmPassword) {
-                showError('Passordene stemmer ikke overens');
-                return;
+            if (sun) {
+                sun.style.transform = `translateY(${rate * 0.5}px)`;
             }
             
-            if (password.length < 6) {
-                showError('Passordet må være minst 6 tegn langt');
-                return;
+            clouds.forEach((cloud, index) => {
+                const speed = (index + 1) * 0.15;
+                cloud.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        }
+
+        // Scroll animations
+        function handleScrollAnimations() {
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        // Handle navbar color change on scroll
+        function handleNavbarScroll() {
+            const navbar = document.querySelector('.navbar');
+            const scrolled = window.pageYOffset;
+            
+            if (scrolled > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
             }
+        }
+
+        // Smooth scrolling for anchor links
+        function handleSmoothScrolling() {
+            const links = document.querySelectorAll('a[href^="#"]');
             
-            btn.disabled = true;
-            btn.textContent = 'Oppretter konto...';
-            hideMessages();
-            
-            try {
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        emailRedirectTo: undefined
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        const offset = 80; // Account for fixed navbar
+                        const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
                     }
                 });
-                
-                if (error) throw error;
-                
-                showSuccess('Konto opprettet! Omdirigerer til dashbord...');
-                
-                setTimeout(() => {
-                    window.location.href = '/dashboard.html';
-                }, 1000);
-                
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Opprett Konto';
-            }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            handleScrollAnimations();
+            handleParallax();
+            handleSmoothScrolling();
         });
 
-        // Social authentication
-        async function signInWithGoogle() {
-            try {
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: `${window.location.origin}/dashboard.html`
-                    }
+        // Scroll event listeners with throttling for better performance
+        let ticking = false;
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    handleScrollAnimations();
+                    handleParallax();
+                    // Remove this line: handleNavbarScroll();
+                    ticking = false;
                 });
-                
-                if (error) throw error;
-                
-            } catch (error) {
-                showError(error.message);
+                ticking = true;
             }
         }
 
-        // Reset password functionality
-        async function resetPassword() {
-            const email = document.getElementById('signin-email').value;
-            
-            if (!email) {
-                showError('Vennligst skriv inn e-postadressen din først');
-                return;
-            }
-            
-            try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/reset-password.html`
-                });
-                
-                if (error) throw error;
-                
-                showSuccess('E-post for tilbakestilling av passord er sendt! Sjekk innboksen din.');
-                
-            } catch (error) {
-                showError(error.message);
-            }
-        }
-
-        // Check if user is already authenticated
-        window.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session) {
-                window.location.href = '/dashboard.html';
-            }
-        });
-
-        // Listen for auth state changes
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN') {
-                window.location.href = '/dashboard.html';
-            }
-        });
+        window.addEventListener('scroll', requestTick);
     </script>
 </body>
 </html>
