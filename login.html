@@ -835,7 +835,7 @@
                 showSuccess('Vellykket innlogging! Omdirigerer...');
                 
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = 'dashboard.html';
                 }, 1000);
                 
             } catch (error) {
@@ -883,7 +883,7 @@
                 showSuccess('Konto opprettet! Omdirigerer til dashbord...');
                 
                 setTimeout(() => {
-                    window.location.href = '/dashboard.html';
+                    window.location.href = 'dashboard.html';
                 }, 1000);
                 
             } catch (error) {
@@ -900,7 +900,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}/dashboard.html`
+                        redirectTo: `${window.location.origin}dashboard.html`
                     }
                 });
                 
@@ -939,14 +939,14 @@
             const { data: { session } } = await supabase.auth.getSession();
             
             if (session) {
-                window.location.href = '/dashboard.html';
+                window.location.href = 'dashboard.html';
             }
         });
 
         // Listen for auth state changes
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') {
-                window.location.href = '/dashboard.html';
+                window.location.href = 'dashboard.html';
             }
         });
     </script>
