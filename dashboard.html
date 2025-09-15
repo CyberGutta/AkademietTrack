@@ -269,90 +269,90 @@
             z-index: 10;
         }
 
-        .header {
-            position: sticky;
+        /* Updated Navigation - Consistent with index */
+        .navbar {
+            position: fixed;
             top: 0;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            left: 0;
+            right: 0;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 1rem 0;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
             transition: all 0.3s ease;
         }
 
-        .header.scrolled {
-            padding: 0.5rem 0;
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+        .navbar.scrolled {
+            background: rgba(30, 58, 138, 0.95);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 0.5rem 2rem;
         }
 
-        .header-content {
+        .nav-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s ease;
         }
 
-        .logo-section {
+        .nav-logo {
             display: flex;
             align-items: center;
             gap: 1rem;
-            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
         }
 
-        .logo {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
+        .nav-logo-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
         }
 
-        .header.scrolled .logo {
-            width: 50px;
-            height: 50px;
-        }
-
-        .logo img {
+        .navbar.scrolled .nav-logo-icon {
             width: 40px;
             height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-logo-icon img {
+            width: 35px;
+            height: 35px;
             object-fit: contain;
             border-radius: 8px;
             transition: all 0.3s ease;
         }
 
-        .header.scrolled .logo img {
-            width: 35px;
-            height: 35px;
+        .navbar.scrolled .nav-logo-icon img {
+            width: 28px;
+            height: 28px;
         }
 
-        .header h1 {
+        .nav-logo-text {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(45deg, #1e40af, #3b82f6);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             transition: all 0.3s ease;
         }
 
-        .header.scrolled h1 {
+        .navbar.scrolled .nav-logo-text {
             font-size: 1.3rem;
+            color: white;
         }
 
-        .user-section {
+        .nav-buttons {
             display: flex;
             align-items: center;
             gap: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .user-info {
@@ -366,8 +366,10 @@
             transition: all 0.3s ease;
         }
 
-        .header.scrolled .user-info {
+        .navbar.scrolled .user-info {
             padding: 0.4rem 0.8rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
         }
 
         .user-avatar {
@@ -384,7 +386,7 @@
             transition: all 0.3s ease;
         }
 
-        .header.scrolled .user-avatar {
+        .navbar.scrolled .user-avatar {
             width: 28px;
             height: 28px;
             font-size: 0.8rem;
@@ -392,13 +394,14 @@
 
         .user-email {
             font-size: 0.9rem;
-            color: #374151;
+            color: white;
             font-weight: 500;
             transition: all 0.3s ease;
         }
 
-        .header.scrolled .user-email {
+        .navbar.scrolled .user-email {
             font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .sign-out-btn {
@@ -413,7 +416,7 @@
             font-size: 0.9rem;
         }
 
-        .header.scrolled .sign-out-btn {
+        .navbar.scrolled .sign-out-btn {
             padding: 0.5rem 1.2rem;
             font-size: 0.85rem;
         }
@@ -427,14 +430,14 @@
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 2rem 8rem;
+            padding: 8rem 2rem 8rem; /* Increased top padding for fixed navbar */
         }
 
-        /* Welcome Section - Similar to index styling */
+        /* Welcome Section */
         .welcome-section {
             text-align: center;
             margin-bottom: 3rem;
-            padding: 4rem 0 2rem;
+            padding: 2rem 0;
         }
 
         .welcome-container {
@@ -535,22 +538,25 @@
             font-weight: 600;
         }
 
-        /* Cards Grid */
+        /* Cards Grid - Single column layout */
         .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-            gap: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
             margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 2.5rem;
-            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.4s ease;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             color: #374151;
@@ -562,13 +568,13 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: linear-gradient(45deg, #3b82f6, #60a5fa);
         }
 
         .card:hover {
-            transform: translateY(-15px);
-            box-shadow: 0 30px 60px rgba(31, 38, 135, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(31, 38, 135, 0.2);
         }
 
         .card-icon {
@@ -806,23 +812,30 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 0 1rem;
+            .navbar {
+                padding: 1rem;
             }
 
-            .header.scrolled .header-content {
+            .navbar.scrolled {
+                padding: 0.5rem 1rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .navbar.scrolled .nav-container {
                 gap: 0.8rem;
             }
 
-            .user-section {
+            .nav-buttons {
                 width: 100%;
                 justify-content: space-between;
             }
 
             .main-container {
-                padding: 2rem 1rem 6rem;
+                padding: 7rem 1rem 6rem;
             }
 
             .welcome-container {
@@ -910,16 +923,16 @@
 
     <!-- Content Layer -->
     <div class="content-layer">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="logo-section">
-                    <div class="logo">
+        <!-- Updated Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="#" class="nav-logo">
+                    <div class="nav-logo-icon">
                         <img src="logo.png" alt="AkademiTrack Logo">
                     </div>
-                    <h1>AkademiTrack Dashbord</h1>
-                </div>
-                <div class="user-section">
+                    <span class="nav-logo-text">AkademiTrack Dashbord</span>
+                </a>
+                <div class="nav-buttons">
                     <div class="user-info">
                         <div class="user-avatar" id="user-avatar">B</div>
                         <span class="user-email" id="user-email">bruker@eksempel.com</span>
@@ -927,7 +940,7 @@
                     <button class="sign-out-btn" onclick="signOut()">Logg Ut</button>
                 </div>
             </div>
-        </header>
+        </nav>
 
         <!-- Main Content -->
         <main class="main-container">
@@ -967,16 +980,6 @@
             <!-- Main Cards -->
             <div class="cards-grid">
                 <div class="card fade-in">
-                    <div class="card-icon">📱</div>
-                    <h2>Last Ned AkademiTrack</h2>
-                    <p>Få den nyeste versjonen av AkademiTrack og glem aldri studietiden din igjen. Vårt kraftige verktøy hjelper deg med å holde deg organisert og fokusert på dine akademiske mål med avanserte sporingsfunksjoner.</p>
-                    <button class="download-btn" onclick="downloadApp()">
-                        <span>⬇️</span>
-                        Last Ned Nyeste Versjon
-                    </button>
-                </div>
-
-                <div class="card fade-in">
                     <div class="card-icon">📝</div>
                     <h2>Kontakt & Tilbakemelding</h2>
                     <p>Har du spørsmål, forslag eller trenger du støtte? Send oss en melding så kommer vi tilbake til deg så snart som mulig. Dine tilbakemeldinger hjelper oss med å forbedre tjenesten.</p>
@@ -1014,6 +1017,16 @@
                         
                         <button type="submit" class="submit-btn" id="submit-btn">Send Melding</button>
                     </form>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-icon">📱</div>
+                    <h2>Last Ned AkademiTrack</h2>
+                    <p>Få den nyeste versjonen av AkademiTrack og glem aldri studietiden din igjen. Vårt kraftige verktøy hjelper deg med å holde deg organisert og fokusert på dine akademiske mål med avanserte sporingsfunksjoner.</p>
+                    <button class="download-btn" onclick="downloadApp()">
+                        <span>⬇️</span>
+                        Last Ned Nyeste Versjon
+                    </button>
                 </div>
             </div>
 
@@ -1071,8 +1084,6 @@
                 const speed = (index + 1) * 0.15;
                 cloud.style.transform = `translateY(${scrolled * speed}px)`;
             });
-
-            // Trees stay fixed to the ground - no parallax movement
         }
 
         // Scroll animations
@@ -1090,13 +1101,13 @@
 
         // Handle navbar shrinking on scroll
         function handleNavbarShrink() {
-            const header = document.querySelector('.header');
+            const navbar = document.querySelector('.navbar');
             const scrolled = window.pageYOffset;
             
             if (scrolled > 100) {
-                header.classList.add('scrolled');
+                navbar.classList.add('scrolled');
             } else {
-                header.classList.remove('scrolled');
+                navbar.classList.remove('scrolled');
             }
         }
 
