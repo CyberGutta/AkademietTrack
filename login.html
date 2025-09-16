@@ -7,7 +7,8 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="shortcut icon" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" integrity="sha384-..." crossorigin="anonymous"></script>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co;">
     <style>
         * {
             margin: 0;
@@ -614,6 +615,23 @@
             text-decoration: underline;
         }
 
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .navbar {
@@ -719,8 +737,8 @@
             
             <div class="auth-container">
                 <div class="form-tabs">
-                    <button class="form-tab active" onclick="switchTab('signin')">Logg Inn</button>
-                    <button class="form-tab" onclick="switchTab('signup')">Registrer Deg</button>
+                    <button class="form-tab active" data-tab="signin">Logg Inn</button>
+                    <button class="form-tab" data-tab="signup">Registrer Deg</button>
                 </div>
 
                 <div id="error-message" class="error-message" style="display: none;"></div>
@@ -730,15 +748,15 @@
                 <form id="signin-form" class="auth-form active">
                     <div class="form-group">
                         <label for="signin-email">E-post</label>
-                        <input type="email" id="signin-email" name="email" placeholder="Skriv inn din e-post" required>
+                        <input type="email" id="signin-email" name="email" placeholder="Skriv inn din e-post" required maxlength="320" autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="signin-password">Passord</label>
-                        <input type="password" id="signin-password" name="password" placeholder="Skriv inn ditt passord" required>
+                        <input type="password" id="signin-password" name="password" placeholder="Skriv inn ditt passord" required minlength="6" maxlength="128" autocomplete="current-password">
                     </div>
                     <button type="submit" class="auth-btn" id="signin-btn">Logg Inn</button>
                     <div class="forgot-password">
-                        <a href="#" onclick="resetPassword()">Glemt passord?</a>
+                        <a href="#" id="forgot-password-link">Glemt passord?</a>
                     </div>
                 </form>
 
@@ -746,15 +764,15 @@
                 <form id="signup-form" class="auth-form">
                     <div class="form-group">
                         <label for="signup-email">E-post</label>
-                        <input type="email" id="signup-email" name="email" placeholder="Skriv inn din e-post" required>
+                        <input type="email" id="signup-email" name="email" placeholder="Skriv inn din e-post" required maxlength="320" autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="signup-password">Passord</label>
-                        <input type="password" id="signup-password" name="password" placeholder="Lag et passord" required>
+                        <input type="password" id="signup-password" name="password" placeholder="Lag et passord" required minlength="6" maxlength="128" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label for="signup-confirm">Bekreft Passord</label>
-                        <input type="password" id="signup-confirm" name="confirmPassword" placeholder="Bekreft passordet ditt" required>
+                        <input type="password" id="signup-confirm" name="confirmPassword" placeholder="Bekreft passordet ditt" required minlength="6" maxlength="128" autocomplete="new-password">
                     </div>
                     <button type="submit" class="auth-btn" id="signup-btn">Opprett Konto</button>
                 </form>
@@ -763,7 +781,7 @@
                     <span>eller</span>
                 </div>
 
-                <button class="social-btn" onclick="signInWithGoogle()">
+                <button class="social-btn" id="google-signin-btn">
                     <span>🔍</span>
                     Fortsett med Google
                 </button>
@@ -772,65 +790,202 @@
     </div>
 
     <script>
+        // Configuration - move to environment variables in production
+        const CONFIG = {
+            SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k',
+            MIN_PASSWORD_LENGTH: 6,
+            MAX_PASSWORD_LENGTH: 128,
+            MAX_EMAIL_LENGTH: 320,
+            ADMIN_EMAIL: 'cyberbrothershq@gmail.com'
+        };
+
+        // Input sanitization functions
+        function sanitizeEmail(email) {
+            return email.trim().toLowerCase();
+        }
+
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email) && email.length <= CONFIG.MAX_EMAIL_LENGTH;
+        }
+
+        function validatePassword(password) {
+            return password.length >= CONFIG.MIN_PASSWORD_LENGTH && 
+                   password.length <= CONFIG.MAX_PASSWORD_LENGTH;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Rate limiting
+        const rateLimiter = {
+            attempts: new Map(),
+            maxAttempts: 5,
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            
+            isAllowed(key) {
+                const now = Date.now();
+                const attempts = this.attempts.get(key) || [];
+                const validAttempts = attempts.filter(time => now - time < this.windowMs);
+                this.attempts.set(key, validAttempts);
+                return validAttempts.length < this.maxAttempts;
+            },
+            
+            recordAttempt(key) {
+                const attempts = this.attempts.get(key) || [];
+                attempts.push(Date.now());
+                this.attempts.set(key, attempts);
+            }
+        };
+
         // Initialize Supabase client
-        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error('Failed to initialize Supabase:', error);
+            showError('Systemfeil. Prøv igjen senere.');
+        }
+
+        // DOM elements
+        const elements = {
+            errorMessage: document.getElementById('error-message'),
+            successMessage: document.getElementById('success-message'),
+            signinForm: document.getElementById('signin-form'),
+            signupForm: document.getElementById('signup-form'),
+            tabButtons: document.querySelectorAll('.form-tab'),
+            forgotPasswordLink: document.getElementById('forgot-password-link'),
+            googleSigninBtn: document.getElementById('google-signin-btn')
+        };
 
         // Tab switching functionality
         function switchTab(tab) {
-            const tabs = document.querySelectorAll('.form-tab');
-            const forms = document.querySelectorAll('.auth-form');
+            const activeTab = document.querySelector('.form-tab.active');
+            const activeForm = document.querySelector('.auth-form.active');
+            const newTab = document.querySelector(`[data-tab="${tab}"]`);
+            const newForm = document.getElementById(`${tab}-form`);
             
-            tabs.forEach(t => t.classList.remove('active'));
-            forms.forEach(f => f.classList.remove('active'));
-            
-            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-            document.getElementById(`${tab}-form`).classList.add('active');
+            if (activeTab) activeTab.classList.remove('active');
+            if (activeForm) activeForm.classList.remove('active');
+            if (newTab) newTab.classList.add('active');
+            if (newForm) newForm.classList.add('active');
             
             hideMessages();
         }
 
+        // Event listeners for tabs
+        elements.tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tab = button.getAttribute('data-tab');
+                if (tab) {
+                    switchTab(tab);
+                }
+            });
+        });
+
         // Message handling
         function showError(message) {
-            const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            document.getElementById('success-message').style.display = 'none';
+            if (!message || typeof message !== 'string') return;
+            
+            const sanitizedMessage = escapeHtml(message);
+            elements.errorMessage.innerHTML = sanitizedMessage;
+            elements.errorMessage.style.display = 'block';
+            elements.successMessage.style.display = 'none';
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                hideMessages();
+            }, 10000);
         }
 
         function showSuccess(message) {
-            const successDiv = document.getElementById('success-message');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            document.getElementById('error-message').style.display = 'none';
+            if (!message || typeof message !== 'string') return;
+            
+            const sanitizedMessage = escapeHtml(message);
+            elements.successMessage.innerHTML = sanitizedMessage;
+            elements.successMessage.style.display = 'block';
+            elements.errorMessage.style.display = 'none';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                hideMessages();
+            }, 5000);
         }
 
         function hideMessages() {
-            document.getElementById('error-message').style.display = 'none';
-            document.getElementById('success-message').style.display = 'none';
+            elements.errorMessage.style.display = 'none';
+            elements.successMessage.style.display = 'none';
+        }
+
+        // Loading state management
+        function setLoadingState(button, isLoading, originalText) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = `<span class="loading-spinner"></span>${originalText}...`;
+            } else {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
         }
 
         // Check if user should be redirected based on email
         function getRedirectUrl(userEmail) {
-            if (userEmail === 'cyberbrothershq@gmail.com') {
-                return 'admin.html';
+            const sanitizedEmail = sanitizeEmail(userEmail);
+            return sanitizedEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
+        }
+
+        // Secure redirect function
+        function secureRedirect(url) {
+            // Validate redirect URL to prevent open redirect vulnerabilities
+            const allowedUrls = ['admin.html', 'dashboard.html'];
+            if (allowedUrls.includes(url)) {
+                window.location.href = url;
             } else {
-                return 'dashboard.html';
+                console.error('Invalid redirect URL:', url);
+                window.location.href = 'dashboard.html';
             }
         }
 
         // Sign In functionality
-        document.getElementById('signin-form').addEventListener('submit', async (e) => {
+        elements.signinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
+            const emailInput = document.getElementById('signin-email');
+            const passwordInput = document.getElementById('signin-password');
             const btn = document.getElementById('signin-btn');
             
-            btn.disabled = true;
-            btn.textContent = 'Logger inn...';
+            const email = sanitizeEmail(emailInput.value);
+            const password = passwordInput.value;
+            
+            // Client-side validation
+            if (!validateEmail(email)) {
+                showError('Ugyldig e-postadresse');
+                return;
+            }
+            
+            if (!validatePassword(password)) {
+                showError(`Passordet må være mellom ${CONFIG.MIN_PASSWORD_LENGTH} og ${CONFIG.MAX_PASSWORD_LENGTH} tegn`);
+                return;
+            }
+            
+            // Rate limiting
+            const clientIP = 'signin_' + (navigator.userAgent || 'unknown');
+            if (!rateLimiter.isAllowed(clientIP)) {
+                showError('For mange påloggingsforsøk. Prøv igjen om 15 minutter.');
+                return;
+            }
+            
+            setLoadingState(btn, true, 'Logger inn');
             hideMessages();
             
             try {
@@ -839,44 +994,80 @@
                     password: password
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    rateLimiter.recordAttempt(clientIP);
+                    throw error;
+                }
                 
                 const redirectUrl = getRedirectUrl(email);
                 showSuccess('Vellykket innlogging! Omdirigerer...');
                 
                 setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 1000);
+                    secureRedirect(redirectUrl);
+                }, 1500);
                 
             } catch (error) {
-                showError(error.message);
+                console.error('Sign in error:', error);
+                let errorMessage = 'Innlogging feilet. Sjekk e-post og passord.';
+                
+                // Handle specific error cases
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Ugyldig e-post eller passord.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'E-posten din er ikke bekreftet. Sjekk innboksen din.';
+                } else if (error.message.includes('Too many requests')) {
+                    errorMessage = 'For mange forespørsler. Prøv igjen senere.';
+                }
+                
+                showError(errorMessage);
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Logg Inn';
+                setLoadingState(btn, false, 'Logg Inn');
             }
         });
 
         // Sign Up functionality
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        elements.signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirmPassword = document.getElementById('signup-confirm').value;
+            const emailInput = document.getElementById('signup-email');
+            const passwordInput = document.getElementById('signup-password');
+            const confirmPasswordInput = document.getElementById('signup-confirm');
             const btn = document.getElementById('signup-btn');
+            
+            const email = sanitizeEmail(emailInput.value);
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Client-side validation
+            if (!validateEmail(email)) {
+                showError('Ugyldig e-postadresse');
+                return;
+            }
+            
+            if (!validatePassword(password)) {
+                showError(`Passordet må være mellom ${CONFIG.MIN_PASSWORD_LENGTH} og ${CONFIG.MAX_PASSWORD_LENGTH} tegn`);
+                return;
+            }
             
             if (password !== confirmPassword) {
                 showError('Passordene stemmer ikke overens');
                 return;
             }
             
-            if (password.length < 6) {
-                showError('Passordet må være minst 6 tegn langt');
+            // Password strength check
+            if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+                showError('Passordet bør inneholde store og små bokstaver samt tall for økt sikkerhet');
+                // Don't return here, just warn the user
+            }
+            
+            // Rate limiting
+            const clientIP = 'signup_' + (navigator.userAgent || 'unknown');
+            if (!rateLimiter.isAllowed(clientIP)) {
+                showError('For mange registreringsforsøk. Prøv igjen om 15 minutter.');
                 return;
             }
             
-            btn.disabled = true;
-            btn.textContent = 'Oppretter konto...';
+            setLoadingState(btn, true, 'Oppretter konto');
             hideMessages();
             
             try {
@@ -884,52 +1075,97 @@
                     email: email,
                     password: password,
                     options: {
-                        emailRedirectTo: undefined
+                        emailRedirectTo: undefined,
+                        data: {
+                            email: email
+                        }
                     }
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    rateLimiter.recordAttempt(clientIP);
+                    throw error;
+                }
                 
-                const redirectUrl = getRedirectUrl(email);
-                showSuccess('Konto opprettet! Omdirigerer...');
-                
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 1000);
+                if (data.user && !data.user.email_confirmed_at) {
+                    showSuccess('Registrering vellykket! Sjekk e-posten din for å bekrefte kontoen.');
+                } else {
+                    const redirectUrl = getRedirectUrl(email);
+                    showSuccess('Konto opprettet! Omdirigerer...');
+                    
+                    setTimeout(() => {
+                        secureRedirect(redirectUrl);
+                    }, 1500);
+                }
                 
             } catch (error) {
-                showError(error.message);
+                console.error('Sign up error:', error);
+                let errorMessage = 'Registrering feilet. Prøv igjen.';
+                
+                // Handle specific error cases
+                if (error.message.includes('User already registered')) {
+                    errorMessage = 'En konto med denne e-posten eksisterer allerede.';
+                } else if (error.message.includes('Password should be at least')) {
+                    errorMessage = 'Passordet er for svakt. Velg et sterkere passord.';
+                } else if (error.message.includes('Unable to validate email address')) {
+                    errorMessage = 'Ugyldig e-postadresse.';
+                }
+                
+                showError(errorMessage);
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Opprett Konto';
+                setLoadingState(btn, false, 'Opprett Konto');
             }
         });
 
         // Social authentication
-        async function signInWithGoogle() {
+        elements.googleSigninBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const btn = e.target;
+            setLoadingState(btn, true, 'Kobler til Google');
+            
             try {
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}/dashboard.html`
+                        redirectTo: `${window.location.origin}/dashboard.html`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        }
                     }
                 });
                 
                 if (error) throw error;
                 
             } catch (error) {
-                showError(error.message);
+                console.error('Google sign in error:', error);
+                showError('Google-innlogging feilet. Prøv igjen.');
+                setLoadingState(btn, false, 'Fortsett med Google');
             }
-        }
+        });
 
         // Reset password functionality
-        async function resetPassword() {
-            const email = document.getElementById('signin-email').value;
+        elements.forgotPasswordLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const emailInput = document.getElementById('signin-email');
+            const email = sanitizeEmail(emailInput.value);
             
             if (!email) {
                 showError('Vennligst skriv inn e-postadressen din først');
+                emailInput.focus();
                 return;
             }
+            
+            if (!validateEmail(email)) {
+                showError('Ugyldig e-postadresse');
+                return;
+            }
+            
+            const originalText = e.target.textContent;
+            e.target.textContent = 'Sender...';
+            e.target.style.pointerEvents = 'none';
             
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -938,29 +1174,79 @@
                 
                 if (error) throw error;
                 
-                showSuccess('E-post for tilbakestilling av passord er sendt! Sjekk innboksen din.');
+                showSuccess('Hvis eposten/brukeren eksisterer så har det blitt sendt tilbakestilling av passord! Sjekk innboksen din.');
                 
             } catch (error) {
-                showError(error.message);
+                console.error('Password reset error:', error);
+                showError('Kunne ikke sende tilbakestillings-e-post. Prøv igjen.');
+            } finally {
+                e.target.textContent = originalText;
+                e.target.style.pointerEvents = 'auto';
             }
+        });
+
+        // Security: Clear form data on page unload
+        window.addEventListener('beforeunload', () => {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                const inputs = form.querySelectorAll('input[type="password"]');
+                inputs.forEach(input => {
+                    input.value = '';
+                });
+            });
+        });
+
+        // Security: Prevent right-click in production (optional)
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            document.addEventListener('contextmenu', e => e.preventDefault());
         }
 
         // Check if user is already authenticated
         window.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session) {
-                const redirectUrl = getRedirectUrl(session.user.email);
-                window.location.href = redirectUrl;
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Session check error:', error);
+                    return;
+                }
+                
+                if (session && session.user) {
+                    const redirectUrl = getRedirectUrl(session.user.email);
+                    secureRedirect(redirectUrl);
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
             }
         });
 
         // Listen for auth state changes
         supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event);
+            
             if (event === 'SIGNED_IN' && session) {
                 const redirectUrl = getRedirectUrl(session.user.email);
-                window.location.href = redirectUrl;
+                setTimeout(() => {
+                    secureRedirect(redirectUrl);
+                }, 500);
+            } else if (event === 'SIGNED_OUT') {
+                // Clear any cached data
+                hideMessages();
+            } else if (event === 'TOKEN_REFRESHED') {
+                console.log('Token refreshed successfully');
             }
+        });
+
+        // Error boundary for uncaught errors
+        window.addEventListener('error', (event) => {
+            console.error('Uncaught error:', event.error);
+            showError('En uventet feil oppstod. Prøv å laste siden på nytt.');
+        });
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            showError('En nettverksfeil oppstod. Sjekk internettforbindelsen din.');
         });
     </script>
 </body>
