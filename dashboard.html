@@ -769,7 +769,7 @@
             bottom: 100px;
             right: 30px;
             width: 350px;
-            height: 450px;
+            height: 500px;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 50px rgba(31, 38, 135, 0.3);
@@ -778,6 +778,8 @@
             transition: all 0.3s ease;
             z-index: 1001;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-widget.open {
@@ -792,6 +794,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .chat-header h3 {
@@ -839,7 +842,7 @@
             padding: 1rem;
             overflow-y: auto;
             background: #f8fafc;
-            max-height: 300px;
+            min-height: 0;
         }
 
         .message {
@@ -889,6 +892,7 @@
             padding: 1rem;
             background: white;
             border-top: 1px solid #e5e7eb;
+            flex-shrink: 0;
         }
 
         .chat-input-form {
@@ -1050,7 +1054,7 @@
                 width: 90vw;
                 max-width: 350px;
                 right: 5vw;
-                height: 400px;
+                height: 450px;
             }
 
             .chat-bubble {
