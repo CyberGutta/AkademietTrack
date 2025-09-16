@@ -812,6 +812,15 @@
             document.getElementById('success-message').style.display = 'none';
         }
 
+        // Check if user should be redirected based on email
+        function getRedirectUrl(userEmail) {
+            if (userEmail === 'cyberbrothershq@gmail.com') {
+                return 'admin.html';
+            } else {
+                return 'dashboard.html';
+            }
+        }
+
         // Sign In functionality
         document.getElementById('signin-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -832,10 +841,11 @@
                 
                 if (error) throw error;
                 
+                const redirectUrl = getRedirectUrl(email);
                 showSuccess('Vellykket innlogging! Omdirigerer...');
                 
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = redirectUrl;
                 }, 1000);
                 
             } catch (error) {
@@ -880,10 +890,11 @@
                 
                 if (error) throw error;
                 
-                showSuccess('Konto opprettet! Omdirigerer til dashbord...');
+                const redirectUrl = getRedirectUrl(email);
+                showSuccess('Konto opprettet! Omdirigerer...');
                 
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = redirectUrl;
                 }, 1000);
                 
             } catch (error) {
@@ -900,7 +911,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}dashboard.html`
+                        redirectTo: `${window.location.origin}/dashboard.html`
                     }
                 });
                 
@@ -939,14 +950,16 @@
             const { data: { session } } = await supabase.auth.getSession();
             
             if (session) {
-                window.location.href = 'dashboard.html';
+                const redirectUrl = getRedirectUrl(session.user.email);
+                window.location.href = redirectUrl;
             }
         });
 
         // Listen for auth state changes
         supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN') {
-                window.location.href = 'dashboard.html';
+            if (event === 'SIGNED_IN' && session) {
+                const redirectUrl = getRedirectUrl(session.user.email);
+                window.location.href = redirectUrl;
             }
         });
     </script>
