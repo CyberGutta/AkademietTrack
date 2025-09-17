@@ -1125,18 +1125,28 @@
             setLoadingState(btn, true, 'Kobler til Google');
             
             try {
+                // Get the full absolute URL for redirect
+                const baseUrl = window.location.origin;
+                const redirectPath = '/AkademietTrack/dashboard.html';
+                const fullRedirectUrl = `${baseUrl}${redirectPath}`;
+                
+                console.log('Redirecting to:', fullRedirectUrl); // For debugging
+                
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}/AkademietTrack/dashboard.html`,
+                        redirectTo: fullRedirectUrl,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'consent',
-                        }
+                        },
+                        skipBrowserRedirect: false
                     }
                 });
                 
                 if (error) throw error;
+                
+                // The redirect will happen automatically, so we don't need to do anything else here
                 
             } catch (error) {
                 console.error('Google sign in error:', error);
@@ -1225,12 +1235,17 @@
             console.log('Auth state changed:', event);
             
             if (event === 'SIGNED_IN' && session) {
-                const redirectUrl = getRedirectUrl(session.user.email);
-                setTimeout(() => {
-                    secureRedirect(redirectUrl);
-                }, 500);
+                // Only redirect if we're still on the login page
+                if (window.location.pathname.includes('login.html') || 
+                    window.location.pathname.includes('index.html') ||
+                    window.location.pathname === '/AkademietTrack/') {
+                    
+                    const redirectUrl = getRedirectUrl(session.user.email);
+                    setTimeout(() => {
+                        secureRedirect(redirectUrl);
+                    }, 500);
+                }
             } else if (event === 'SIGNED_OUT') {
-                // Clear any cached data
                 hideMessages();
             } else if (event === 'TOKEN_REFRESHED') {
                 console.log('Token refreshed successfully');
