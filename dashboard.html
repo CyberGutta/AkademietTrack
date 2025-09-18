@@ -1500,6 +1500,408 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
+let userActivationData = null;
+
+// Generate a secure activation key
+function generateSecureKey() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const segments = 4;
+    const segmentLength = 4;
+    let key = '';
+    
+    for (let i = 0; i < segments; i++) {
+        if (i > 0) key += '-';
+        for (let j = 0; j < segmentLength; j++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+    }
+    
+    return key;
+}
+
+// Fetch or create activation key for user
+async function fetchActivationKey(userEmail) {
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to fetchActivationKey');
+            return null;
+        }
+
+        console.log('Fetching activation key for:', userEmail);
+
+        // First, try to get existing key
+        let { data: existingKey, error: fetchError } = await supabase
+            .from('activation_keys')
+            .select('*')
+            .eq('user_email', userEmail)
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            console.error('Error fetching activation key:', fetchError);
+            return null;
+        }
+
+        if (existingKey) {
+            console.log('Found existing activation key:', existingKey);
+            return existingKey;
+        }
+
+        console.log('No existing key found, creating new one...');
+
+        // If no existing key, create one
+        const newActivationKey = generateSecureKey();
+        
+        const { data: newKey, error: createError } = await supabase
+            .from('activation_keys')
+            .insert([{
+                user_email: userEmail,
+                activation_key: newActivationKey,
+                is_activated: false
+            }])
+            .select()
+            .single();
+
+        if (createError) {
+            console.error('Error creating activation key:', createError);
+            return null;
+        }
+
+        console.log('Created new activation key:', newKey);
+        return newKey;
+    } catch (error) {
+        console.error('Error in fetchActivationKey:', error);
+        return null;
+    }
+}
+
+// Update activation status UI
+function updateActivationStatusUI(activationData) {
+    const statusElement = document.getElementById('activation-status');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const statusDescription = document.getElementById('status-description');
+    const keyContainer = document.getElementById('activation-key-container');
+    const keyDisplay = document.getElementById('activation-key-display');
+
+    if (!statusElement || !statusIndicator || !statusText || !statusDescription || 
+        !keyContainer || !keyDisplay) {
+        console.error('Missing UI elements for activation status');
+        return;
+    }
+
+    console.log('Updating activation UI with data:', activationData);
+
+    if (activationData) {
+        // Show activation key
+        keyContainer.style.display = 'block';
+        keyDisplay.textContent = activationData.activation_key;
+        
+        if (activationData.is_activated) {
+            // Activated
+            statusElement.className = 'activation-status activated';
+            statusIndicator.className = 'status-indicator active';
+            statusText.textContent = 'Konto Aktivert';
+            statusDescription.textContent = activationData.activated_at ? 
+                `Aktivert ${new Date(activationData.activated_at).toLocaleDateString('no-NO')}` :
+                'Konto er aktivert';
+        } else {
+            // Not activated
+            statusElement.className = 'activation-status not-activated';
+            statusIndicator.className = 'status-indicator inactive';
+            statusText.textContent = 'Venter på Aktivering';
+            statusDescription.textContent = 'Bruk aktiverings nøkkelen din i AkademiTrack programmet';
+        }
+    } else {
+        // Error state
+        statusElement.className = 'activation-status not-activated';
+        statusIndicator.className = 'status-indicator inactive';
+        statusText.textContent = 'Feil ved lasting av aktiverings data';
+        statusDescription.textContent = 'Kunne ikke laste aktiverings informasjon';
+        keyContainer.style.display = 'none';
+    }
+}
+
+// Load activation data
+async function loadActivationData(userEmail) {
+    console.log('Loading activation data for:', userEmail);
+    
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to loadActivationData');
+            updateActivationStatusUI(null);
+            return;
+        }
+        
+        const activationData = await fetchActivationKey(userEmail);
+        userActivationData = activationData;
+        updateActivationStatusUI(activationData);
+        
+    } catch (error) {
+        console.error('Error loading activation data:', error);
+        updateActivationStatusUI(null);
+    }
+}
+
+// Replace the existing checkAuth function with this updated version
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+        window.location.href = '/';
+        return;
+    }
+    
+    const userEmail = session.user.email;
+    
+    // Security: Validate email from session
+    if (!userEmail || !isValidEmail(userEmail)) {
+        console.error('Invalid email from session');
+        await supabase.auth.signOut();
+        window.location.href = '/';
+        return;
+    }
+    
+    // Check if user is admin
+    if (userEmail === 'cyberbrothershq@gmail.com') {
+        window.location.href = 'admin.html';
+        return;
+    }
+    
+    const userAvatar = document.getElementById('user-avatar');
+    const userEmailElement = document.getElementById('user-email');
+    
+    if (userEmailElement) {
+        userEmailElement.textContent = userEmail;
+    }
+    if (userAvatar) {
+        userAvatar.textContent = userEmail.charAt(0).toUpperCase();
+    }
+
+    // Add loading state to STU stats
+    const stuSessionsElement = document.getElementById('stu-sessions-count');
+    const stuHoursElement = document.getElementById('stu-hours-total');
+    
+    if (stuSessionsElement && stuHoursElement) {
+        const stuSessionsCard = stuSessionsElement.parentElement;
+        const stuHoursCard = stuHoursElement.parentElement;
+        if (stuSessionsCard) stuSessionsCard.classList.add('stat-loading');
+        if (stuHoursCard) stuHoursCard.classList.add('stat-loading');
+    }
+
+    // Fetch and display STU data
+    try {
+        const stuData = await fetchSTUData(userEmail);
+        updateSTUStats(stuData.sessions, stuData.totalHours);
+    } catch (error) {
+        console.error('Error loading STU data:', error);
+        updateSTUStats(0, 0);
+    }
+
+    // Load activation data - FIX: Move this outside of try-catch and make it global
+    console.log('About to load activation data for:', userEmail);
+    try {
+        await loadActivationData(userEmail);
+        console.log('Activation data loading completed');
+    } catch (error) {
+        console.error('Error loading activation data:', error);
+        updateActivationStatusUI(null);
+    }
+
+    // Subscribe to admin status changes
+    subscribeToAdminStatus();
+}
+
+// Global variable for activation data
+
+// Generate a secure activation key
+function generateSecureKey() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const segments = 4;
+    const segmentLength = 4;
+    let key = '';
+    
+    for (let i = 0; i < segments; i++) {
+        if (i > 0) key += '-';
+        for (let j = 0; j < segmentLength; j++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+    }
+    
+    return key;
+}
+
+// Fetch or create activation key for user
+async function fetchActivationKey(userEmail) {
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to fetchActivationKey');
+            return null;
+        }
+
+        console.log('Fetching activation key for:', userEmail);
+
+        // First, try to get existing key
+        let { data: existingKey, error: fetchError } = await supabase
+            .from('activation_keys')
+            .select('*')
+            .eq('user_email', userEmail)
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            console.error('Error fetching activation key:', fetchError);
+            return null;
+        }
+
+        if (existingKey) {
+            console.log('Found existing activation key:', existingKey);
+            return existingKey;
+        }
+
+        console.log('No existing key found, creating new one...');
+
+        // If no existing key, create one
+        const newActivationKey = generateSecureKey();
+        
+        const { data: newKey, error: createError } = await supabase
+            .from('activation_keys')
+            .insert([{
+                user_email: userEmail,
+                activation_key: newActivationKey,
+                is_activated: false
+            }])
+            .select()
+            .single();
+
+        if (createError) {
+            console.error('Error creating activation key:', createError);
+            return null;
+        }
+
+        console.log('Created new activation key:', newKey);
+        return newKey;
+    } catch (error) {
+        console.error('Error in fetchActivationKey:', error);
+        return null;
+    }
+}
+
+// Update activation status UI
+function updateActivationStatusUI(activationData) {
+    const statusElement = document.getElementById('activation-status');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const statusDescription = document.getElementById('status-description');
+    const keyContainer = document.getElementById('activation-key-container');
+    const keyDisplay = document.getElementById('activation-key-display');
+
+    if (!statusElement || !statusIndicator || !statusText || !statusDescription || 
+        !keyContainer || !keyDisplay) {
+        console.error('Missing UI elements for activation status');
+        return;
+    }
+
+    console.log('Updating activation UI with data:', activationData);
+
+    if (activationData) {
+        // Show activation key
+        keyContainer.style.display = 'block';
+        keyDisplay.textContent = activationData.activation_key;
+        
+        if (activationData.is_activated) {
+            // Activated
+            statusElement.className = 'activation-status activated';
+            statusIndicator.className = 'status-indicator active';
+            statusText.textContent = 'Konto Aktivert';
+            statusDescription.textContent = activationData.activated_at ? 
+                `Aktivert ${new Date(activationData.activated_at).toLocaleDateString('no-NO')}` :
+                'Konto er aktivert';
+        } else {
+            // Not activated
+            statusElement.className = 'activation-status not-activated';
+            statusIndicator.className = 'status-indicator inactive';
+            statusText.textContent = 'Venter på Aktivering';
+            statusDescription.textContent = 'Bruk aktiverings nøkkelen din i AkademiTrack programmet';
+        }
+    } else {
+        // Error state
+        statusElement.className = 'activation-status not-activated';
+        statusIndicator.className = 'status-indicator inactive';
+        statusText.textContent = 'Feil ved lasting av aktiverings data';
+        statusDescription.textContent = 'Kunne ikke laste aktiverings informasjon';
+        keyContainer.style.display = 'none';
+    }
+}
+
+// Load activation data
+async function loadActivationData(userEmail) {
+    console.log('Loading activation data for:', userEmail);
+    
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to loadActivationData');
+            updateActivationStatusUI(null);
+            return;
+        }
+        
+        const activationData = await fetchActivationKey(userEmail);
+        userActivationData = activationData;
+        updateActivationStatusUI(activationData);
+        
+    } catch (error) {
+        console.error('Error loading activation data:', error);
+        updateActivationStatusUI(null);
+    }
+}
+
+// Add this function to make copyActivationKey globally accessible
+async function copyActivationKey() {
+    const keyElement = document.getElementById('activation-key-display');
+    if (!keyElement) return;
+    
+    try {
+        await navigator.clipboard.writeText(keyElement.textContent);
+        
+        // Show feedback
+        const copyBtn = document.querySelector('.copy-key-btn');
+        if (copyBtn) {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '✅';
+            copyBtn.style.background = '#22c55e';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = '#3b82f6';
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Failed to copy activation key:', error);
+        // Fallback for older browsers
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = keyElement.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            const copyBtn = document.querySelector('.copy-key-btn');
+            if (copyBtn) {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '✅';
+                copyBtn.style.background = '#22c55e';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '#3b82f6';
+                }, 2000);
+            }
+        } catch (fallbackError) {
+            alert('Kunne ikke kopiere nøkkel. Prøv å velge og kopiere manuelt.');
+        }
+    }
+}
+
 let currentConversationId = null;
 let isAdminOnline = false;
 let messagesSubscription = null;
@@ -1898,73 +2300,7 @@ function handleNavbarShrink() {
 }
 
 // Security: Check authentication and load user info with validation
-async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-        window.location.href = '/';
-        return;
-    }
-    
-    const userEmail = session.user.email;
-    
-    // Security: Validate email from session
-    if (!userEmail || !isValidEmail(userEmail)) {
-        console.error('Invalid email from session');
-        await supabase.auth.signOut();
-        window.location.href = '/';
-        return;
-    }
-    
-    // Check if user is admin
-    if (userEmail === 'cyberbrothershq@gmail.com') {
-        window.location.href = 'admin.html';
-        return;
-    }
-    
-    const userAvatar = document.getElementById('user-avatar');
-    const userEmailElement = document.getElementById('user-email');
-    
-    if (userEmailElement) {
-        userEmailElement.textContent = userEmail;
-    }
-    if (userAvatar) {
-        userAvatar.textContent = userEmail.charAt(0).toUpperCase();
-    }
 
-    // Add loading state to STU stats
-    const stuSessionsElement = document.getElementById('stu-sessions-count');
-    const stuHoursElement = document.getElementById('stu-hours-total');
-    
-    if (stuSessionsElement && stuHoursElement) {
-        const stuSessionsCard = stuSessionsElement.parentElement;
-        const stuHoursCard = stuHoursElement.parentElement;
-        if (stuSessionsCard) stuSessionsCard.classList.add('stat-loading');
-        if (stuHoursCard) stuHoursCard.classList.add('stat-loading');
-    }
-
-    // Fetch and display STU data
-    try {
-        const stuData = await fetchSTUData(userEmail);
-        updateSTUStats(stuData.sessions, stuData.totalHours);
-    } catch (error) {
-        console.error('Error loading STU data:', error);
-        updateSTUStats(0, 0);
-    }
-
-    // Load activation data - ADD THIS
-    console.log('About to load activation data for:', userEmail);
-    try {
-        await loadActivationData(userEmail);
-        console.log('Activation data loading completed');
-    } catch (error) {
-        console.error('Error loading activation data:', error);
-        updateActivationStatusUI(null);
-    }
-
-    // Subscribe to admin status changes
-    subscribeToAdminStatus();
-}
 
 // Sign out functionality
 async function signOut() {
@@ -2048,124 +2384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let userActivationData = null;
 
-    // Generate a secure activation key
-    function generateSecureKey() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        const segments = 4;
-        const segmentLength = 4;
-        let key = '';
-        
-        for (let i = 0; i < segments; i++) {
-            if (i > 0) key += '-';
-            for (let j = 0; j < segmentLength; j++) {
-                key += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-        }
-        
-        return key;
-    }
-
-    // Fetch or create activation key for user
-    async function fetchActivationKey(userEmail) {
-        try {
-            if (!userEmail || !isValidEmail(userEmail)) {
-                console.error('Invalid email provided to fetchActivationKey');
-                return null;
-            }
-
-            console.log('Fetching activation key for:', userEmail);
-
-            // First, try to get existing key
-            let { data: existingKey, error: fetchError } = await supabase
-                .from('activation_keys')
-                .select('*')
-                .eq('user_email', userEmail)
-                .single();
-
-            if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-                console.error('Error fetching activation key:', fetchError);
-                return null;
-            }
-
-            if (existingKey) {
-                console.log('Found existing activation key:', existingKey);
-                return existingKey;
-            }
-
-            console.log('No existing key found, creating new one...');
-
-            // If no existing key, create one
-            const newActivationKey = generateSecureKey();
-            
-            const { data: newKey, error: createError } = await supabase
-                .from('activation_keys')
-                .insert([{
-                    user_email: userEmail,
-                    activation_key: newActivationKey,
-                    is_activated: false
-                }])
-                .select()
-                .single();
-
-            if (createError) {
-                console.error('Error creating activation key:', createError);
-                return null;
-            }
-
-            console.log('Created new activation key:', newKey);
-            return newKey;
-        } catch (error) {
-            console.error('Error in fetchActivationKey:', error);
-            return null;
-        }
-    }
-
-    // Update activation status UI
-    function updateActivationStatusUI(activationData) {
-        const statusElement = document.getElementById('activation-status');
-        const statusIndicator = document.getElementById('status-indicator');
-        const statusText = document.getElementById('status-text');
-        const statusDescription = document.getElementById('status-description');
-        const keyContainer = document.getElementById('activation-key-container');
-        const keyDisplay = document.getElementById('activation-key-display');
-
-        if (!statusElement || !statusIndicator || !statusText || !statusDescription || 
-            !keyContainer || !keyDisplay) {
-            console.error('Missing UI elements for activation status');
-            return;
-        }
-
-        console.log('Updating activation UI with data:', activationData);
-
-        if (activationData) {
-            // Show activation key
-            keyContainer.style.display = 'block';
-            keyDisplay.textContent = activationData.activation_key;
-            
-            if (activationData.is_activated) {
-                // Activated
-                statusElement.className = 'activation-status activated';
-                statusIndicator.className = 'status-indicator active';
-                statusText.textContent = 'Konto Aktivert';
-                statusDescription.textContent = activationData.activated_at ? 
-                    `Aktivert ${new Date(activationData.activated_at).toLocaleDateString('no-NO')}` :
-                    'Konto er aktivert';
-            } else {
-                // Not activated
-                statusElement.className = 'activation-status not-activated';
-                statusIndicator.className = 'status-indicator inactive';
-                statusText.textContent = 'Venter på Aktivering';
-                statusDescription.textContent = 'Bruk aktiverings nøkkelen din i AkademiTrack programmet';
-            }
-        } else {
-            // Error state
-            statusElement.className = 'activation-status not-activated';
-            statusIndicator.className = 'status-indicator inactive';
-            statusText.textContent = 'Feil ved lasting av aktiverings data';
-            statusDescription.textContent = 'Kunne ikke laste aktiverings informasjon';
-            keyContainer.style.display = 'none';
-        }
-    }
+    
 
     // Copy activation key to clipboard
     async function copyActivationKey() {
@@ -2267,25 +2486,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Load activation data
-    async function loadActivationData(userEmail) {
-        console.log('Loading activation data for:', userEmail);
-        
-        try {
-            if (!userEmail || !isValidEmail(userEmail)) {
-                console.error('Invalid email provided to loadActivationData');
-                updateActivationStatusUI(null);
-                return;
-            }
-            
-            const activationData = await fetchActivationKey(userEmail);
-            userActivationData = activationData;
-            updateActivationStatusUI(activationData);
-            
-        } catch (error) {
-            console.error('Error loading activation data:', error);
-            updateActivationStatusUI(null);
-        }
-    }
+    
 
     // Auto-resize textarea with security limits
     const chatInput = document.getElementById('chat-input');
