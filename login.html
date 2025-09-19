@@ -996,15 +996,15 @@
             hideMessages();
             
             try {
-                // Get current origin dynamically
-                const currentOrigin = window.location.origin;
+                // Clear any existing session first
+                await supabase.auth.signOut();
                 
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://cybergutta.github.io/AkademietTrack/auth.html',
+                        redirectTo: `${window.location.origin}/AkademietTrack/auth.html`,
                         queryParams: {
-                            access_type: 'online',
+                            access_type: 'offline',
                             prompt: 'select_account'
                         }
                     }
@@ -1015,7 +1015,7 @@
                     throw error;
                 }
                 
-                // The OAuth flow will redirect automatically, no need to handle response here
+                // The OAuth flow will redirect automatically
                 console.log('OAuth flow initiated successfully');
                 
             } catch (error) {
