@@ -999,11 +999,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/auth.html',
-                        queryParams: {
-                            access_type: 'offline',
-                            prompt: 'consent',
-                        }
+                        redirectTo: 'https://cybergutta.github.io/AkademietTrack/login.html'
                     }
                 });
                 
@@ -1011,21 +1007,10 @@
                     throw error;
                 }
                 
-                // The redirect will happen automatically, no need to handle success here
-                
             } catch (error) {
                 console.error('Google sign in error:', error);
-                let errorMessage = 'Google innlogging feilet. Prøv igjen.';
-                
-                if (error.message.includes('popup')) {
-                    errorMessage = 'Popup ble blokkert. Tillat popup-vinduer og prøv igjen.';
-                } else if (error.message.includes('network')) {
-                    errorMessage = 'Nettverksfeil. Sjekk internetttilkoblingen din.';
-                }
-                
-                showError(errorMessage);
-                elements.googleSigninBtn.innerHTML = originalText;
-                elements.googleSigninBtn.disabled = false;
+                showError('Google innlogging feilet. Prøv igjen.');
+                setLoadingState(elements.googleSigninBtn, false, originalText);
             }
         });
 
@@ -1215,34 +1200,14 @@
         // Handle OAuth callback and check authentication
         async function handleAuthCallback() {
             try {
-                // Check if we're in an OAuth callback
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const urlParams = new URLSearchParams(window.location.search);
-                
-                // Check for OAuth tokens or session
-                if (hashParams.get('access_token') || urlParams.get('code')) {
-                    showSuccess('Behandler Google innlogging...');
-                    
-                    // Wait a moment for Supabase to process the session
-                    setTimeout(async () => {
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (session) {
-                            await handleSuccessfulAuth(session);
-                        } else {
-                            showError('Google innlogging feilet. Prøv igjen.');
-                        }
-                    }, 1000);
-                } else {
-                    // Check if user is already authenticated
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session) {
-                        const redirectUrl = getRedirectUrl(session.user.email);
-                        secureRedirect(redirectUrl);
-                    }
+                // Check if user is already authenticated
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const redirectUrl = getRedirectUrl(session.user.email);
+                    secureRedirect(redirectUrl);
                 }
             } catch (error) {
                 console.error('Auth callback error:', error);
-                showError('Innloggingsfeil. Prøv igjen.');
             }
         }
 
@@ -1262,17 +1227,14 @@
             console.log('Auth state changed:', event, session?.user?.email);
             
             if (event === 'SIGNED_IN' && session) {
-                // Only redirect if we're still on the login/auth page
-                if (window.location.pathname.includes('auth.html') || 
-                    window.location.pathname.includes('login.html') ||
-                    window.location.pathname.includes('index.html') ||
-                    window.location.pathname === '/' ||
-                    window.location.pathname.endsWith('/')) {
-                    
-                    await handleSuccessfulAuth(session);
+                const userEmail = session.user.email;
+                if (userEmail === CONFIG.ADMIN_EMAIL) {
+                    showSuccess('Vellykket innlogging! Omdirigerer til admin...');
+                    setTimeout(() => secureRedirect('admin.html'), 1500);
+                } else {
+                    showSuccess('Vellykket innlogging! Omdirigerer...');
+                    setTimeout(() => secureRedirect('dashboard.html'), 1500);
                 }
-            } else if (event === 'SIGNED_OUT') {
-                hideMessages();
             }
         });
 
