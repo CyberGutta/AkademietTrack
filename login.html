@@ -1002,10 +1002,11 @@
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `https://cybergutta.github.io/AkademietTrack/auth.html`,
+                        // This should redirect to your login page after successful auth
+                        redirectTo: `${window.location.origin}/AkademietTrack/login.html`,
                         queryParams: {
                             access_type: 'offline',
-                            prompt: 'select_account'
+                            prompt: 'consent'
                         }
                     }
                 });
@@ -1238,6 +1239,8 @@
                 const userEmail = session.user.email?.toLowerCase().trim();
                 if (userEmail) {
                     showSuccess('Vellykket innlogging! Omdirigerer...');
+                    
+                    // Small delay to show success message
                     setTimeout(() => {
                         const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
                         window.location.href = redirectUrl;
@@ -1245,12 +1248,37 @@
                 }
             } else if (event === 'SIGNED_OUT') {
                 console.log('User signed out');
-                // User is on login page, this is expected
             } else if (event === 'TOKEN_REFRESHED') {
                 console.log('Token refreshed');
-                // Token was refreshed, user should still be logged in
             }
         });
+
+        async function handleOAuthReturn() {
+            try {
+                // Check for auth session after OAuth return
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    console.error('Session error:', error);
+                    showError('Innlogging feilet. Prøv igjen.');
+                    return;
+                }
+                
+                if (session && session.user) {
+                    console.log('OAuth session found:', session.user.email);
+                    const userEmail = session.user.email?.toLowerCase().trim();
+                    if (userEmail) {
+                        showSuccess('Google innlogging vellykket! Omdirigerer...');
+                        setTimeout(() => {
+                            const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
+                            window.location.href = redirectUrl;
+                        }, 1500);
+                    }
+                }
+            } catch (error) {
+                console.error('OAuth return handling error:', error);
+            }
+        }
 
         // Error boundary for uncaught errors
         window.addEventListener('error', (event) => {
@@ -1265,9 +1293,7 @@
         });
 
         // Initialize authentication handling when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            handleAuthCallback();
-        });
+        
 
         function handleOAuthErrors() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1299,10 +1325,31 @@
 
         // Add this to your DOMContentLoaded event
         document.addEventListener('DOMContentLoaded', () => {
-            handleOAuthErrors(); // Add this line
-            handleAuthCallback();
+            // Handle OAuth errors from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
             
-            // Also check if user is already logged in
+            if (error) {
+                let errorMessage = 'Innlogging feilet.';
+                
+                if (error === 'access_denied') {
+                    errorMessage = 'Du avbrøt Google innloggingen.';
+                } else if (error === 'server_error') {
+                    errorMessage = 'Google innlogging feilet. Prøv igjen eller bruk e-post/passord.';
+                }
+                
+                showError(errorMessage);
+                
+                // Clean URL
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            } else {
+                // Check for successful OAuth return
+                handleOAuthReturn();
+            }
+            
+            // Check if user is already logged in
             checkExistingSession();
         });
 
