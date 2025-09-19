@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AkademiTrack - Enhanced Auth Handler</title>
-    <link rel="icon" type="image/png" href="logo.png">
+    <title>AkademiTrack - Fixed OAuth Handler</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
@@ -52,24 +51,6 @@
             opacity: 0.9;
             line-height: 1.6;
         }
-        .error-details {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            text-align: left;
-            font-size: 0.9rem;
-            display: none;
-        }
-        .success-message {
-            background: rgba(34, 197, 94, 0.2);
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            display: none;
-        }
         .retry-btn {
             background: linear-gradient(45deg, #3b82f6, #60a5fa);
             color: white;
@@ -85,39 +66,51 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
         }
-        .debug-info {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            text-align: left;
-            display: none;
+        .google-btn {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 2rem;
+            margin: 1rem auto;
+            max-width: 300px;
+        }
+        .google-btn:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg width='18' height='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath d='M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3A8.8 8.8 0 0 0 17.6 9.2z' fill='%234285F4'/%3E%3Cpath d='M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z' fill='%2334A853'/%3E%3Cpath d='M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z' fill='%23FBBC05'/%3E%3Cpath d='M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z' fill='%23EA4335'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: contain;
+            flex-shrink: 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="spinner" id="spinner"></div>
-        <h2 class="status-title" id="status-title">Behandler autentisering...</h2>
+        <h2 class="status-title" id="status-title">Behandler Google innlogging...</h2>
         <p class="status-message" id="status-message">Vennligst vent mens vi fullfører innloggingen din.</p>
         
-        <div id="error-details" class="error-details">
-            <strong>Feildetaljer:</strong>
-            <div id="error-content"></div>
-        </div>
-        
-        <div id="success-message" class="success-message">
-            <p><strong>Innlogging vellykket!</strong></p>
-            <p>Du blir omdirigert til dashbordet...</p>
-        </div>
+        <button id="google-signin-btn" class="google-btn" style="display: none;">
+            <div class="google-icon"></div>
+            Logg inn med Google
+        </button>
 
-        <div id="debug-info" class="debug-info">
-            <strong>Debug informasjon:</strong>
-            <pre id="debug-content"></pre>
-        </div>
-
-        <button id="retry-btn" class="retry-btn" onclick="retryAuth()" style="display: none;">
+        <button id="retry-btn" class="retry-btn" style="display: none;">
             Prøv på nytt
         </button>
     </div>
@@ -126,14 +119,10 @@
         const CONFIG = {
             SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
             SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k',
-            ADMIN_EMAIL: 'cyberbrothershq@gmail.com',
-            MAX_RETRIES: 3,
-            RETRY_DELAY: 2000
+            ADMIN_EMAIL: 'cyberbrothershq@gmail.com'
         };
 
         let supabase;
-        let retryCount = 0;
-        let debugMode = false;
 
         // Initialize Supabase
         try {
@@ -141,200 +130,39 @@
             console.log('Supabase client initialized successfully');
         } catch (error) {
             console.error('Failed to initialize Supabase:', error);
-            showError('Kunne ikke initialisere autentiseringssystem', error);
+            showError('Kunne ikke initialisere autentiseringssystem');
             return;
         }
 
         // Utility functions
         function updateUI(title, message, showSpinner = true) {
-            document.getElementById('status-title').textContent = title;
-            document.getElementById('status-message').textContent = message;
-            document.getElementById('spinner').style.display = showSpinner ? 'block' : 'none';
+            const titleEl = document.getElementById('status-title');
+            const messageEl = document.getElementById('status-message');
+            const spinnerEl = document.getElementById('spinner');
+            
+            if (titleEl) titleEl.textContent = title;
+            if (messageEl) messageEl.textContent = message;
+            if (spinnerEl) spinnerEl.style.display = showSpinner ? 'block' : 'none';
         }
 
-        function showError(message, error = null) {
-            console.error('Auth error:', error);
-            
+        function showError(message) {
             document.getElementById('spinner').style.display = 'none';
-            document.getElementById('status-title').textContent = 'Autentiseringsfeil';
+            document.getElementById('status-title').textContent = 'Innlogging feilet';
             document.getElementById('status-message').textContent = message;
-            
-            if (error) {
-                const errorDetails = document.getElementById('error-details');
-                const errorContent = document.getElementById('error-content');
-                errorContent.innerHTML = `
-                    <p><strong>Feilmelding:</strong> ${error.message || 'Ukjent feil'}</p>
-                    <p><strong>Type:</strong> ${error.name || error.error || 'Ukjent'}</p>
-                    ${error.details ? `<p><strong>Detaljer:</strong> ${error.details}</p>` : ''}
-                `;
-                errorDetails.style.display = 'block';
-            }
-            
             document.getElementById('retry-btn').style.display = 'inline-block';
-            
-            if (debugMode) {
-                showDebugInfo({
-                    error: error,
-                    url: window.location.href,
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent,
-                    retryCount: retryCount
-                });
-            }
+        }
+
+        function showGoogleButton() {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('status-title').textContent = 'Google innlogging';
+            document.getElementById('status-message').textContent = 'Klikk knappen under for å logge inn med Google';
+            document.getElementById('google-signin-btn').style.display = 'flex';
         }
 
         function showSuccess(message) {
             document.getElementById('spinner').style.display = 'none';
             document.getElementById('status-title').textContent = 'Innlogging vellykket!';
             document.getElementById('status-message').textContent = message;
-            document.getElementById('success-message').style.display = 'block';
-        }
-
-        function showDebugInfo(info) {
-            const debugElement = document.getElementById('debug-info');
-            const debugContent = document.getElementById('debug-content');
-            debugContent.textContent = JSON.stringify(info, null, 2);
-            debugElement.style.display = 'block';
-        }
-
-        // Enhanced OAuth callback handler
-        async function handleOAuthCallback() {
-            console.log('Starting enhanced OAuth callback handling...');
-            
-            try {
-                // Check for URL parameters and hash
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlHash = new URLSearchParams(window.location.hash.substring(1));
-                
-                console.log('URL Params:', Object.fromEntries(urlParams));
-                console.log('URL Hash:', Object.fromEntries(urlHash));
-                
-                // Check for OAuth errors first
-                const error = urlParams.get('error') || urlHash.get('error');
-                const errorDescription = urlParams.get('error_description') || urlHash.get('error_description');
-                
-                if (error) {
-                    console.error('OAuth error detected:', error, errorDescription);
-                    let errorMessage = 'Google innlogging feilet.';
-                    
-                    switch (error) {
-                        case 'access_denied':
-                            errorMessage = 'Du avbrøt Google innloggingen.';
-                            break;
-                        case 'server_error':
-                            if (errorDescription?.includes('Unable to exchange')) {
-                                errorMessage = 'Kunne ikke fullføre Google innlogging. Dette kan være et midlertidig problem.';
-                            }
-                            break;
-                        case 'invalid_request':
-                            errorMessage = 'Ugyldig innloggingsforespørsel. Prøv å logge inn på nytt.';
-                            break;
-                        default:
-                            errorMessage = `Google innlogging feilet: ${error}`;
-                    }
-                    
-                    throw new Error(errorMessage);
-                }
-
-                // Method 1: Try getSessionFromUrl first
-                updateUI('Behandler OAuth respons...', 'Henter sesjonsdata fra URL...');
-                
-                let session = null;
-                let sessionError = null;
-                
-                try {
-                    console.log('Attempting to get session from URL...');
-                    const { data, error: urlSessionError } = await supabase.auth.getSessionFromUrl();
-                    
-                    if (urlSessionError) {
-                        console.warn('getSessionFromUrl failed:', urlSessionError);
-                        sessionError = urlSessionError;
-                    } else if (data.session) {
-                        console.log('Successfully got session from URL:', data.session.user?.email);
-                        session = data.session;
-                    }
-                } catch (error) {
-                    console.warn('getSessionFromUrl threw error:', error);
-                    sessionError = error;
-                }
-
-                // Method 2: If no session from URL, try manual token exchange
-                if (!session && (urlParams.has('code') || urlHash.has('access_token'))) {
-                    updateUI('Behandler OAuth respons...', 'Bytter autorisasjonskode for sesjon...');
-                    
-                    try {
-                        console.log('Attempting manual token exchange...');
-                        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
-                            urlParams.get('code') || urlHash.get('code')
-                        );
-                        
-                        if (exchangeError) {
-                            console.warn('Code exchange failed:', exchangeError);
-                            sessionError = exchangeError;
-                        } else if (data.session) {
-                            console.log('Successfully exchanged code for session:', data.session.user?.email);
-                            session = data.session;
-                        }
-                    } catch (error) {
-                        console.warn('Code exchange threw error:', error);
-                        sessionError = error;
-                    }
-                }
-
-                // Method 3: Wait and try getSession as fallback
-                if (!session) {
-                    updateUI('Behandler OAuth respons...', 'Venter på sesjonssynchronisering...');
-                    
-                    // Wait a bit for session to propagate
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    try {
-                        console.log('Attempting to get current session...');
-                        const { data, error: getCurrentError } = await supabase.auth.getSession();
-                        
-                        if (getCurrentError) {
-                            console.warn('getCurrentSession failed:', getCurrentError);
-                            sessionError = getCurrentError;
-                        } else if (data.session) {
-                            console.log('Successfully got current session:', data.session.user?.email);
-                            session = data.session;
-                        }
-                    } catch (error) {
-                        console.warn('getCurrentSession threw error:', error);
-                        sessionError = error;
-                    }
-                }
-
-                // If still no session, throw error
-                if (!session) {
-                    console.error('No session found after all methods, last error:', sessionError);
-                    throw new Error(sessionError?.message || 'Kunne ikke opprette gyldig sesjon etter Google innlogging');
-                }
-
-                // Validate session
-                if (!session.user || !session.user.email) {
-                    throw new Error('Ugyldig sesjon: mangler brukerinformasjon');
-                }
-
-                // Success! Handle the authenticated user
-                await handleSuccessfulAuth(session);
-                
-            } catch (error) {
-                console.error('OAuth callback handler failed:', error);
-                
-                if (retryCount < CONFIG.MAX_RETRIES) {
-                    retryCount++;
-                    showError(
-                        `${error.message} (Forsøk ${retryCount}/${CONFIG.MAX_RETRIES})`, 
-                        error
-                    );
-                } else {
-                    showError(
-                        'Kunne ikke fullføre innlogging etter flere forsøk. Prøv å logge inn på nytt.',
-                        error
-                    );
-                }
-            }
         }
 
         // Handle successful authentication
@@ -343,12 +171,7 @@
                 const userEmail = session.user.email.toLowerCase().trim();
                 console.log('Handling successful auth for:', userEmail);
                 
-                updateUI('Innlogging vellykket!', 'Omdirigerer til dashbordet...');
-                showSuccess('Du blir omdirigert til dashbordet...');
-                
-                // Clean up URL
-                const cleanUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, cleanUrl);
+                showSuccess('Du blir omdirigert...');
                 
                 // Wait a bit for UI feedback
                 await new Promise(resolve => setTimeout(resolve, 1500));
@@ -361,43 +184,11 @@
                 
             } catch (error) {
                 console.error('Error handling successful auth:', error);
-                showError('Feil ved behandling av innlogging', error);
+                showError('Feil ved behandling av innlogging');
             }
         }
 
-        // Enhanced retry function
-        async function retryAuth() {
-            console.log(`Retrying authentication (attempt ${retryCount + 1})`);
-            
-            document.getElementById('retry-btn').style.display = 'none';
-            document.getElementById('error-details').style.display = 'none';
-            document.getElementById('success-message').style.display = 'none';
-            
-            updateUI('Prøver på nytt...', 'Forsøker å fullføre innloggingen...');
-            
-            await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
-            await handleOAuthCallback();
-        }
-
-        // Auth state change listener
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state change detected:', event, session?.user?.email);
-            
-            if (event === 'SIGNED_IN' && session) {
-                console.log('Auth state: SIGNED_IN - handling success');
-                await handleSuccessfulAuth(session);
-            } else if (event === 'SIGNED_OUT') {
-                console.log('Auth state: SIGNED_OUT - redirecting to login');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1000);
-            } else if (event === 'TOKEN_REFRESHED') {
-                console.log('Auth state: TOKEN_REFRESHED');
-                // Token refreshed, user should remain authenticated
-            }
-        });
-
-        // Check for existing session immediately
+        // Check for existing session
         async function checkExistingSession() {
             try {
                 console.log('Checking for existing session...');
@@ -422,72 +213,230 @@
             }
         }
 
+        // Enhanced OAuth callback handler
+        async function handleOAuthCallback() {
+            console.log('Starting OAuth callback handling...');
+            
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlHash = new URLSearchParams(window.location.hash.substring(1));
+                
+                console.log('URL Params:', Object.fromEntries(urlParams));
+                console.log('URL Hash:', Object.fromEntries(urlHash));
+                
+                // Check for OAuth errors first
+                const error = urlParams.get('error') || urlHash.get('error');
+                const errorDescription = urlParams.get('error_description') || urlHash.get('error_description');
+                
+                if (error) {
+                    console.error('OAuth error detected:', error, errorDescription);
+                    let errorMessage = 'Google innlogging feilet.';
+                    
+                    switch (error) {
+                        case 'access_denied':
+                            errorMessage = 'Du avbrøt Google innloggingen.';
+                            break;
+                        case 'server_error':
+                            if (errorDescription?.includes('Unable to exchange')) {
+                                errorMessage = 'Kunne ikke fullføre Google innlogging. Prøv igjen.';
+                            }
+                            break;
+                        default:
+                            errorMessage = `Google innlogging feilet: ${error}`;
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+
+                // Check if we have OAuth parameters (code, access_token, etc.)
+                const hasOAuthParams = urlParams.has('code') || urlHash.has('access_token') || 
+                                      urlParams.has('access_token') || urlHash.has('refresh_token');
+
+                if (!hasOAuthParams) {
+                    console.log('No OAuth parameters found, showing Google sign-in button');
+                    showGoogleButton();
+                    return;
+                }
+
+                updateUI('Behandler Google innlogging...', 'Henter sesjonsdata...');
+
+                // Try to get session from URL
+                let session = null;
+                
+                try {
+                    console.log('Attempting to get session from URL...');
+                    const { data, error: urlSessionError } = await supabase.auth.getSessionFromUrl();
+                    
+                    if (urlSessionError) {
+                        console.warn('getSessionFromUrl failed:', urlSessionError);
+                    } else if (data.session) {
+                        console.log('Successfully got session from URL:', data.session.user?.email);
+                        session = data.session;
+                    }
+                } catch (error) {
+                    console.warn('getSessionFromUrl threw error:', error);
+                }
+
+                // If still no session, wait and try getSession
+                if (!session) {
+                    updateUI('Behandler Google innlogging...', 'Venter på sesjonssynchronisering...');
+                    
+                    // Wait a bit for session to propagate
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    try {
+                        console.log('Attempting to get current session...');
+                        const { data, error: getCurrentError } = await supabase.auth.getSession();
+                        
+                        if (getCurrentError) {
+                            console.warn('getCurrentSession failed:', getCurrentError);
+                        } else if (data.session) {
+                            console.log('Successfully got current session:', data.session.user?.email);
+                            session = data.session;
+                        }
+                    } catch (error) {
+                        console.warn('getCurrentSession threw error:', error);
+                    }
+                }
+
+                // If still no session, throw error
+                if (!session) {
+                    console.error('No session found after all methods');
+                    throw new Error('Kunne ikke opprette gyldig sesjon etter Google innlogging');
+                }
+
+                // Validate session
+                if (!session.user || !session.user.email) {
+                    throw new Error('Ugyldig sesjon: mangler brukerinformasjon');
+                }
+
+                // Success! Handle the authenticated user
+                await handleSuccessfulAuth(session);
+                
+            } catch (error) {
+                console.error('OAuth callback handler failed:', error);
+                showError(error.message || 'Kunne ikke fullføre Google innlogging');
+            }
+        }
+
+        // Google sign-in function
+        async function initiateGoogleSignIn() {
+            console.log('Initiating Google sign-in...');
+            
+            const googleBtn = document.getElementById('google-signin-btn');
+            if (googleBtn) {
+                googleBtn.disabled = true;
+                googleBtn.innerHTML = '<div class="google-icon"></div>Logger inn...';
+            }
+
+            try {
+                // Clear any existing session first
+                await supabase.auth.signOut();
+
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/AkademietTrack/auth.html`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'select_account'
+                        }
+                    }
+                });
+
+                if (error) {
+                    console.error('Google OAuth initiation error:', error);
+                    throw error;
+                }
+
+                console.log('OAuth flow initiated successfully');
+                
+            } catch (error) {
+                console.error('Google sign in error:', error);
+                let errorMessage = 'Google innlogging feilet. Prøv igjen.';
+                
+                if (error.message?.includes('popup')) {
+                    errorMessage = 'Popup blokkert. Tillat popups og prøv igjen.';
+                } else if (error.message?.includes('network')) {
+                    errorMessage = 'Nettverksfeil. Sjekk internettforbindelsen din.';
+                }
+                
+                showError(errorMessage);
+                
+                if (googleBtn) {
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = '<div class="google-icon"></div>Logg inn med Google';
+                }
+            }
+        }
+
+        // Retry function
+        async function retry() {
+            document.getElementById('retry-btn').style.display = 'none';
+            document.getElementById('google-signin-btn').style.display = 'none';
+            
+            updateUI('Prøver på nytt...', 'Forsøker å fullføre innloggingen...');
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await initialize();
+        }
+
         // Main initialization
         async function initialize() {
-            console.log('Initializing auth handler...');
-            
-            // Enable debug mode if in development
-            debugMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            console.log('Initializing OAuth handler...');
             
             try {
                 // First check if user is already authenticated
                 const hasExistingSession = await checkExistingSession();
                 if (hasExistingSession) {
-                    return; // Already handled by checkExistingSession
+                    return; // Already handled
                 }
                 
-                // If no existing session, handle OAuth callback
+                // Handle OAuth callback
                 await handleOAuthCallback();
                 
             } catch (error) {
                 console.error('Initialization failed:', error);
-                showError('Kunne ikke initialisere autentisering', error);
+                showError('Kunne ikke initialisere autentisering');
             }
         }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const googleBtn = document.getElementById('google-signin-btn');
+            if (googleBtn) {
+                googleBtn.addEventListener('click', initiateGoogleSignIn);
+            }
+
+            const retryBtn = document.getElementById('retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', retry);
+            }
+
+            initialize();
+        });
+
+        // Auth state change listener
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state change detected:', event, session?.user?.email);
+            
+            if (event === 'SIGNED_IN' && session) {
+                console.log('Auth state: SIGNED_IN - handling success');
+                await handleSuccessfulAuth(session);
+            } else if (event === 'SIGNED_OUT') {
+                console.log('Auth state: SIGNED_OUT');
+                // Could redirect to login if needed
+            }
+        });
 
         // Safety timeout
         setTimeout(() => {
-            if (document.getElementById('spinner').style.display !== 'none') {
+            const spinner = document.getElementById('spinner');
+            if (spinner && spinner.style.display !== 'none') {
                 console.warn('Authentication timeout reached');
-                showError(
-                    'Autentiseringen tok for lang tid. Prøv å logge inn på nytt.',
-                    new Error('Authentication timeout')
-                );
+                showError('Autentiseringen tok for lang tid. Prøv på nytt.');
             }
         }, 30000);
-
-        // Handle page visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                console.log('Page became visible, re-checking auth...');
-                // Only retry if we haven't succeeded yet
-                if (document.getElementById('spinner').style.display !== 'none') {
-                    setTimeout(() => {
-                        if (retryCount < CONFIG.MAX_RETRIES) {
-                            retryAuth();
-                        }
-                    }, 1000);
-                }
-            }
-        });
-
-        // Start initialization when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initialize);
-        } else {
-            initialize();
-        }
-
-        // Global error handler
-        window.addEventListener('error', (event) => {
-            console.error('Global error caught:', event.error);
-            showError('En uventet feil oppstod', event.error);
-        });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            showError('En nettverksfeil oppstod', event.reason);
-        });
 
     </script>
 </body>

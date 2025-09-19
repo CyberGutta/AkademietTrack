@@ -999,10 +999,10 @@
                 // Clear any existing session first
                 await supabase.auth.signOut();
                 
-                const { data, error } = await supabase.auth.signInWithOAuth({
+                const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `${window.location.origin}/AkademietTrack/auth.html`,
+                        redirectTo: `https://cybergutta.github.io/AkademietTrack/auth.html`,
                         queryParams: {
                             access_type: 'offline',
                             prompt: 'select_account'
@@ -1015,20 +1015,9 @@
                     throw error;
                 }
                 
-                // The OAuth flow will redirect automatically
-                console.log('OAuth flow initiated successfully');
-                
             } catch (error) {
                 console.error('Google sign in error:', error);
-                let errorMessage = 'Google innlogging feilet. Prøv igjen.';
-                
-                if (error.message?.includes('popup')) {
-                    errorMessage = 'Popup blokkert. Tillat popups og prøv igjen.';
-                } else if (error.message?.includes('network')) {
-                    errorMessage = 'Nettverksfeil. Sjekk internettforbindelsen din.';
-                }
-                
-                showError(errorMessage);
+                showError('Google innlogging feilet. Prøv igjen.');
                 setLoadingState(elements.googleSigninBtn, false, originalText);
             }
         });
