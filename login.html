@@ -996,25 +996,23 @@
             hideMessages();
             
             try {
-                // Clear any existing session first
-                await supabase.auth.signOut();
-                
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        // This should redirect to your login page after successful auth
-                        redirectTo: `${window.location.origin}/AkademietTrack/login.html`,
+                        redirectTo: window.location.href, // Returns to current page
                         queryParams: {
                             access_type: 'offline',
-                            prompt: 'consent'
+                            prompt: 'select_account'
                         }
                     }
                 });
                 
                 if (error) {
-                    console.error('Google OAuth initiation error:', error);
+                    console.error('Google OAuth error:', error);
                     throw error;
                 }
+                
+                // OAuth initiated successfully - user will be redirected
                 
             } catch (error) {
                 console.error('Google sign in error:', error);
@@ -1233,23 +1231,17 @@
 
         // Listen for auth state changes
         supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed:', event, session?.user?.email);
+            console.log('Auth event:', event, session?.user?.email);
             
-            if (event === 'SIGNED_IN' && session) {
-                const userEmail = session.user.email?.toLowerCase().trim();
-                if (userEmail) {
-                    showSuccess('Vellykket innlogging! Omdirigerer...');
-                    
-                    // Small delay to show success message
-                    setTimeout(() => {
-                        const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
-                        window.location.href = redirectUrl;
-                    }, 1500);
-                }
-            } else if (event === 'SIGNED_OUT') {
-                console.log('User signed out');
-            } else if (event === 'TOKEN_REFRESHED') {
-                console.log('Token refreshed');
+            if (event === 'SIGNED_IN' && session?.user?.email) {
+                const userEmail = session.user.email.toLowerCase().trim();
+                const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
+                
+                showSuccess('Vellykket innlogging! Omdirigerer...');
+                
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1500);
             }
         });
 
@@ -1324,33 +1316,37 @@
         }
 
         // Add this to your DOMContentLoaded event
-        document.addEventListener('DOMContentLoaded', () => {
-            // Handle OAuth errors from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const error = urlParams.get('error');
-            const errorDescription = urlParams.get('error_description');
-            
-            if (error) {
-                let errorMessage = 'Innlogging feilet.';
-                
-                if (error === 'access_denied') {
-                    errorMessage = 'Du avbrøt Google innloggingen.';
-                } else if (error === 'server_error') {
-                    errorMessage = 'Google innlogging feilet. Prøv igjen eller bruk e-post/passord.';
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Check for existing session first
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user?.email) {
+                    const userEmail = session.user.email.toLowerCase().trim();
+                    const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
+                    console.log('Existing session found, redirecting to:', redirectUrl);
+                    window.location.href = redirectUrl;
+                    return;
                 }
                 
-                showError(errorMessage);
+                // Handle URL parameters from OAuth return
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error');
+                const errorDescription = urlParams.get('error_description');
                 
-                // Clean URL
-                const cleanUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, cleanUrl);
-            } else {
-                // Check for successful OAuth return
-                handleOAuthReturn();
+                if (error) {
+                    let errorMessage = 'Google innlogging feilet.';
+                    if (error === 'access_denied') {
+                        errorMessage = 'Du avbrøt Google innloggingen.';
+                    }
+                    showError(errorMessage);
+                    
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
             }
-            
-            // Check if user is already logged in
-            checkExistingSession();
         });
 
         async function checkExistingSession() {
