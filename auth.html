@@ -37,64 +37,222 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .success-message {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="spinner"></div>
-        <h2>Autentiserer...</h2>
-        <p>Vennligst vent mens vi logger deg inn.</p>
+        <div class="spinner" id="spinner"></div>
+        <h2 id="status-title">Autentiserer...</h2>
+        <p id="status-message">Vennligst vent mens vi logger deg inn.</p>
+        
+        <div id="error-message" class="error-message">
+            <p>Det oppstod en feil under innlogging. Du blir omdirigert tilbake...</p>
+        </div>
+        
+        <div id="success-message" class="success-message">
+            <p>Innlogging vellykket! Omdirigerer...</p>
+        </div>
     </div>
 
     <script>
         const CONFIG = {
             SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY0Mjc4NjksImV4cCI6MjA0MjAwMzg2OX0.wlFXNhfzuFulQ8F8iAJhqLCMhKdqQdVlYKvQpXFQPJk',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k',
             ADMIN_EMAIL: 'cyberbrothershq@gmail.com'
         };
 
         const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
-        async function handleAuth() {
+        // Show error message
+        function showError(message) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('status-title').textContent = 'Innlogging feilet';
+            document.getElementById('status-message').textContent = message;
+            document.getElementById('error-message').style.display = 'block';
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('status-title').textContent = 'Suksess!';
+            document.getElementById('status-message').textContent = message;
+            document.getElementById('success-message').style.display = 'block';
+        }
+
+        // Enhanced OAuth handler with better error handling
+        async function handleOAuthCallback() {
             try {
-                // Wait for Supabase to process the OAuth callback
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.log('Starting OAuth callback handling...');
                 
-                const { data: { session }, error } = await supabase.auth.getSession();
+                // Check URL for OAuth errors first
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlHash = new URLSearchParams(window.location.hash.substring(1));
+                
+                // Check for OAuth errors in URL
+                const error = urlParams.get('error') || urlHash.get('error');
+                const errorDescription = urlParams.get('error_description') || urlHash.get('error_description');
                 
                 if (error) {
-                    console.error('Auth error:', error);
-                    window.location.href = 'login.html?error=auth_failed';
+                    console.error('OAuth error in URL:', error, errorDescription);
+                    let errorMessage = 'Google innlogging feilet.';
+                    
+                    if (error === 'access_denied') {
+                        errorMessage = 'Du avbrøt Google innloggingen.';
+                    } else if (errorDescription?.includes('Unable to exchange')) {
+                        errorMessage = 'Kunne ikke fullføre Google innlogging. Prøv igjen.';
+                    }
+                    
+                    showError(errorMessage);
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
                     return;
                 }
 
-                if (session && session.user) {
-                    const userEmail = session.user.email.toLowerCase().trim();
+                // Wait a bit for Supabase to process the OAuth response
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                console.log('Attempting to get session...');
+                
+                // Try to get the session from the URL hash first
+                const { data, error: sessionError } = await supabase.auth.getSessionFromUrl();
+                
+                if (sessionError) {
+                    console.error('Session from URL error:', sessionError);
+                    // Fallback to regular session check
+                    const { data: sessionData, error: getSessionError } = await supabase.auth.getSession();
                     
-                    if (userEmail === CONFIG.ADMIN_EMAIL) {
-                        window.location.href = 'admin.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
+                    if (getSessionError || !sessionData.session) {
+                        console.error('No valid session found:', getSessionError);
+                        showError('Kunne ikke få sesjonsinformasjon. Prøver å logge inn på nytt...');
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 3000);
+                        return;
                     }
-                } else {
-                    // No session found, redirect back to login
-                    window.location.href = 'login.html';
+                    
+                    // Use the session from getSession
+                    await handleSuccessfulAuth(sessionData.session);
+                    return;
                 }
+
+                if (data.session && data.user) {
+                    console.log('Session found from URL:', data.session);
+                    await handleSuccessfulAuth(data.session);
+                } else {
+                    console.log('No session in URL data, trying getSession...');
+                    
+                    // Fallback: try to get existing session
+                    const { data: sessionData, error: getSessionError } = await supabase.auth.getSession();
+                    
+                    if (getSessionError || !sessionData.session) {
+                        console.error('No session found anywhere:', getSessionError);
+                        showError('Ingen gyldig økt funnet. Omdirigerer tilbake...');
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 3000);
+                        return;
+                    }
+                    
+                    await handleSuccessfulAuth(sessionData.session);
+                }
+                
             } catch (error) {
-                console.error('Unexpected error:', error);
-                window.location.href = 'login.html?error=unexpected';
+                console.error('OAuth callback error:', error);
+                showError('En uventet feil oppstod under autentisering.');
+                setTimeout(() => {
+                    window.location.href = 'login.html?error=unexpected';
+                }, 3000);
             }
         }
 
-        // Start authentication handling when page loads
-        document.addEventListener('DOMContentLoaded', handleAuth);
+        // Handle successful authentication
+        async function handleSuccessfulAuth(session) {
+            try {
+                if (!session || !session.user || !session.user.email) {
+                    throw new Error('Invalid session data');
+                }
 
-        // Fallback timeout
-        setTimeout(() => {
-            if (!document.hidden) {
-                window.location.href = 'login.html?error=timeout';
+                const userEmail = session.user.email.toLowerCase().trim();
+                console.log('Authenticated user:', userEmail);
+                
+                showSuccess('Innlogging vellykket! Omdirigerer...');
+                
+                // Wait a bit for the UI update
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Redirect based on user type
+                if (userEmail === CONFIG.ADMIN_EMAIL) {
+                    console.log('Redirecting to admin dashboard...');
+                    window.location.href = 'admin.html';
+                } else {
+                    console.log('Redirecting to user dashboard...');
+                    window.location.href = 'dashboard.html';
+                }
+                
+            } catch (error) {
+                console.error('Error handling successful auth:', error);
+                showError('Feil ved behandling av innlogging.');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 3000);
             }
-        }, 10000);
+        }
+
+        // Listen for auth state changes
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state change:', event, session?.user?.email);
+            
+            if (event === 'SIGNED_IN' && session) {
+                console.log('Auth state: SIGNED_IN detected');
+                await handleSuccessfulAuth(session);
+            } else if (event === 'SIGNED_OUT') {
+                console.log('Auth state: SIGNED_OUT detected');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Start the OAuth handling process
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, starting OAuth callback handling...');
+            handleOAuthCallback();
+        });
+
+        // Safety timeout - redirect if nothing happens within 15 seconds
+        setTimeout(() => {
+            if (!document.hidden && document.getElementById('spinner').style.display !== 'none') {
+                console.log('Timeout reached, redirecting...');
+                showError('Innlogging tok for lang tid. Prøver igjen...');
+                setTimeout(() => {
+                    window.location.href = 'login.html?error=timeout';
+                }, 2000);
+            }
+        }, 15000);
+
+        // Handle page visibility change (user switches tabs)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('Page became visible again, checking auth status...');
+                // Re-check auth when user comes back to the tab
+                setTimeout(handleOAuthCallback, 500);
+            }
+        });
     </script>
 </body>
 </html>
