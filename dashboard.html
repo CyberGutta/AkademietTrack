@@ -2206,37 +2206,57 @@ document.addEventListener('DOMContentLoaded', function() {
             const sendBtn = document.getElementById('chat-send-btn');
             const messageType = document.getElementById('message-type');
             
-            if (!input || !sendBtn || !messageType || !currentConversationId) return;
+            if (!input || !sendBtn || !messageType) return;
             
             // Security: Validate and sanitize input
             const messageText = validateInput(input.value, 1000); // Max 1000 characters
             const selectedMessageType = messageType.value;
             
-            if (!messageText) return;
+            console.log('Attempting to send message:', {
+                messageText,
+                selectedMessageType,
+                conversationId: currentConversationId
+            });
+            
+            if (!messageText) {
+                console.log('Empty message text, aborting');
+                return;
+            }
+            
+            // Get user email
+            const userEmailElement = document.getElementById('user-email');
+            const userEmail = userEmailElement ? userEmailElement.textContent : '';
+            
+            // Security: Validate email
+            if (!userEmail || !isValidEmail(userEmail)) {
+                console.error('Invalid user email');
+                return;
+            }
             
             // Security: Validate message type
             const validMessageTypes = ['support', 'feedback', 'feature', 'bug', 'other'];
             const validatedMessageType = validMessageTypes.includes(selectedMessageType) ? selectedMessageType : 'other';
             
+            // Ensure we have the right conversation for this message type
+            await getOrCreateConversation(userEmail, validatedMessageType);
+            
+            if (!currentConversationId) {
+                console.error('No conversation ID available after creation attempt');
+                alert('Feil: Ingen samtale ID tilgjengelig. Prøv å lukke og åpne chatten igjen.');
+                return;
+            }
+            
             sendBtn.disabled = true;
             
             try {
-                const userEmailElement = document.getElementById('user-email');
-                const userEmail = userEmailElement ? userEmailElement.textContent : '';
-                
-                // Security: Validate email
-                if (!userEmail || !isValidEmail(userEmail)) {
-                    throw new Error('Invalid user email');
-                }
-                
                 const { error } = await supabase
                     .from('chat_messages')
                     .insert([{
                         conversation_id: currentConversationId,
                         sender_email: userEmail,
                         sender_type: 'user',
-                        message_text: messageText, // Already validated and limited
-                        message_type: validatedMessageType
+                        message_text: messageText
+                        // Don't include message_type here - it's stored in the conversation
                     }]);
 
                 if (error) throw error;
