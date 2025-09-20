@@ -1495,6 +1495,7 @@ let userActivationData = null;
 let currentConversationId = null;
 let isAdminOnline = false;
 let messagesSubscription = null;
+let conversationsByType = {}; // Store conversation IDs by message type
 
 // Security: HTML Sanitization function
 function sanitizeHTML(str) {
@@ -1945,6 +1946,8 @@ function toggleChat() {
 async function initializeChat() {
     const userEmailElement = document.getElementById('user-email');
     const userEmail = userEmailElement ? userEmailElement.textContent : '';
+    const messageTypeSelect = document.getElementById('message-type');
+    const currentMessageType = messageTypeSelect ? messageTypeSelect.value : 'support';
     
     // Security: Validate email before proceeding
     if (!userEmail || !isValidEmail(userEmail)) {
@@ -1953,10 +1956,10 @@ async function initializeChat() {
     }
     
     try {
-        // Get or create conversation
-        await getOrCreateConversation(userEmail);
+        // Get or create conversation for current message type
+        await getOrCreateConversation(userEmail, currentMessageType);
         
-        // Load existing messages
+        // Load existing messages for this conversation
         await loadMessages();
         
         // Subscribe to new messages
@@ -1967,19 +1970,30 @@ async function initializeChat() {
     }
 }
 
-// Get or create conversation
-async function getOrCreateConversation(userEmail) {
+// Get or create conversation based on message type
+async function getOrCreateConversation(userEmail, messageType = 'support') {
     try {
         // Security: Validate email parameter
         if (!userEmail || !isValidEmail(userEmail)) {
             throw new Error('Invalid email provided');
         }
 
-        // Check if conversation exists
+        // Security: Validate message type
+        const validMessageTypes = ['support', 'feedback', 'feature', 'bug', 'other'];
+        const validatedMessageType = validMessageTypes.includes(messageType) ? messageType : 'support';
+
+        // Check if we already have a conversation ID for this message type
+        if (conversationsByType[validatedMessageType]) {
+            currentConversationId = conversationsByType[validatedMessageType];
+            return;
+        }
+
+        // Check if conversation exists for this user and message type
         let { data: conversations, error } = await supabase
             .from('chat_conversations')
             .select('*')
             .eq('user_email', userEmail)
+            .eq('message_type', validatedMessageType)
             .eq('status', 'open')
             .order('created_at', { ascending: false })
             .limit(1);
@@ -1988,12 +2002,14 @@ async function getOrCreateConversation(userEmail) {
 
         if (conversations && conversations.length > 0) {
             currentConversationId = conversations[0].id;
+            conversationsByType[validatedMessageType] = currentConversationId;
         } else {
-            // Create new conversation
+            // Create new conversation for this message type
             const { data: newConversation, error: createError } = await supabase
                 .from('chat_conversations')
                 .insert([{
                     user_email: userEmail,
+                    message_type: validatedMessageType,
                     status: 'open'
                 }])
                 .select()
@@ -2001,6 +2017,7 @@ async function getOrCreateConversation(userEmail) {
 
             if (createError) throw createError;
             currentConversationId = newConversation.id;
+            conversationsByType[validatedMessageType] = currentConversationId;
         }
     } catch (error) {
         console.error('Error managing conversation:', error);
@@ -2232,6 +2249,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Feil ved sending av melding. Prøv igjen.');
             } finally {
                 sendBtn.disabled = false;
+            }
+        });
+    }
+
+    // Message type selector change handler
+    const messageTypeSelect = document.getElementById('message-type');
+    if (messageTypeSelect) {
+        messageTypeSelect.addEventListener('change', async function() {
+            const userEmailElement = document.getElementById('user-email');
+            const userEmail = userEmailElement ? userEmailElement.textContent : '';
+            
+            if (!userEmail || !isValidEmail(userEmail)) {
+                console.error('Invalid user email');
+                return;
+            }
+
+            const selectedMessageType = this.value;
+            
+            try {
+                // Unsubscribe from current messages
+                if (messagesSubscription) {
+                    supabase.removeChannel(messagesSubscription);
+                    messagesSubscription = null;
+                }
+                
+                // Get or create conversation for new message type
+                await getOrCreateConversation(userEmail, selectedMessageType);
+                
+                // Load messages for this conversation
+                await loadMessages();
+                
+                // Subscribe to messages for this conversation
+                subscribeToMessages();
+                
+            } catch (error) {
+                console.error('Error switching message type:', error);
             }
         });
     }
