@@ -1186,6 +1186,314 @@
             margin-bottom: 2rem;
         }
 
+        .settings-btn {
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(45deg, #6b7280, #9ca3af);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .navbar.scrolled .settings-btn {
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .settings-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+            background: linear-gradient(45deg, #4b5563, #6b7280);
+        }
+
+        /* Settings Modal */
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .settings-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .settings-overlay.open .settings-modal {
+            transform: scale(1);
+        }
+
+        .settings-header {
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .settings-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .settings-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .settings-content {
+            padding: 2rem;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-section h3 {
+            color: #1e40af;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .settings-description {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .data-list {
+            color: #64748b;
+            padding-left: 1.5rem;
+        }
+
+        .data-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            background: rgba(239, 68, 68, 0.05);
+            border: 2px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .danger-zone h4 {
+            color: #dc2626;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .danger-zone p {
+            color: #7f1d1d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .delete-account-btn {
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .delete-account-btn:hover {
+            background: linear-gradient(45deg, #b91c1c, #dc2626);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Confirmation Modal */
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .confirmation-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirmation-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .confirmation-overlay.open .confirmation-modal {
+            transform: scale(1);
+        }
+
+        .confirmation-header {
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .confirmation-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .confirmation-content {
+            padding: 2rem;
+        }
+
+        .confirmation-content p {
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .confirmation-content ul {
+            color: #64748b;
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .confirmation-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .confirmation-warning {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-weight: 600;
+        }
+
+        .confirmation-input {
+            margin-top: 1.5rem;
+        }
+
+        .confirmation-input label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .confirmation-input input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .confirmation-input input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+
+        .confirmation-buttons {
+            padding: 1.5rem 2rem 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .cancel-btn {
+            padding: 0.75rem 1.5rem;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .cancel-btn:hover {
+            background: #4b5563;
+        }
+
+        .confirm-delete-btn {
+            padding: 0.75rem 1.5rem;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .confirm-delete-btn:hover:not(:disabled) {
+            background: #b91c1c;
+        }
+
+        .confirm-delete-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .navbar {
@@ -1338,6 +1646,7 @@
                         <span class="user-email" id="user-email">bruker@eksempel.com</span>
                     </div>
                     <button class="sign-out-btn" onclick="signOut()">Logg Ut</button>
+                    <button class="settings-btn" onclick="openSettings()">⚙️ Innstillinger</button>
                 </div>
             </div>
         </nav>
@@ -1483,6 +1792,83 @@
             </form>
         </div>
     </div>
+
+    <div class="settings-overlay" id="settings-overlay">
+    <div class="settings-modal">
+        <div class="settings-header">
+            <h2>Kontoinnstillinger</h2>
+            <button class="settings-close" onclick="closeSettings()">✕</button>
+        </div>
+        
+        <div class="settings-content">
+            <div class="settings-section">
+                <h3>Personvern og Data</h3>
+                <p class="settings-description">
+                    I henhold til GDPR har du rett til å slette alle dine personopplysninger fra våre systemer.
+                </p>
+                
+                <div class="danger-zone">
+                    <h4>Farlig område</h4>
+                    <p>Denne handlingen kan ikke angres. All din data vil bli permanent slettet.</p>
+                    
+                    <button class="delete-account-btn" onclick="initiateAccountDeletion()">
+                        🗑️ Slett min konto og alle data
+                    </button>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Dataoversikt</h3>
+                <p class="settings-description">
+                    Din konto inneholder følgende data som vil bli slettet:
+                </p>
+                <ul class="data-list">
+                    <li>Kontoinformasjon og e-postadresse</li>
+                    <li>STU-registreringer og studiedata</li>
+                    <li>Aktiverings nøkkel og status</li>
+                    <li>Chat-meldinger og samtaler</li>
+                    <li>Alle tilknyttede metadata</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="confirmation-overlay" id="confirmation-overlay">
+    <div class="confirmation-modal">
+        <div class="confirmation-header">
+            <h2>⚠️ Bekreft sletting av konto</h2>
+        </div>
+        
+        <div class="confirmation-content">
+            <p><strong>Er du sikker på at du vil slette kontoen din?</strong></p>
+            <p>Dette vil permanent fjerne:</p>
+            <ul>
+                <li>All din personlige informasjon</li>
+                <li>Alle STU-registreringer</li>
+                <li>Chat-historikk og meldinger</li>
+                <li>Aktiverings nøkkel og tilgang</li>
+            </ul>
+            
+            <p class="confirmation-warning">
+                <strong>Denne handlingen kan IKKE angres!</strong>
+            </p>
+            
+            <div class="confirmation-input">
+                <label for="delete-confirmation">Skriv "SLETT" for å bekrefte:</label>
+                <input type="text" id="delete-confirmation" placeholder="Skriv SLETT her">
+            </div>
+        </div>
+        
+        <div class="confirmation-buttons">
+            <button class="cancel-btn" onclick="closeConfirmation()">Avbryt</button>
+            <button class="confirm-delete-btn" onclick="confirmAccountDeletion()" disabled>
+                Slett kontoen min permanent
+            </button>
+        </div>
+    </div>
+</div>
 
     <script>
 // Initialize Supabase client
@@ -1806,6 +2192,133 @@ function subscribeToAdminStatus() {
         })
         .subscribe();
 }
+
+function openSettings() {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) {
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeSettings() {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Account Deletion Functions
+function initiateAccountDeletion() {
+    closeSettings();
+    const confirmationOverlay = document.getElementById('confirmation-overlay');
+    if (confirmationOverlay) {
+        confirmationOverlay.classList.add('open');
+        
+        // Reset confirmation input
+        const confirmInput = document.getElementById('delete-confirmation');
+        if (confirmInput) {
+            confirmInput.value = '';
+            confirmInput.addEventListener('input', handleConfirmationInput);
+        }
+    }
+}
+
+function handleConfirmationInput() {
+    const input = document.getElementById('delete-confirmation');
+    const confirmBtn = document.querySelector('.confirm-delete-btn');
+    
+    if (input && confirmBtn) {
+        if (input.value.toUpperCase() === 'SLETT') {
+            confirmBtn.disabled = false;
+        } else {
+            confirmBtn.disabled = true;
+        }
+    }
+}
+
+function closeConfirmation() {
+    const overlay = document.getElementById('confirmation-overlay');
+    if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function confirmAccountDeletion() {
+    const confirmInput = document.getElementById('delete-confirmation');
+    
+    if (!confirmInput || confirmInput.value.toUpperCase() !== 'SLETT') {
+        alert('Vennligst skriv "SLETT" for å bekrefte slettingen.');
+        return;
+    }
+    
+    const confirmBtn = document.querySelector('.confirm-delete-btn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Sletter konto...';
+    }
+    
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            throw new Error('Ingen aktiv sesjon');
+        }
+        
+        console.log('Calling edge function to delete user account...');
+        
+        // Call Edge Function to delete everything including auth user
+        const { data, error } = await supabase.functions.invoke('delete-user-account', {
+            headers: {
+                Authorization: `Bearer ${session.access_token}`,
+            },
+        });
+        
+        if (error) {
+            console.error('Edge function error:', error);
+            throw error;
+        }
+        
+        if (!data || !data.success) {
+            throw new Error('Failed to delete account');
+        }
+        
+        console.log('Account deleted successfully');
+        
+        // Clear session and redirect
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        alert('Din konto og alle data har blitt permanent slettet. Du kan ikke lenger logge inn med denne e-postadressen.');
+        
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('Error during account deletion:', error);
+        alert('Det oppstod en feil under sletting av kontoen. Kontakt support for hjelp.');
+        
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Slett kontoen min permanent';
+        }
+    }
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const confirmationOverlay = document.getElementById('confirmation-overlay');
+    
+    if (event.target === settingsOverlay) {
+        closeSettings();
+    }
+    
+    if (event.target === confirmationOverlay) {
+        closeConfirmation();
+    }
+});
 
 // Replace the existing checkAuth function with this updated version
 async function checkAuth() {
@@ -2355,5 +2868,8 @@ supabase.auth.onAuthStateChange((event, session) => {
 // Check admin status periodically as backup
 setInterval(checkAdminStatus, 60000); // Check every minute
     </script>
+
+
+
 </body>
 </html>
