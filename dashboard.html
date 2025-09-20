@@ -444,9 +444,9 @@
         }
 
         .welcome-container {
-            max-width: 500px;
+            max-width: none; /* Remove the max-width constraint */
             width: 100%;
-            margin: 0 auto;
+            margin: 0; /* Remove auto margins */
             padding: 2rem;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -727,6 +727,7 @@
             box-shadow: 0 8px 20px rgba(31, 38, 135, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #374151;
+            position: relative;
         }
 
         .activation-section::before {
@@ -881,12 +882,19 @@
 
         .admin-status-indicator.offline {
             background: #ef4444;
+            animation: pulse-red 2s infinite;
         }
 
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
         /* Chat Widget */
@@ -1123,21 +1131,6 @@
             padding: 2rem 0;
         }
 
-        .welcome-container {
-            max-width: none; /* Remove the max-width constraint */
-            width: 100%;
-            margin: 0; /* Remove auto margins */
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
-            animation: fadeInUp 0.8s ease-out;
-            color: #1e40af;
-            position: relative;
-        }
-
         .download-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -1151,8 +1144,6 @@
             color: #374151;
             animation: fadeInUp 0.8s ease-out 0.1s both;
         }
-
-        
 
         .download-card::before {
             content: '';
@@ -1377,35 +1368,35 @@
             </section>
 
             <section class="activation-section fade-in" id="activation-section">
-            <div class="activation-header">
-                <div class="activation-icon">🔑</div>
-                <div>
-                    <h2 class="activation-title">Din Aktiverings Nøkkel</h2>
-                    <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Bruk denne nøkkelen for å aktivere AkademiTrack programmet</p>
+                <div class="activation-header">
+                    <div class="activation-icon">🔑</div>
+                    <div>
+                        <h2 class="activation-title">Din Aktiverings Nøkkel</h2>
+                        <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Bruk denne nøkkelen for å aktivere AkademiTrack programmet</p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="activation-status" id="activation-status">
-                <div class="status-indicator" id="status-indicator"></div>
-                <div>
-                    <div style="font-weight: 600; margin-bottom: 0.25rem;" id="status-text">Sjekker aktiverings status...</div>
-                    <div style="font-size: 0.85rem; color: #64748b;" id="status-description">Laster...</div>
+                
+                <div class="activation-status" id="activation-status">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;" id="status-text">Sjekker aktiverings status...</div>
+                        <div style="font-size: 0.85rem; color: #64748b;" id="status-description">Laster...</div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="activation-key-container" id="activation-key-container" style="display: none;">
-                <div class="activation-key-label">Din Aktiverings Nøkkel:</div>
-                <div class="activation-key-value" id="activation-key-display">-</div>
-                <button class="copy-key-btn" onclick="copyActivationKey()" title="Kopier nøkkel">📋</button>
-            </div>
-            
-            <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                <p style="margin: 0; font-size: 0.9rem; color: #1e40af; line-height: 1.4;">
-                    <strong>Viktig:</strong> Din aktiverings nøkkel genereres automatisk og kan kun brukes én gang. 
-                    Oppbevar den trygt og bruk den i AkademiTrack programmet for å aktivere kontoen din.
-                </p>
-            </div>
-        </section>
+                
+                <div class="activation-key-container" id="activation-key-container" style="display: none;">
+                    <div class="activation-key-label">Din Aktiverings Nøkkel:</div>
+                    <div class="activation-key-value" id="activation-key-display">-</div>
+                    <button class="copy-key-btn" onclick="copyActivationKey()" title="Kopier nøkkel">📋</button>
+                </div>
+                
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <p style="margin: 0; font-size: 0.9rem; color: #1e40af; line-height: 1.4;">
+                        <strong>Viktig:</strong> Din aktiverings nøkkel genereres automatisk og kan kun brukes én gang. 
+                        Oppbevar den trygt og bruk den i AkademiTrack programmet for å aktivere kontoen din.
+                    </p>
+                </div>
+            </section>
 
             <!-- Stats Grid -->
             <div class="stats-grid">
@@ -1463,7 +1454,7 @@
                 <h3>Support Chat</h3>
                 <div class="chat-status">
                     <div class="status-dot" id="status-dot"></div>
-                    <span id="status-text">Kontroller status...</span>
+                    <span id="chat-status-text">Kontrollerer status...</span>
                 </div>
             </div>
             <button class="chat-close" onclick="toggleChat()">✕</button>
@@ -1500,8 +1491,29 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-
 let userActivationData = null;
+let currentConversationId = null;
+let isAdminOnline = false;
+let messagesSubscription = null;
+
+// Security: HTML Sanitization function
+function sanitizeHTML(str) {
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
+// Security: Input validation function
+function validateInput(input, maxLength = 1000) {
+    if (typeof input !== 'string') return '';
+    return input.trim().slice(0, maxLength);
+}
+
+// Security: Email validation function
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
 
 // Generate a secure activation key
 function generateSecureKey() {
@@ -1641,6 +1653,157 @@ async function loadActivationData(userEmail) {
         console.error('Error loading activation data:', error);
         updateActivationStatusUI(null);
     }
+}
+
+// Simplified function to fetch STU registration data without charts
+async function fetchSTUData(userEmail) {
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to fetchSTUData');
+            return { sessions: 0, totalHours: 0 };
+        }
+
+        console.log('Fetching STU data for user:', userEmail);
+
+        const { data, error } = await supabase
+            .from('stu_registrations')
+            .select('*')
+            .eq('user_email', userEmail)
+            .order('session_date', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching STU data:', error);
+            return { sessions: 0, totalHours: 0 };
+        }
+
+        console.log('Raw STU data from database:', data);
+
+        if (!data || data.length === 0) {
+            console.log('No STU sessions found for user:', userEmail);
+            return { sessions: 0, totalHours: 0 };
+        }
+
+        // Calculate total hours
+        let totalMinutes = 0;
+
+        data.forEach(session => {
+            if (session.session_start && session.session_end) {
+                const startTime = new Date(`1970-01-01 ${session.session_start}`);
+                const endTime = new Date(`1970-01-01 ${session.session_end}`);
+                const diffMinutes = (endTime - startTime) / (1000 * 60);
+                
+                if (diffMinutes > 0 && diffMinutes < 1440) { // Valid session (less than 24 hours)
+                    totalMinutes += diffMinutes;
+                }
+            }
+        });
+
+        const totalHours = Math.floor((totalMinutes / 60) * 100) / 100;
+
+        console.log('Calculated stats:', {
+            totalHours,
+            sessions: data.length
+        });
+
+        return {
+            sessions: Math.min(data.length, 99999),
+            totalHours: Math.min(totalHours, 99999)
+        };
+    } catch (error) {
+        console.error('Error in fetchSTUData:', error);
+        return { sessions: 0, totalHours: 0 };
+    }
+}
+
+// Security: Function to update STU stats in the UI with validation
+function updateSTUStats(sessions, totalHours) {
+    const sessionsElement = document.getElementById('stu-sessions-count');
+    const hoursElement = document.getElementById('stu-hours-total');
+
+    if (sessionsElement && hoursElement) {
+        // Security: Validate and sanitize numeric values
+        const safeSessions = isNaN(sessions) ? 0 : Math.max(0, Math.floor(Number(sessions)));
+        const safeHours = isNaN(totalHours) ? 0 : Math.max(0, Number(totalHours));
+        
+        sessionsElement.textContent = safeSessions.toString();
+        hoursElement.textContent = safeHours.toString();
+        
+        // Remove loading state
+        const sessionsCard = sessionsElement.parentElement;
+        const hoursCard = hoursElement.parentElement;
+        if (sessionsCard) sessionsCard.classList.remove('stat-loading');
+        if (hoursCard) hoursCard.classList.remove('stat-loading');
+    }
+}
+
+// Check admin status immediately on load
+async function checkAdminStatus() {
+    try {
+        const { data: adminStatus, error } = await supabase
+            .from('admin_status')
+            .select('is_online')
+            .eq('admin_email', 'cyberbrothershq@gmail.com')
+            .single();
+
+        if (error) {
+            console.log('Admin status not found or error:', error);
+            isAdminOnline = false;
+        } else {
+            isAdminOnline = adminStatus?.is_online || false;
+        }
+        
+        updateAdminStatusUI(isAdminOnline);
+        
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        isAdminOnline = false;
+        updateAdminStatusUI(false);
+    }
+}
+
+// Update admin status UI
+function updateAdminStatusUI(isOnline) {
+    const statusIndicator = document.getElementById('admin-status');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('chat-status-text');
+
+    if (statusIndicator) {
+        if (isOnline) {
+            statusIndicator.classList.add('online');
+            statusIndicator.classList.remove('offline');
+        } else {
+            statusIndicator.classList.add('offline');
+            statusIndicator.classList.remove('online');
+        }
+    }
+
+    if (statusDot) {
+        if (isOnline) {
+            statusDot.classList.remove('offline');
+        } else {
+            statusDot.classList.add('offline');
+        }
+    }
+
+    if (statusText) {
+        statusText.textContent = isOnline ? 'Admin er online' : 'Admin er offline';
+    }
+}
+
+// Subscribe to admin status changes
+function subscribeToAdminStatus() {
+    supabase
+        .channel('admin-status')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'admin_status',
+            filter: 'admin_email=eq.cyberbrothershq@gmail.com'
+        }, (payload) => {
+            isAdminOnline = payload.new.is_online;
+            updateAdminStatusUI(isAdminOnline);
+        })
+        .subscribe();
 }
 
 // Replace the existing checkAuth function with this updated version
@@ -1698,163 +1861,22 @@ async function checkAuth() {
         updateSTUStats(0, 0);
     }
 
-    // Load activation data - FIX: Move this outside of try-catch and make it global
-    console.log('About to load activation data for:', userEmail);
+    // Load activation data
     try {
         await loadActivationData(userEmail);
-        console.log('Activation data loading completed');
     } catch (error) {
         console.error('Error loading activation data:', error);
         updateActivationStatusUI(null);
     }
 
+    // Check admin status immediately on page load
+    await checkAdminStatus();
+    
     // Subscribe to admin status changes
     subscribeToAdminStatus();
 }
 
-// Global variable for activation data
-
-// Generate a secure activation key
-function generateSecureKey() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const segments = 4;
-    const segmentLength = 4;
-    let key = '';
-    
-    for (let i = 0; i < segments; i++) {
-        if (i > 0) key += '-';
-        for (let j = 0; j < segmentLength; j++) {
-            key += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-    }
-    
-    return key;
-}
-
-// Fetch or create activation key for user
-async function fetchActivationKey(userEmail) {
-    try {
-        if (!userEmail || !isValidEmail(userEmail)) {
-            console.error('Invalid email provided to fetchActivationKey');
-            return null;
-        }
-
-        console.log('Fetching activation key for:', userEmail);
-
-        // First, try to get existing key
-        let { data: existingKey, error: fetchError } = await supabase
-            .from('activation_keys')
-            .select('*')
-            .eq('user_email', userEmail)
-            .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-            console.error('Error fetching activation key:', fetchError);
-            return null;
-        }
-
-        if (existingKey) {
-            console.log('Found existing activation key:', existingKey);
-            return existingKey;
-        }
-
-        console.log('No existing key found, creating new one...');
-
-        // If no existing key, create one
-        const newActivationKey = generateSecureKey();
-        
-        const { data: newKey, error: createError } = await supabase
-            .from('activation_keys')
-            .insert([{
-                user_email: userEmail,
-                activation_key: newActivationKey,
-                is_activated: false
-            }])
-            .select()
-            .single();
-
-        if (createError) {
-            console.error('Error creating activation key:', createError);
-            return null;
-        }
-
-        console.log('Created new activation key:', newKey);
-        return newKey;
-    } catch (error) {
-        console.error('Error in fetchActivationKey:', error);
-        return null;
-    }
-}
-
-// Update activation status UI
-function updateActivationStatusUI(activationData) {
-    const statusElement = document.getElementById('activation-status');
-    const statusIndicator = document.getElementById('status-indicator');
-    const statusText = document.getElementById('status-text');
-    const statusDescription = document.getElementById('status-description');
-    const keyContainer = document.getElementById('activation-key-container');
-    const keyDisplay = document.getElementById('activation-key-display');
-
-    if (!statusElement || !statusIndicator || !statusText || !statusDescription || 
-        !keyContainer || !keyDisplay) {
-        console.error('Missing UI elements for activation status');
-        return;
-    }
-
-    console.log('Updating activation UI with data:', activationData);
-
-    if (activationData) {
-        // Show activation key
-        keyContainer.style.display = 'block';
-        keyDisplay.textContent = activationData.activation_key;
-        
-        if (activationData.is_activated) {
-            // Activated
-            statusElement.className = 'activation-status activated';
-            statusIndicator.className = 'status-indicator active';
-            statusText.textContent = 'Konto Aktivert';
-            statusDescription.textContent = activationData.activated_at ? 
-                `Aktivert ${new Date(activationData.activated_at).toLocaleDateString('no-NO')}` :
-                'Konto er aktivert';
-        } else {
-            // Not activated
-            statusElement.className = 'activation-status not-activated';
-            statusIndicator.className = 'status-indicator inactive';
-            statusText.textContent = 'Venter på Aktivering';
-            statusDescription.textContent = 'Bruk aktiverings nøkkelen din i AkademiTrack programmet';
-        }
-    } else {
-        // Error state
-        statusElement.className = 'activation-status not-activated';
-        statusIndicator.className = 'status-indicator inactive';
-        statusText.textContent = 'Feil ved lasting av aktiverings data';
-        statusDescription.textContent = 'Kunne ikke laste aktiverings informasjon';
-        keyContainer.style.display = 'none';
-    }
-}
-
-// Load activation data
-async function loadActivationData(userEmail) {
-    console.log('Loading activation data for:', userEmail);
-    
-    try {
-        if (!userEmail || !isValidEmail(userEmail)) {
-            console.error('Invalid email provided to loadActivationData');
-            updateActivationStatusUI(null);
-            return;
-        }
-        
-        const activationData = await fetchActivationKey(userEmail);
-        userActivationData = activationData;
-        updateActivationStatusUI(activationData);
-        
-    } catch (error) {
-        console.error('Error loading activation data:', error);
-        updateActivationStatusUI(null);
-    }
-}
-
-// Add this function to make copyActivationKey globally accessible
+// Copy activation key to clipboard
 async function copyActivationKey() {
     const keyElement = document.getElementById('activation-key-display');
     if (!keyElement) return;
@@ -1902,89 +1924,6 @@ async function copyActivationKey() {
     }
 }
 
-let currentConversationId = null;
-let isAdminOnline = false;
-let messagesSubscription = null;
-
-// Security: HTML Sanitization function
-function sanitizeHTML(str) {
-    const temp = document.createElement('div');
-    temp.textContent = str;
-    return temp.innerHTML;
-}
-
-// Security: Input validation function
-function validateInput(input, maxLength = 1000) {
-    if (typeof input !== 'string') return '';
-    return input.trim().slice(0, maxLength);
-}
-
-// Security: Email validation function
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-// Simplified function to fetch STU registration data without charts
-async function fetchSTUData(userEmail) {
-    try {
-        if (!userEmail || !isValidEmail(userEmail)) {
-            console.error('Invalid email provided to fetchSTUData');
-            return { sessions: 0, totalHours: 0 };
-        }
-
-        console.log('Fetching STU data for user:', userEmail);
-
-        const { data, error } = await supabase
-            .from('stu_registrations')
-            .select('*')
-            .eq('user_email', userEmail)
-            .order('session_date', { ascending: true });
-
-        if (error) {
-            console.error('Error fetching STU data:', error);
-            return { sessions: 0, totalHours: 0 };
-        }
-
-        console.log('Raw STU data from database:', data);
-
-        if (!data || data.length === 0) {
-            console.log('No STU sessions found for user:', userEmail);
-            return { sessions: 0, totalHours: 0 };
-        }
-
-        // Calculate total hours
-        let totalMinutes = 0;
-
-        data.forEach(session => {
-            if (session.session_start && session.session_end) {
-                const startTime = new Date(`1970-01-01 ${session.session_start}`);
-                const endTime = new Date(`1970-01-01 ${session.session_end}`);
-                const diffMinutes = (endTime - startTime) / (1000 * 60);
-                
-                if (diffMinutes > 0 && diffMinutes < 1440) { // Valid session (less than 24 hours)
-                    totalMinutes += diffMinutes;
-                }
-            }
-        });
-
-        const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
-
-        console.log('Calculated stats:', {
-            totalHours,
-            sessions: data.length
-        });
-
-        return {
-            sessions: Math.min(data.length, 99999),
-            totalHours: Math.min(totalHours, 99999)
-        };
-    } catch (error) {
-        console.error('Error in fetchSTUData:', error);
-        return { sessions: 0, totalHours: 0 };
-    }
-}
-
 // Chat functionality
 function toggleChat() {
     const chatWidget = document.getElementById('chat-widget');
@@ -2022,9 +1961,6 @@ async function initializeChat() {
         
         // Subscribe to new messages
         subscribeToMessages();
-        
-        // Check admin status
-        checkAdminStatus();
         
     } catch (error) {
         console.error('Error initializing chat:', error);
@@ -2167,90 +2103,11 @@ function displayMessage(message) {
     messagesContainer.appendChild(messageElement);
 }
 
-// Check admin status
-async function checkAdminStatus() {
-    try {
-        const { data: adminStatus, error } = await supabase
-            .from('admin_status')
-            .select('is_online')
-            .eq('admin_email', 'cyberbrothershq@gmail.com')
-            .single();
-
-        if (error) throw error;
-
-        isAdminOnline = adminStatus?.is_online || false;
-        updateAdminStatusUI(isAdminOnline);
-        
-    } catch (error) {
-        console.error('Error checking admin status:', error);
-        isAdminOnline = false;
-        updateAdminStatusUI(false);
-    }
-}
-
-// Update admin status UI
-function updateAdminStatusUI(isOnline) {
-    const statusIndicator = document.getElementById('admin-status');
-    const statusDot = document.getElementById('status-dot');
-    const statusText = document.getElementById('status-text');
-
-    if (!statusIndicator || !statusDot || !statusText) return;
-
-    if (isOnline) {
-        statusIndicator.classList.add('online');
-        statusIndicator.classList.remove('offline');
-        statusDot.classList.remove('offline');
-        statusText.textContent = 'Admin er online';
-    } else {
-        statusIndicator.classList.add('offline');
-        statusIndicator.classList.remove('online');
-        statusDot.classList.add('offline');
-        statusText.textContent = 'Admin er offline';
-    }
-}
-
 // Scroll chat to bottom
 function scrollToBottom() {
     const messagesContainer = document.getElementById('chat-messages');
     if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-}
-
-// Subscribe to admin status changes
-function subscribeToAdminStatus() {
-    supabase
-        .channel('admin-status')
-        .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'admin_status',
-            filter: 'admin_email=eq.cyberbrothershq@gmail.com'
-        }, (payload) => {
-            isAdminOnline = payload.new.is_online;
-            updateAdminStatusUI(isAdminOnline);
-        })
-        .subscribe();
-}
-
-// Security: Function to update STU stats in the UI with validation
-function updateSTUStats(sessions, totalHours) {
-    const sessionsElement = document.getElementById('stu-sessions-count');
-    const hoursElement = document.getElementById('stu-hours-total');
-
-    if (sessionsElement && hoursElement) {
-        // Security: Validate and sanitize numeric values
-        const safeSessions = isNaN(sessions) ? 0 : Math.max(0, Math.floor(Number(sessions)));
-        const safeHours = isNaN(totalHours) ? 0 : Math.max(0, Number(totalHours));
-        
-        sessionsElement.textContent = safeSessions.toString();
-        hoursElement.textContent = safeHours.toString();
-        
-        // Remove loading state
-        const sessionsCard = sessionsElement.parentElement;
-        const hoursCard = hoursElement.parentElement;
-        if (sessionsCard) sessionsCard.classList.remove('stat-loading');
-        if (hoursCard) hoursCard.classList.remove('stat-loading');
     }
 }
 
@@ -2298,9 +2155,6 @@ function handleNavbarShrink() {
         }
     }
 }
-
-// Security: Check authentication and load user info with validation
-
 
 // Sign out functionality
 async function signOut() {
@@ -2382,112 +2236,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    let userActivationData = null;
-
-    
-
-    // Copy activation key to clipboard
-    async function copyActivationKey() {
-        const keyElement = document.getElementById('activation-key-display');
-        if (!keyElement) return;
-        
-        try {
-            await navigator.clipboard.writeText(keyElement.textContent);
-            
-            // Show feedback
-            const copyBtn = document.querySelector('.copy-key-btn');
-            if (copyBtn) {
-                const originalText = copyBtn.innerHTML;
-                copyBtn.innerHTML = '✅';
-                copyBtn.style.background = '#22c55e';
-                
-                setTimeout(() => {
-                    copyBtn.innerHTML = originalText;
-                    copyBtn.style.background = '#3b82f6';
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('Failed to copy activation key:', error);
-            // Fallback for older browsers
-            try {
-                const textArea = document.createElement('textarea');
-                textArea.value = keyElement.textContent;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                
-                const copyBtn = document.querySelector('.copy-key-btn');
-                if (copyBtn) {
-                    const originalText = copyBtn.innerHTML;
-                    copyBtn.innerHTML = '✅';
-                    copyBtn.style.background = '#22c55e';
-                    
-                    setTimeout(() => {
-                        copyBtn.innerHTML = originalText;
-                        copyBtn.style.background = '#3b82f6';
-                    }, 2000);
-                }
-            } catch (fallbackError) {
-                alert('Kunne ikke kopiere nøkkel. Prøv å velge og kopiere manuelt.');
-            }
-        }
-    }
-
-    // Generate new activation key
-    async function generateActivationKey() {
-        const userEmailElement = document.getElementById('user-email');
-        const userEmail = userEmailElement ? userEmailElement.textContent : '';
-        
-        if (!userEmail || !isValidEmail(userEmail)) {
-            alert('Ugyldig bruker e-post');
-            return;
-        }
-        
-        const generateBtn = document.getElementById('generate-key-btn');
-        if (generateBtn) {
-            generateBtn.disabled = true;
-            generateBtn.textContent = 'Genererer...';
-        }
-        
-        try {
-            const newActivationKey = generateSecureKey();
-            
-            // Update existing record or create new one
-            const { data: updatedKey, error } = await supabase
-                .from('activation_keys')
-                .upsert([{
-                    user_email: userEmail,
-                    activation_key: newActivationKey,
-                    is_activated: false,
-                    activated_at: null
-                }], {
-                    onConflict: 'user_email'
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
-            
-            userActivationData = updatedKey;
-            updateActivationStatusUI(userActivationData);
-            
-            alert('Ny aktiverings nøkkel generert!');
-            
-        } catch (error) {
-            console.error('Error generating activation key:', error);
-            alert('Feil ved generering av ny nøkkel. Prøv igjen.');
-        } finally {
-            if (generateBtn) {
-                generateBtn.disabled = false;
-                generateBtn.textContent = 'Generer Ny Aktiverings Nøkkel';
-            }
-        }
-    }
-
-    // Load activation data
-    
-
     // Auto-resize textarea with security limits
     const chatInput = document.getElementById('chat-input');
     if (chatInput) {
@@ -2531,8 +2279,8 @@ supabase.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// Check admin status periodically
-setInterval(checkAdminStatus, 30000); // Check every 30 seconds
+// Check admin status periodically as backup
+setInterval(checkAdminStatus, 60000); // Check every minute
     </script>
 </body>
 </html>
