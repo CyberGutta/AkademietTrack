@@ -1954,8 +1954,8 @@ function isValidEmail(email) {
 }
 
 function viewTutorial() {
-    // Open tutorial in read-only mode by adding a parameter
-    window.open('tutorial.html?readonly=true', '_blank');
+    // Use same tab instead of opening new tab
+    window.location.href = 'tutorial.html?readonly=true';
 }
 
 // Generate a secure activation key

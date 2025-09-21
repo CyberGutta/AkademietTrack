@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AkademiTrack Tutorial</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -162,7 +163,7 @@
             color: #9ca3af;
         }
 
-        .tutorial-button {
+        .tutorial-button, .download-button {
             background: linear-gradient(45deg, #10b981, #059669);
             color: white;
             border: none;
@@ -171,9 +172,20 @@
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
-            margin-top: 1rem;
             transition: all 0.3s ease;
             align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0; /* Remove default margin */
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch; /* Makes both buttons same height */
+            flex-wrap: wrap;
+            margin-top: 1rem;
         }
 
         .tutorial-button:hover:not(:disabled) {
@@ -198,12 +210,12 @@
             font-weight: 600;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 1rem;
             transition: all 0.3s ease;
-            align-self: flex-start;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            box-sizing: border-box; /* Ensures consistent sizing */
+            min-height: 48px; /* Set minimum height */
         }
 
         .download-button:hover:not(:disabled) {
@@ -510,25 +522,27 @@
         /* Special styling for step 3 to ensure everything fits */
         #step-3 .content-left {
             justify-content: flex-start;
-            padding-top: 20px;
+            padding-top: 15px; /* Reduced from 20px */
         }
 
         #step-3 .step-content {
             justify-content: flex-start;
-            gap: 0.8rem;
+            gap: 0.6rem; /* Reduced from 0.8rem */
         }
 
-        #step-3 .terminal-steps {
-            margin: 0.8rem 0;
+        #step-3 .step-title {
+            margin-bottom: 0.6rem; /* Reduce title margin */
         }
 
-        #step-3 .command-container {
-            margin: 0.8rem 0;
+        #step-3 .step-description {
+            margin-bottom: 1rem; /* Reduce description margin */
         }
 
+        #step-3 .terminal-steps,
+        #step-3 .command-container,
         #step-3 .warning-box,
         #step-3 .success-box {
-            margin: 0.8rem 0;
+            margin: 0.6rem 0; /* Reduced from 0.8rem */
         }
     </style>
 </head>
@@ -606,10 +620,16 @@
                             <strong>Viktig:</strong> Sørg for at du laster ned appen fra en sikker kilde og at du har tilstrekkelig lagringsplass.
                         </div>
 
-                        <button class="download-button" onclick="startDownload()" id="install-btn">
-                            <span>📥</span>
-                            <span id="download-text">Last ned AkademiTrack</span>
-                        </button>
+                        <div class="button-container">
+                            <button class="download-button" onclick="startDownload()" id="install-btn">
+                                <span>📥</span>
+                                <span id="download-text">Last ned AkademiTrack</span>
+                            </button>
+                            
+                            <button class="download-button" onclick="goToStep(3)" id="already-downloaded-btn" style="background: linear-gradient(45deg, #6b7280, #4b5563);">
+                                Allerede lastet ned
+                            </button>
+                        </div>
 
                         <div id="download-status" style="margin-top: 1rem; display: none;">
                             <p style="color: #059669;">⏳ Nedlasting pågår... Vennligst vent.</p>
@@ -1234,20 +1254,35 @@
         }
 
         function setupReadOnlyTutorial() {
-            // Disable name input and show readonly notice
-            const nameInput = document.getElementById('user-name-input');
-            if (nameInput) {
-                nameInput.disabled = true;
-                nameInput.value = 'Tutorial i visning-modus';
-                nameInput.style.opacity = '0.6';
+            // Start on step 2 instead of step 1
+            currentStep = 2;
+            
+            // Hide step 1 and show step 2
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            if (step1) step1.classList.remove('active');
+            if (step2) step2.classList.add('active');
+            
+            // Update progress indicators to show 3 steps instead of 4
+            const stepIndicator = document.querySelector('.step-indicator');
+            if (stepIndicator) {
+                stepIndicator.innerHTML = `
+                    <div class="step-dot active" data-step="2"></div>
+                    <div class="step-dot" data-step="3"></div>
+                    <div class="step-dot" data-step="4"></div>
+                `;
             }
             
-            // Enable next button for navigation in readonly
-            const nextBtn = document.getElementById('name-next-btn');
-            if (nextBtn) {
-                nextBtn.disabled = false;
-                nextBtn.textContent = 'Fortsett (kun visning)';
-                nextBtn.style.opacity = '1';
+            // Update progress bar to show step 2 as step 1
+            const progressFill = document.getElementById('progress-fill');
+            if (progressFill) {
+                progressFill.style.width = '33.33%'; // 1/3 instead of 2/4
+            }
+            
+            // Set up the greeting with a generic name
+            const displayElement = document.getElementById('user-name-display');
+            if (displayElement) {
+                displayElement.textContent = 'Tutorial Bruker';
             }
             
             // Show readonly notice
@@ -1258,56 +1293,73 @@
                 );
             }
             
-            // Override goToStep to skip database operations in readonly mode
+            // Override goToStep for readonly mode with 3-step navigation
             window.isReadOnlyMode = true;
             
-            // Store original functions
             if (!window.originalGoToStep) {
                 window.originalGoToStep = goToStep;
                 window.originalCompleteTutorial = completeTutorial;
             }
             
-            // Override goToStep for readonly
             window.goToStep = function(stepNumber) {
-                if (stepNumber < 1 || stepNumber > 4) return;
+                // Only allow steps 2, 3, 4 in readonly mode
+                if (stepNumber < 2 || stepNumber > 4) return;
                 
-                // Skip name saving and database operations in readonly mode
-                if (currentStep === 1 && stepNumber > 1) {
-                    const displayElement = document.getElementById('user-name-display');
-                    if (displayElement) {
-                        displayElement.textContent = 'Tutorial Bruker';
-                    }
-                }
-                
-                // Continue with normal step navigation but skip DB operations
+                // Update step display
                 const currentStepEl = document.getElementById(`step-${currentStep}`);
-                if (currentStepEl) {
-                    currentStepEl.classList.remove('active');
-                }
+                const newStepEl = document.getElementById(`step-${stepNumber}`);
                 
+                if (currentStepEl) currentStepEl.classList.remove('active');
+                if (newStepEl) newStepEl.classList.add('active');
+                
+                // Update step indicators (3 dots representing steps 2,3,4)
                 const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
                 const nextDot = document.querySelector(`.step-dot[data-step="${stepNumber}"]`);
                 
                 if (currentDot) currentDot.classList.remove('active');
                 if (nextDot) nextDot.classList.add('active');
                 
-                const newStepEl = document.getElementById(`step-${stepNumber}`);
-                if (newStepEl) {
-                    newStepEl.classList.add('active');
-                }
-                
+                // Update progress bar (treat step 2 as 1/3, step 3 as 2/3, step 4 as 3/3)
                 const progressFill = document.getElementById('progress-fill');
                 if (progressFill) {
-                    const progressPercent = (stepNumber / 4) * 100;
+                    const progressPercent = ((stepNumber - 1) / 3) * 100; // -1 to adjust for starting at step 2
                     progressFill.style.width = `${progressPercent}%`;
                 }
                 
                 currentStep = stepNumber;
+                
+                // Set greeting for step 2
+                if (stepNumber === 2) {
+                    const displayElement = document.getElementById('user-name-display');
+                    if (displayElement) {
+                        displayElement.textContent = 'Tutorial Bruker';
+                    }
+                }
             };
             
             // Override completion function for readonly
             window.completeTutorial = function() {
-                alert('Tutorial fullført i visning-modus. Du kan lukke denne fanen.');
+                // Clear any existing countdown
+                if (countdownTimer) {
+                    clearInterval(countdownTimer);
+                }
+                
+                // In readonly mode, go back to dashboard
+                window.location.href = 'dashboard.html';
+            };
+
+            window.startCountdown = function() {
+                // In readonly mode, don't start countdown, just show completion message
+                const countdownElement = document.getElementById('countdown');
+                const autoRedirectText = document.querySelector('.auto-redirect-text');
+                
+                if (autoRedirectText) {
+                    autoRedirectText.innerHTML = 'Klikk knappen under for å gå tilbake til dashboard.';
+                }
+                
+                if (countdownElement) {
+                    countdownElement.style.display = 'none'; // Hide the countdown span
+                }
             };
         }
 
