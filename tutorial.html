@@ -14,13 +14,14 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
             margin: 0;
+            color: #ffffff;
         }
 
         .tutorial-container {
@@ -29,18 +30,21 @@
             height: 90vh;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            color: #1f2937;
         }
 
         .tutorial-header {
             padding: 20px 40px 15px 40px;
             text-align: center;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
             flex-shrink: 0;
+            background: rgba(30, 58, 138, 0.1);
         }
 
         .tutorial-content {
@@ -56,6 +60,7 @@
             flex-direction: column;
             justify-content: center;
             overflow-y: auto;
+            background: #ffffff;
         }
 
         .content-right {
@@ -64,7 +69,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            background: linear-gradient(45deg, rgba(30, 58, 138, 0.1), rgba(59, 130, 246, 0.1));
+            border-left: 1px solid rgba(59, 130, 246, 0.2);
         }
 
         .tutorial-step {
@@ -92,7 +98,7 @@
             font-size: 2rem;
             font-weight: 800;
             margin-bottom: 0.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -100,7 +106,7 @@
 
         .tutorial-subtitle {
             font-size: 1rem;
-            color: #666;
+            color: #6b7280;
             margin-bottom: 1rem;
             line-height: 1.5;
         }
@@ -116,13 +122,13 @@
         .step-title {
             font-size: 1.6rem;
             font-weight: 700;
-            color: #333;
+            color: #1f2937;
             margin-bottom: 0.8rem;
         }
 
         .step-description {
             font-size: 1rem;
-            color: #666;
+            color: #4b5563;
             line-height: 1.5;
             margin-bottom: 1.5rem;
         }
@@ -136,22 +142,28 @@
             max-width: 400px;
             padding: 16px 24px;
             font-size: 1.2rem;
-            border: 2px solid #e1e5e9;
+            border: 2px solid #e5e7eb;
             border-radius: 50px;
-            background: white;
-            color: #333;
+            background: #f9fafb;
+            color: #1f2937;
             text-align: center;
             outline: none;
             transition: all 0.3s ease;
         }
 
         .name-input:focus {
-            border-color: #667eea;
+            border-color: #3b82f6;
             transform: scale(1.02);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .name-input::placeholder {
+            color: #9ca3af;
         }
 
         .tutorial-button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(45deg, #10b981, #059669);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -166,53 +178,144 @@
 
         .tutorial-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(45deg, #059669, #047857);
         }
 
         .tutorial-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
+            background: #9ca3af;
+        }
+
+        .download-button {
+            background: linear-gradient(45deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+            background: linear-gradient(45deg, #2563eb, #1d4ed8);
+        }
+
+        .download-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            background: #9ca3af;
         }
 
         .media-container {
             width: 100%;
             max-width: 400px;
             height: 300px;
-            background: white;
-            border: 2px dashed #dee2e6;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px dashed #d1d5db;
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
-            color: #6c757d;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            color: #6b7280;
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-animation {
+            font-size: 4rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-30px);
+            }
+            60% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .floating-book {
+            position: absolute;
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-book:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-book:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation-delay: 1s;
+        }
+
+        .floating-book:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
         }
 
         .command-container {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
             border-radius: 12px;
             padding: 15px;
             margin: 1rem 0;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #3b82f6;
         }
 
         .command-input {
             width: 100%;
             padding: 10px 12px;
-            background: white;
-            border: 1px solid #dee2e6;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
             border-radius: 8px;
-            color: #333;
+            color: #1f2937;
             font-family: 'Monaco', 'Courier New', monospace;
             font-size: 0.9rem;
             margin: 0.8rem 0;
         }
 
         .copy-button {
-            background: #6c757d;
+            background: #6b7280;
             color: white;
             border: none;
             padding: 6px 12px;
@@ -224,19 +327,20 @@
         }
 
         .copy-button:hover {
-            background: #5a6268;
+            background: #4b5563;
         }
 
         .terminal-steps {
             text-align: left;
-            background: #f8f9fa;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
             padding: 15px;
             border-radius: 12px;
             margin: 1rem 0;
         }
 
         .terminal-steps h4 {
-            color: #667eea;
+            color: #3b82f6;
             margin-bottom: 10px;
             text-align: center;
             font-size: 1rem;
@@ -250,7 +354,7 @@
         .terminal-steps li {
             margin: 6px 0;
             line-height: 1.4;
-            color: #495057;
+            color: #4b5563;
             font-size: 0.9rem;
         }
 
@@ -263,21 +367,47 @@
         }
 
         .warning-box {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            color: #92400e;
         }
 
         .success-box {
-            background: #d1e7dd;
-            border: 1px solid #badbcc;
-            color: #0f5132;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #065f46;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .success-box ul {
+            margin: 10px 0 !important;
+            padding-left: 20px !important;
+        }
+
+        .success-box li {
+            margin: 8px 0 !important;
+            line-height: 1.5 !important;
+        }
+
+        .os-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            line-height: 1.3;
         }
 
         .progress-bar {
             width: 100%;
             height: 6px;
-            background: #e9ecef;
+            background: rgba(30, 58, 138, 0.2);
             border-radius: 3px;
             margin-bottom: 15px;
             overflow: hidden;
@@ -285,7 +415,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
             border-radius: 3px;
             width: 0%;
             transition: width 0.5s ease;
@@ -302,12 +432,12 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #dee2e6;
+            background: rgba(30, 58, 138, 0.3);
             transition: all 0.3s ease;
         }
 
         .step-dot.active {
-            background: #667eea;
+            background: #3b82f6;
             transform: scale(1.2);
         }
 
@@ -322,7 +452,7 @@
         }
 
         .auto-redirect-text {
-            color: #666;
+            color: #6b7280;
             font-size: 0.9rem;
             margin: 1rem 0;
             font-style: italic;
@@ -330,7 +460,7 @@
 
         .countdown {
             font-weight: bold;
-            color: #667eea;
+            color: #3b82f6;
         }
 
         /* Responsive */
@@ -359,6 +489,8 @@
 
             .content-right {
                 max-height: 200px;
+                border-left: none;
+                border-top: 1px solid rgba(59, 130, 246, 0.2);
             }
 
             .step-title {
@@ -444,7 +576,12 @@
                 </div>
                 <div class="content-right">
                     <div class="media-container">
-                        👋 Velkommen-animasjon kommer her
+                        <div class="floating-elements">
+                            <div class="floating-book">📚</div>
+                            <div class="floating-book">📖</div>
+                            <div class="floating-book">📝</div>
+                        </div>
+                        <div class="welcome-animation">👋</div>
                     </div>
                 </div>
             </div>
@@ -460,16 +597,22 @@
                             Hei <span id="user-name-display"></span>! Nå skal vi laste ned og installere AkademiTrack-appen.
                         </div>
 
+                        <div class="os-info" id="os-info">
+                            <strong>Operativsystem oppdaget:</strong> <span id="detected-os">Sjekker...</span><br>
+                            <strong>Fil som lastes ned:</strong> <span id="download-filename">...</span>
+                        </div>
+
                         <div class="warning-box">
                             <strong>Viktig:</strong> Sørg for at du laster ned appen fra en sikker kilde og at du har tilstrekkelig lagringsplass.
                         </div>
 
-                        <button class="tutorial-button" onclick="startDownload()" id="install-btn">
-                            📥 Last ned AkademiTrack
+                        <button class="download-button" onclick="startDownload()" id="install-btn">
+                            <span>📥</span>
+                            <span id="download-text">Last ned AkademiTrack</span>
                         </button>
 
                         <div id="download-status" style="margin-top: 1rem; display: none;">
-                            <p style="color: #28a745;">⏳ Nedlasting pågår... Vennligst vent.</p>
+                            <p style="color: #059669;">⏳ Nedlasting pågår... Vennligst vent.</p>
                         </div>
 
                         <button class="tutorial-button" onclick="goToStep(3)" id="install-next-btn" disabled style="margin-top: 1rem;">
@@ -479,7 +622,7 @@
                 </div>
                 <div class="content-right">
                     <div class="media-container">
-                        📱 Installasjon GIF/Video kommer her
+                        <div style="font-size: 3rem; animation: pulse 2s infinite;">📱</div>
                     </div>
                 </div>
             </div>
@@ -490,15 +633,15 @@
             <div class="tutorial-content">
                 <div class="content-left">
                     <div class="step-content">
-                        <div class="step-title">Fjern sikkerhetsbegrensninger</div>
-                        <div class="step-description">
+                        <div class="step-title" id="step3-title">Fjern sikkerhetsbegrensninger</div>
+                        <div class="step-description" id="step3-description">
                             For å kunne kjøre appen må vi fjerne macOS sine sikkerhetsbegrensninger.
                             Ikke bekymre deg - dette er helt trygt!
                         </div>
 
-                        <div class="terminal-steps">
+                        <div class="terminal-steps" id="terminal-instructions">
                             <h4>Følg disse stegene:</h4>
-                            <ol>
+                            <ol id="terminal-steps-list">
                                 <li>Åpne Terminal (trykk Cmd + Space, skriv "Terminal")</li>
                                 <li>Kopier kommandoen nedenfor</li>
                                 <li>Lim den inn i Terminal og trykk Enter</li>
@@ -506,7 +649,7 @@
                             </ol>
                         </div>
 
-                        <div class="command-container">
+                        <div class="command-container" id="command-section">
                             <p><strong>Kommando å kopiere:</strong></p>
                             <input 
                                 type="text" 
@@ -518,7 +661,7 @@
                             <button class="copy-button" onclick="copyCommand()">📋 Kopier</button>
                         </div>
 
-                        <div class="success-box">
+                        <div class="success-box" id="step3-tip">
                             <strong>Tips:</strong> Hvis du ikke finner appen i Downloads, sjekk hvor du lagret den og erstatt stien i kommandoen.
                         </div>
 
@@ -529,7 +672,7 @@
                 </div>
                 <div class="content-right">
                     <div class="media-container">
-                        🎥 Terminal-video kommer her
+                        <div style="font-size: 3rem; animation: pulse 2s infinite;">💻</div>
                     </div>
                 </div>
             </div>
@@ -550,10 +693,10 @@
 
                             <div class="success-box">
                                 <p><strong>Du kan nå:</strong></p>
-                                <ul style="text-align: left; margin: 10px 0;">
-                                    <li>Åpne AkademiTrack-appen fra Applications-mappen</li>
-                                    <li>Bruke aktiveringsnøkkelen din til å logge inn</li>
-                                    <li>Begynne å spore dine studieøkter</li>
+                                <ul style="text-align: left; margin: 10px 0; padding-left: 20px; line-height: 1.6;">
+                                    <li style="margin: 8px 0;">Åpne AkademiTrack-appen</li>
+                                    <li style="margin: 8px 0;">Bruke aktiveringsnøkkelen din til å logge inn</li>
+                                    <li style="margin: 8px 0;">Begynne å spore dine studieøkter</li>
                                 </ul>
                             </div>
 
@@ -569,12 +712,26 @@
                 </div>
                 <div class="content-right">
                     <div class="media-container">
-                        ✅ Fullført-animasjon kommer her
+                        <div style="font-size: 4rem; animation: bounce 2s infinite;">✅</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
 
     <script>
         // Initialize Supabase client
@@ -587,6 +744,145 @@
         let userName = '';
         let userEmail = '';
         let countdownTimer;
+        let userOS = '';
+        let downloadURL = '';
+
+        // OS Detection and Download URLs
+        const GITHUB_RELEASES = {
+            baseURL: 'https://github.com/CyberGutta/AkademiTrack/releases/download/v1.0.0/',
+            files: {
+                windows: 'Windows.zip',
+                mac: 'Mac.zip',
+                linux: 'Linux.zip'
+            }
+        };
+
+        // Detect user's operating system
+        function detectOS() {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            const platform = window.navigator.platform.toLowerCase();
+            
+            if (platform.includes('mac') || userAgent.includes('mac')) {
+                return 'mac';
+            } else if (platform.includes('win') || userAgent.includes('win')) {
+                return 'windows';
+            } else if (platform.includes('linux') || userAgent.includes('linux')) {
+                return 'linux';
+            } else {
+                // Fallback detection
+                if (userAgent.includes('mac os x') || userAgent.includes('macintosh')) {
+                    return 'mac';
+                } else if (userAgent.includes('windows nt')) {
+                    return 'windows';
+                } else {
+                    return 'linux'; // Default fallback
+                }
+            }
+        }
+
+        // Get OS display name
+        function getOSDisplayName(os) {
+            switch(os) {
+                case 'mac': return 'macOS';
+                case 'windows': return 'Windows';
+                case 'linux': return 'Linux';
+                default: return 'Ukjent';
+            }
+        }
+
+        // Update OS-specific content
+        function updateOSContent() {
+            userOS = detectOS();
+            const filename = GITHUB_RELEASES.files[userOS];
+            downloadURL = GITHUB_RELEASES.baseURL + filename;
+            
+            // Update step 2 content
+            const detectedOSElement = document.getElementById('detected-os');
+            const downloadFilenameElement = document.getElementById('download-filename');
+            
+            if (detectedOSElement) {
+                detectedOSElement.textContent = getOSDisplayName(userOS);
+            }
+            
+            if (downloadFilenameElement) {
+                downloadFilenameElement.textContent = filename;
+            }
+            
+            // Update step 3 content based on OS
+            updateStep3Content();
+        }
+
+        // Update Step 3 content based on OS
+        function updateStep3Content() {
+            const title = document.getElementById('step3-title');
+            const description = document.getElementById('step3-description');
+            const stepsList = document.getElementById('terminal-steps-list');
+            const commandInput = document.getElementById('terminal-command');
+            const tip = document.getElementById('step3-tip');
+            
+            if (userOS === 'mac') {
+                if (title) title.textContent = 'Fjern sikkerhetsbegrensninger (macOS)';
+                if (description) {
+                    description.textContent = 'For å kunne kjøre appen må vi fjerne macOS sine sikkerhetsbegrensninger. Ikke bekymre deg - dette er helt trygt!';
+                }
+                if (stepsList) {
+                    stepsList.innerHTML = `
+                        <li>Åpne Terminal (trykk Cmd + Space, skriv "Terminal")</li>
+                        <li>Kopier kommandoen nedenfor</li>
+                        <li>Lim den inn i Terminal og trykk Enter</li>
+                        <li>Vent til kommandoen er ferdig</li>
+                    `;
+                }
+                if (commandInput) {
+                    commandInput.value = 'xattr -cr ~/Downloads/AkademiTrack.app';
+                }
+                if (tip) {
+                    tip.innerHTML = '<strong>Tips:</strong> Hvis du ikke finner appen i Downloads, sjekk hvor du lagret den og erstatt stien i kommandoen.';
+                }
+            } else if (userOS === 'linux') {
+                if (title) title.textContent = 'Gjør filen kjørbar (Linux)';
+                if (description) {
+                    description.textContent = 'For Linux må vi gjøre filen kjørbar og eventuelt starte den. Dette er standard prosedyre for Linux-applikasjoner.';
+                }
+                if (stepsList) {
+                    stepsList.innerHTML = `
+                        <li>Åpne Terminal (Ctrl + Alt + T)</li>
+                        <li>Naviger til mappen der du pakket ut filen</li>
+                        <li>Kopier og kjør kommandoen nedenfor</li>
+                        <li>Test om appen starter med: ./AkademiTrack</li>
+                    `;
+                }
+                if (commandInput) {
+                    commandInput.value = 'chmod +x ./AkademiTrack';
+                }
+                if (tip) {
+                    tip.innerHTML = '<strong>Tips:</strong> Husk å pakke ut zip-filen først, og naviger til riktig mappe i Terminal før du kjører kommandoen.';
+                }
+            } else { // Windows
+                if (title) title.textContent = 'Windows Defender og SmartScreen';
+                if (description) {
+                    description.textContent = 'Windows kan vise en sikkerhetsadvarsel. Dette er normalt for nye applikasjoner. Du kan trykt kjøre appen likevel.';
+                }
+                if (stepsList) {
+                    stepsList.innerHTML = `
+                        <li>Pakk ut zip-filen til en mappe</li>
+                        <li>Høyreklikk på AkademiTrack.exe</li>
+                        <li>Velg "Egenskaper" → "Avblokker" → "OK"</li>
+                        <li>Dobbeltklikk på filen for å starte</li>
+                    `;
+                }
+                
+                // Hide command section for Windows
+                const commandSection = document.getElementById('command-section');
+                if (commandSection) {
+                    commandSection.style.display = 'none';
+                }
+                
+                if (tip) {
+                    tip.innerHTML = '<strong>Tips:</strong> Hvis Windows Defender blokkerer appen, klikk "Mer info" og deretter "Kjør likevel".';
+                }
+            }
+        }
 
         // Email validation function
         function isValidEmail(email) {
@@ -726,34 +1022,66 @@
             currentStep = stepNumber;
         }
 
-        // Simulate download process
+        // Start download process
         function startDownload() {
+            if (!downloadURL) {
+                alert('Kunne ikke bestemme nedlastingslenke. Prøv å laste siden på nytt.');
+                return;
+            }
+            
             const downloadBtn = document.getElementById('install-btn');
             const downloadStatus = document.getElementById('download-status');
             const nextBtn = document.getElementById('install-next-btn');
+            const downloadText = document.getElementById('download-text');
             
             if (downloadBtn) {
                 downloadBtn.disabled = true;
-                downloadBtn.textContent = '⏳ Laster ned...';
+                if (downloadText) {
+                    downloadText.textContent = 'Laster ned...';
+                }
             }
             
             if (downloadStatus) {
                 downloadStatus.style.display = 'block';
             }
             
-            // Simulate download progress
-            setTimeout(() => {
+            // Start the actual download
+            try {
+                const link = document.createElement('a');
+                link.href = downloadURL;
+                link.download = GITHUB_RELEASES.files[userOS];
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Nedlasting feilet. Prøv igjen eller last ned manuelt fra GitHub.');
+                
                 if (downloadBtn) {
-                    downloadBtn.textContent = '✅ Nedlasting fullført!';
+                    downloadBtn.disabled = false;
+                    if (downloadText) {
+                        downloadText.textContent = 'Last ned AkademiTrack';
+                    }
                 }
                 if (downloadStatus) {
-                    downloadStatus.innerHTML = '<p style="color: #28a745;">✅ AkademiTrack er lastet ned! Du kan nå gå til neste trinn.</p>';
+                    downloadStatus.style.display = 'none';
+                }
+                return;
+            }
+            
+            // Simulate download completion after a delay
+            setTimeout(() => {
+                if (downloadBtn && downloadText) {
+                    downloadText.textContent = '✅ Nedlasting fullført!';
+                }
+                if (downloadStatus) {
+                    downloadStatus.innerHTML = '<p style="color: #059669;">✅ AkademiTrack er lastet ned! Du kan nå gå til neste trinn.</p>';
                 }
                 if (nextBtn) {
                     nextBtn.disabled = false;
                     nextBtn.style.opacity = '1';
                 }
-            }, 3000);
+            }, 2000);
         }
 
         // Copy terminal command
@@ -769,20 +1097,43 @@
                 const copyBtn = event.target;
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = '✅ Kopiert!';
-                copyBtn.style.background = '#28a745';
+                copyBtn.style.background = '#059669';
                 
                 setTimeout(() => {
                     copyBtn.textContent = originalText;
-                    copyBtn.style.background = '#6c757d';
+                    copyBtn.style.background = '#6b7280';
                 }, 2000);
             } catch (err) {
                 console.error('Kunne ikke kopiere tekst:', err);
-                alert('Kunne ikke kopiere automatisk. Vennligst merk teksten og kopier manuelt.');
+                
+                // Fallback: try modern clipboard API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(commandInput.value).then(() => {
+                        const copyBtn = event.target;
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '✅ Kopiert!';
+                        copyBtn.style.background = '#059669';
+                        
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.background = '#6b7280';
+                        }, 2000);
+                    }).catch(() => {
+                        alert('Kunne ikke kopiere automatisk. Vennligst merk teksten og kopier manuelt.');
+                    });
+                } else {
+                    alert('Kunne ikke kopiere automatisk. Vennligst merk teksten og kopier manuelt.');
+                }
             }
         }
 
         // Complete tutorial and redirect
         async function completeTutorial() {
+            // Clear any existing countdown
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+            
             // Mark tutorial as completed in database
             if (userEmail) {
                 await markTutorialCompleted(userEmail);
@@ -792,10 +1143,31 @@
             window.location.href = 'dashboard.html';
         }
 
+        // Start countdown for automatic redirect
+        function startCountdown() {
+            let timeLeft = 5;
+            const countdownElement = document.getElementById('countdown');
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                if (countdownElement) {
+                    countdownElement.textContent = timeLeft;
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    completeTutorial();
+                }
+            }, 1000);
+        }
+
         // Initialize tutorial
         async function initializeTutorial() {
             const email = await checkAuth();
             if (!email) return;
+            
+            // Initialize OS detection and content
+            updateOSContent();
             
             // Set up name input listener
             const nameInput = document.getElementById('user-name-input');
@@ -828,6 +1200,23 @@
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             initializeTutorial();
+            
+            // Start countdown when step 4 is reached
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const step4 = document.getElementById('step-4');
+                        if (step4 && step4.classList.contains('active') && !countdownTimer) {
+                            startCountdown();
+                        }
+                    }
+                });
+            });
+            
+            const step4 = document.getElementById('step-4');
+            if (step4) {
+                observer.observe(step4, { attributes: true });
+            }
         });
     </script>
 </body>
