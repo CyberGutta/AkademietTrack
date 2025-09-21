@@ -1163,37 +1163,33 @@
                                 .from('user_profiles')
                                 .select('tutorial_completed')
                                 .eq('user_email', userEmail)
-                                .single();
+                                .maybeSingle(); // Changed from .single() to .maybeSingle()
 
-                            if (error && error.code !== 'PGRST116') {
+                            if (error) {
                                 console.error('Error checking tutorial status:', error);
+                                // Default to tutorial for any database errors
                                 window.location.href = 'tutorial.html';
                                 return;
                             }
 
                             const hasCompletedTutorial = data?.tutorial_completed || false;
                             window.location.href = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
+                            
                         } catch (dbError) {
                             console.error('Database error:', dbError);
+                            // Default to tutorial if any error occurs
                             window.location.href = 'tutorial.html';
                         }
                     }
                 }
             } catch (error) {
                 console.error('Error checking existing session:', error);
-                // Continue with normal login flow
+                // Continue with normal login flow if session check fails
             }
         }
 
         // Listen for auth state changes
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth event:', event, session?.user?.email);
-            
-            if (event === 'SIGNED_IN' && session?.user?.email) {
-                // Let handleSuccessfulAuth handle the logic
-                await handleSuccessfulAuth(session);
-            }
-        });
+        
 
         // Security: Clear form data on page unload
         window.addEventListener('beforeunload', () => {
@@ -1223,6 +1219,23 @@
             try {
                 // Check for existing session first
                 await checkExistingSession();
+                
+                // Only set up auth listener for fresh auth events, not existing sessions
+                supabase.auth.onAuthStateChange(async (event, session) => {
+                    console.log('Auth event:', event);
+                    
+                    // Only handle fresh sign-ins, not existing sessions
+                    if (event === 'SIGNED_IN' && session?.user?.email) {
+                        // Small delay to avoid race conditions with form submission
+                        setTimeout(async () => {
+                            await handleSuccessfulAuth(session);
+                        }, 100);
+                    } else if (event === 'SIGNED_OUT') {
+                        // Handle sign out if needed
+                        hideMessages();
+                    }
+                });
+                
             } catch (error) {
                 console.error('Initialization error:', error);
             }
