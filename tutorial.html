@@ -966,6 +966,12 @@
         // Navigate to specific step
         async function goToStep(stepNumber) {
             if (stepNumber < 1 || stepNumber > 4) return;
+    
+            // Skip database operations if in readonly mode
+            if (window.isReadOnlyMode) {
+                // Use the readonly version
+                return;
+            }
             
             // Save user name when leaving step 1
             if (currentStep === 1 && stepNumber > 1) {
@@ -1166,6 +1172,36 @@
             const email = await checkAuth();
             if (!email) return;
             
+            // Check for readonly mode FIRST
+            const urlParams = new URLSearchParams(window.location.search);
+            const isReadOnly = urlParams.get('readonly') === 'true';
+            
+            if (isReadOnly) {
+                // Set up readonly tutorial without checking completion status
+                setupReadOnlyTutorial();
+                updateOSContent();
+                return;
+            }
+            
+            // Only check tutorial completion if NOT in readonly mode
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('tutorial_completed')
+                    .eq('user_email', email)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error('Error checking tutorial status:', error);
+                } else if (data?.tutorial_completed === true) {
+                    // User has already completed tutorial, redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+            } catch (dbError) {
+                console.error('Database error checking tutorial completion:', dbError);
+            }
+            
             // Initialize OS detection and content
             updateOSContent();
             
@@ -1195,6 +1231,84 @@
                 // Focus on name input
                 nameInput.focus();
             }
+        }
+
+        function setupReadOnlyTutorial() {
+            // Disable name input and show readonly notice
+            const nameInput = document.getElementById('user-name-input');
+            if (nameInput) {
+                nameInput.disabled = true;
+                nameInput.value = 'Tutorial i visning-modus';
+                nameInput.style.opacity = '0.6';
+            }
+            
+            // Enable next button for navigation in readonly
+            const nextBtn = document.getElementById('name-next-btn');
+            if (nextBtn) {
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Fortsett (kun visning)';
+                nextBtn.style.opacity = '1';
+            }
+            
+            // Show readonly notice
+            const tutorialTitle = document.querySelector('.tutorial-title');
+            if (tutorialTitle) {
+                tutorialTitle.insertAdjacentHTML('afterend', 
+                    '<div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.9rem; color: #1e40af;">📖 Du ser gjennom tutorialen - ingen endringer vil bli lagret</div>'
+                );
+            }
+            
+            // Override goToStep to skip database operations in readonly mode
+            window.isReadOnlyMode = true;
+            
+            // Store original functions
+            if (!window.originalGoToStep) {
+                window.originalGoToStep = goToStep;
+                window.originalCompleteTutorial = completeTutorial;
+            }
+            
+            // Override goToStep for readonly
+            window.goToStep = function(stepNumber) {
+                if (stepNumber < 1 || stepNumber > 4) return;
+                
+                // Skip name saving and database operations in readonly mode
+                if (currentStep === 1 && stepNumber > 1) {
+                    const displayElement = document.getElementById('user-name-display');
+                    if (displayElement) {
+                        displayElement.textContent = 'Tutorial Bruker';
+                    }
+                }
+                
+                // Continue with normal step navigation but skip DB operations
+                const currentStepEl = document.getElementById(`step-${currentStep}`);
+                if (currentStepEl) {
+                    currentStepEl.classList.remove('active');
+                }
+                
+                const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
+                const nextDot = document.querySelector(`.step-dot[data-step="${stepNumber}"]`);
+                
+                if (currentDot) currentDot.classList.remove('active');
+                if (nextDot) nextDot.classList.add('active');
+                
+                const newStepEl = document.getElementById(`step-${stepNumber}`);
+                if (newStepEl) {
+                    newStepEl.classList.add('active');
+                }
+                
+                const progressFill = document.getElementById('progress-fill');
+                if (progressFill) {
+                    const progressPercent = (stepNumber / 4) * 100;
+                    progressFill.style.width = `${progressPercent}%`;
+                }
+                
+                currentStep = stepNumber;
+            };
+            
+            // Override completion function for readonly
+            window.completeTutorial = function() {
+                alert('Tutorial fullført i visning-modus. Du kan lukke denne fanen.');
+            };
         }
 
         // Initialize when DOM is loaded

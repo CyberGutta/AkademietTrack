@@ -718,6 +718,32 @@
             z-index: 1000;
         }
 
+        .tutorial-access-card {
+            margin-bottom: 2rem;
+        }
+
+        .tutorial-btn {
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .tutorial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
         .activation-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -1676,6 +1702,31 @@
                 </div>
             </section>
 
+            <section>
+            <div class="card tutorial-access-card">
+            <div class="card-header">
+                    <div class="card-icon">
+                        <span>📖</span>
+                    </div>
+                    <div class="card-title-section">
+                        <h2 class="card-title">Oppsett Tutorial</h2>
+                        <p class="card-subtitle">Se gjennom installasjons- og oppsettguiden</p>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="info-box">
+                        <p><strong>Info:</strong> Trenger du å se installasjonsguiden igjen? Klikk på knappen under for å gå gjennom oppsettsprosessen på nytt.</p>
+                    </div>
+                    
+                    <button onclick="viewTutorial()" class="tutorial-btn">
+                        <span>🎯</span>
+                        Se Tutorial
+                    </button>
+                </div>
+            </div>
+            </section>
+
             <section class="activation-section fade-in" id="activation-section">
                 <div class="activation-header">
                     <div class="activation-icon">🔑</div>
@@ -1900,6 +1951,11 @@ function validateInput(input, maxLength = 1000) {
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+}
+
+function viewTutorial() {
+    // Open tutorial in read-only mode by adding a parameter
+    window.open('tutorial.html?readonly=true', '_blank');
 }
 
 // Generate a secure activation key
