@@ -736,7 +736,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         // Configuration
         const CONFIG = {
             SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
@@ -882,32 +882,79 @@
             }
         }
 
-        // Check if user should be redirected based on email
-        function getRedirectUrl(userEmail) {
+        // Check if user should be redirected based on email and tutorial status
+        async function getRedirectUrl(userEmail) {
             const sanitizedEmail = sanitizeEmail(userEmail);
-            return sanitizedEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
+            
+            if (sanitizedEmail === CONFIG.ADMIN_EMAIL) {
+                return 'admin.html';
+            }
+            
+            // For new registrations, always go to tutorial first
+            // We'll check tutorial status in dashboard.html instead
+            console.log('Redirecting user to tutorial for onboarding...');
+            return 'tutorial.html';
         }
 
         // Secure redirect function
         function secureRedirect(url) {
-            const allowedUrls = ['admin.html', 'dashboard.html'];
+            const allowedUrls = ['admin.html', 'dashboard.html', 'tutorial.html'];
             if (allowedUrls.includes(url)) {
                 window.location.href = url;
             } else {
                 console.error('Invalid redirect URL:', url);
-                window.location.href = 'dashboard.html';
+                window.location.href = 'tutorial.html'; // Default to tutorial
             }
         }
 
         // Handle successful authentication
         async function handleSuccessfulAuth(session) {
             if (session && session.user && session.user.email) {
-                const redirectUrl = getRedirectUrl(session.user.email);
-                showSuccess('Vellykket innlogging! Omdirigerer...');
+                const userEmail = session.user.email.toLowerCase().trim();
                 
-                setTimeout(() => {
-                    secureRedirect(redirectUrl);
-                }, 1500);
+                if (userEmail === CONFIG.ADMIN_EMAIL) {
+                    showSuccess('Vellykket innlogging! Omdirigerer...');
+                    setTimeout(() => {
+                        secureRedirect('admin.html');
+                    }, 1500);
+                    return;
+                }
+                
+                // For fresh logins/registrations, check tutorial status
+                try {
+                    const { data, error } = await supabase
+                        .from('user_profiles')
+                        .select('tutorial_completed')
+                        .eq('user_email', userEmail)
+                        .maybeSingle(); // Use maybeSingle instead of single
+
+                    if (error) {
+                        console.error('Error checking tutorial status:', error);
+                        // Default to tutorial for new users
+                        showSuccess('Vellykket innlogging! Omdirigerer...');
+                        setTimeout(() => {
+                            secureRedirect('tutorial.html');
+                        }, 1500);
+                        return;
+                    }
+
+                    const hasCompletedTutorial = data?.tutorial_completed || false;
+                    const redirectUrl = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
+                    
+                    showSuccess('Vellykket innlogging! Omdirigerer...');
+                    setTimeout(() => {
+                        secureRedirect(redirectUrl);
+                    }, 1500);
+                    
+                } catch (dbError) {
+                    console.error('Database error in handleSuccessfulAuth:', dbError);
+                    // Default to tutorial if database error
+                    showSuccess('Vellykket innlogging! Omdirigerer...');
+                    setTimeout(() => {
+                        secureRedirect('tutorial.html');
+                    }, 1500);
+                }
+                
             } else {
                 console.error('Invalid session data:', session);
                 showError('Innlogging feilet. Prøv igjen.');
@@ -1105,9 +1152,31 @@
                     const userEmail = session.user.email?.toLowerCase().trim();
                     if (userEmail) {
                         // User is already logged in, redirect appropriately
-                        const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
-                        console.log('Existing session found, redirecting to:', redirectUrl);
-                        window.location.href = redirectUrl;
+                        if (userEmail === CONFIG.ADMIN_EMAIL) {
+                            window.location.href = 'admin.html';
+                            return;
+                        }
+                        
+                        // Check tutorial status for existing sessions
+                        try {
+                            const { data, error } = await supabase
+                                .from('user_profiles')
+                                .select('tutorial_completed')
+                                .eq('user_email', userEmail)
+                                .single();
+
+                            if (error && error.code !== 'PGRST116') {
+                                console.error('Error checking tutorial status:', error);
+                                window.location.href = 'tutorial.html';
+                                return;
+                            }
+
+                            const hasCompletedTutorial = data?.tutorial_completed || false;
+                            window.location.href = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
+                        } catch (dbError) {
+                            console.error('Database error:', dbError);
+                            window.location.href = 'tutorial.html';
+                        }
                     }
                 }
             } catch (error) {
@@ -1121,14 +1190,8 @@
             console.log('Auth event:', event, session?.user?.email);
             
             if (event === 'SIGNED_IN' && session?.user?.email) {
-                const userEmail = session.user.email.toLowerCase().trim();
-                const redirectUrl = userEmail === CONFIG.ADMIN_EMAIL ? 'admin.html' : 'dashboard.html';
-                
-                showSuccess('Vellykket innlogging! Omdirigerer...');
-                
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 1500);
+                // Let handleSuccessfulAuth handle the logic
+                await handleSuccessfulAuth(session);
             }
         });
 
@@ -1150,7 +1213,7 @@
         });
 
         // Handle unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
+        window.addEventListener('unhandled rejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
             showError('En nettverksfeil oppstod. Sjekk internettforbindelsen din.');
         });

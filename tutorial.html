@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkademiTrack Tutorial</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .tutorial-container {
+            max-width: 1200px;
+            width: 100%;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tutorial-header {
+            padding: 20px 40px 15px 40px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .tutorial-content {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .content-left {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .content-right {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+        }
+
+        .tutorial-step {
+            display: none;
+            height: 100%;
+        }
+
+        .tutorial-step.active {
+            display: flex;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tutorial-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tutorial-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .step-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+        }
+
+        .step-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.8rem;
+        }
+
+        .step-description {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .name-input-container {
+            margin: 1.5rem 0;
+        }
+
+        .name-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 16px 24px;
+            font-size: 1.2rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 50px;
+            background: white;
+            color: #333;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .name-input:focus {
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+
+        .tutorial-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .tutorial-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .tutorial-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .media-container {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: white;
+            border: 2px dashed #dee2e6;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #6c757d;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .command-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 1rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .command-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            color: #333;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 0.8rem 0;
+        }
+
+        .copy-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .copy-button:hover {
+            background: #5a6268;
+        }
+
+        .terminal-steps {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .terminal-steps h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .terminal-steps ol {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .terminal-steps li {
+            margin: 6px 0;
+            line-height: 1.4;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .warning-box, .success-box {
+            border-radius: 8px;
+            padding: 12px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .success-box {
+            background: #d1e7dd;
+            border: 1px solid #badbcc;
+            color: #0f5132;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: #667eea;
+            transform: scale(1.2);
+        }
+
+        .congratulations {
+            font-size: 2.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .completion-content {
+            text-align: center;
+        }
+
+        .auto-redirect-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+
+        .countdown {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tutorial-container {
+                height: 95vh;
+                margin: 10px;
+            }
+
+            .tutorial-header {
+                padding: 15px 20px 10px 20px;
+            }
+
+            .tutorial-title {
+                font-size: 1.5rem;
+            }
+
+            .tutorial-content {
+                flex-direction: column;
+            }
+
+            .content-left, .content-right {
+                flex: none;
+                padding: 15px;
+            }
+
+            .content-right {
+                max-height: 200px;
+            }
+
+            .step-title {
+                font-size: 1.3rem;
+            }
+
+            .step-description {
+                font-size: 0.95rem;
+            }
+
+            .media-container {
+                max-width: 100%;
+                height: 180px;
+            }
+        }
+
+        /* Special styling for step 3 to ensure everything fits */
+        #step-3 .content-left {
+            justify-content: flex-start;
+            padding-top: 20px;
+        }
+
+        #step-3 .step-content {
+            justify-content: flex-start;
+            gap: 0.8rem;
+        }
+
+        #step-3 .terminal-steps {
+            margin: 0.8rem 0;
+        }
+
+        #step-3 .command-container {
+            margin: 0.8rem 0;
+        }
+
+        #step-3 .warning-box,
+        #step-3 .success-box {
+            margin: 0.8rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="tutorial-container">
+        <!-- Header with progress -->
+        <div class="tutorial-header">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="step-indicator">
+                <div class="step-dot active" data-step="1"></div>
+                <div class="step-dot" data-step="2"></div>
+                <div class="step-dot" data-step="3"></div>
+                <div class="step-dot" data-step="4"></div>
+            </div>
+            <div class="tutorial-title">AkademiTrack Setup</div>
+        </div>
+
+        <!-- Step 1: Welcome and Name Input -->
+        <div class="tutorial-step active" id="step-1">
+            <div class="tutorial-content">
+                <div class="content-left">
+                    <div class="step-content">
+                        <div class="step-title">Hei! Velkommen til AkademiTrack!</div>
+                        <div class="step-description">
+                            La oss komme i gang med å sette opp din personlige studieopplevelse.
+                            Først - hva kan vi kalle deg?
+                        </div>
+
+                        <div class="name-input-container">
+                            <input 
+                                type="text" 
+                                class="name-input" 
+                                id="user-name-input" 
+                                placeholder="Skriv inn navnet ditt her..."
+                                maxlength="50"
+                            >
+                        </div>
+
+                        <button class="tutorial-button" onclick="goToStep(2)" id="name-next-btn" disabled>
+                            Fortsett
+                        </button>
+                    </div>
+                </div>
+                <div class="content-right">
+                    <div class="media-container">
+                        👋 Velkommen-animasjon kommer her
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: App Installation -->
+        <div class="tutorial-step" id="step-2">
+            <div class="tutorial-content">
+                <div class="content-left">
+                    <div class="step-content">
+                        <div class="step-title">Last ned AkademiTrack</div>
+                        <div class="step-description" id="install-greeting">
+                            Hei <span id="user-name-display"></span>! Nå skal vi laste ned og installere AkademiTrack-appen.
+                        </div>
+
+                        <div class="warning-box">
+                            <strong>Viktig:</strong> Sørg for at du laster ned appen fra en sikker kilde og at du har tilstrekkelig lagringsplass.
+                        </div>
+
+                        <button class="tutorial-button" onclick="startDownload()" id="install-btn">
+                            📥 Last ned AkademiTrack
+                        </button>
+
+                        <div id="download-status" style="margin-top: 1rem; display: none;">
+                            <p style="color: #28a745;">⏳ Nedlasting pågår... Vennligst vent.</p>
+                        </div>
+
+                        <button class="tutorial-button" onclick="goToStep(3)" id="install-next-btn" disabled style="margin-top: 1rem;">
+                            Neste - Jeg har installert appen
+                        </button>
+                    </div>
+                </div>
+                <div class="content-right">
+                    <div class="media-container">
+                        📱 Installasjon GIF/Video kommer her
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Terminal Commands -->
+        <div class="tutorial-step" id="step-3">
+            <div class="tutorial-content">
+                <div class="content-left">
+                    <div class="step-content">
+                        <div class="step-title">Fjern sikkerhetsbegrensninger</div>
+                        <div class="step-description">
+                            For å kunne kjøre appen må vi fjerne macOS sine sikkerhetsbegrensninger.
+                            Ikke bekymre deg - dette er helt trygt!
+                        </div>
+
+                        <div class="terminal-steps">
+                            <h4>Følg disse stegene:</h4>
+                            <ol>
+                                <li>Åpne Terminal (trykk Cmd + Space, skriv "Terminal")</li>
+                                <li>Kopier kommandoen nedenfor</li>
+                                <li>Lim den inn i Terminal og trykk Enter</li>
+                                <li>Vent til kommandoen er ferdig</li>
+                            </ol>
+                        </div>
+
+                        <div class="command-container">
+                            <p><strong>Kommando å kopiere:</strong></p>
+                            <input 
+                                type="text" 
+                                class="command-input" 
+                                id="terminal-command" 
+                                value="xattr -cr ~/Downloads/AkademiTrack.app"
+                                readonly
+                            >
+                            <button class="copy-button" onclick="copyCommand()">📋 Kopier</button>
+                        </div>
+
+                        <div class="success-box">
+                            <strong>Tips:</strong> Hvis du ikke finner appen i Downloads, sjekk hvor du lagret den og erstatt stien i kommandoen.
+                        </div>
+
+                        <button class="tutorial-button" onclick="goToStep(4)">
+                            Neste - Jeg har kjørt kommandoen
+                        </button>
+                    </div>
+                </div>
+                <div class="content-right">
+                    <div class="media-container">
+                        🎥 Terminal-video kommer her
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Completion -->
+        <div class="tutorial-step" id="step-4">
+            <div class="tutorial-content">
+                <div class="content-left">
+                    <div class="step-content">
+                        <div class="completion-content">
+                            <div class="congratulations">🎉</div>
+                            <div class="step-title">Gratulerer!</div>
+                            <div class="step-description">
+                                Du har fullført oppsettet! Nå kan du åpne AkademiTrack-programmet og begynne å spore studieprogresjonen din.
+                                Len deg tilbake og registrer i fred - alt er klart for deg!
+                            </div>
+
+                            <div class="success-box">
+                                <p><strong>Du kan nå:</strong></p>
+                                <ul style="text-align: left; margin: 10px 0;">
+                                    <li>Åpne AkademiTrack-appen fra Applications-mappen</li>
+                                    <li>Bruke aktiveringsnøkkelen din til å logge inn</li>
+                                    <li>Begynne å spore dine studieøkter</li>
+                                </ul>
+                            </div>
+
+                            <div class="auto-redirect-text">
+                                Omdirigerer automatisk til dashboard om <span class="countdown" id="countdown">5</span> sekunder...
+                            </div>
+
+                            <button class="tutorial-button" onclick="completeTutorial()">
+                                Gå til Dashboard nå
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-right">
+                    <div class="media-container">
+                        ✅ Fullført-animasjon kommer her
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentStep = 1;
+        let userName = '';
+        let userEmail = '';
+        let countdownTimer;
+
+        // Email validation function
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Save user name to database
+        async function saveUserNameToDatabase(userEmail, displayName) {
+            try {
+                if (!userEmail || !displayName) return false;
+                
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .upsert([{
+                        user_email: userEmail,
+                        display_name: displayName.trim(),
+                        tutorial_completed: false,
+                        updated_at: new Date().toISOString()
+                    }], { onConflict: 'user_email' })
+                    .select();
+
+                if (error) {
+                    console.error('Error saving user name:', error);
+                    return false;
+                }
+                
+                console.log('User name saved to database:', data);
+                return true;
+            } catch (error) {
+                console.error('Error in saveUserNameToDatabase:', error);
+                return false;
+            }
+        }
+
+        // Mark tutorial as completed in database
+        async function markTutorialCompleted(userEmail) {
+            try {
+                const { error } = await supabase
+                    .from('user_profiles')
+                    .upsert([{
+                        user_email: userEmail,
+                        tutorial_completed: true,
+                        tutorial_completed_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }], { onConflict: 'user_email' })
+                    .select();
+
+                if (error) {
+                    console.error('Error marking tutorial as completed:', error);
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error in markTutorialCompleted:', error);
+                return false;
+            }
+        }
+
+        // Check auth and redirect if not logged in
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session || !session.user || !session.user.email) {
+                window.location.href = 'index.html';
+                return null;
+            }
+            
+            userEmail = session.user.email;
+            
+            // Check if admin
+            if (userEmail === 'cyberbrothershq@gmail.com') {
+                window.location.href = 'admin.html';
+                return null;
+            }
+            
+            return userEmail;
+        }
+
+        // Navigate to specific step
+        async function goToStep(stepNumber) {
+            if (stepNumber < 1 || stepNumber > 4) return;
+            
+            // Save user name when leaving step 1
+            if (currentStep === 1 && stepNumber > 1) {
+                const nameInput = document.getElementById('user-name-input');
+                userName = nameInput ? nameInput.value.trim() : '';
+                
+                if (!userName || userName.length < 2) {
+                    alert('Vennligst skriv inn navnet ditt først!');
+                    return;
+                }
+                
+                // Save to database
+                if (userEmail) {
+                    const saved = await saveUserNameToDatabase(userEmail, userName);
+                    if (!saved) {
+                        alert('Kunne ikke lagre navnet. Prøv igjen.');
+                        return;
+                    }
+                }
+                
+                // Update greeting in step 2
+                const displayElement = document.getElementById('user-name-display');
+                if (displayElement) {
+                    displayElement.textContent = userName;
+                }
+            }
+            
+            // Hide current step
+            const currentStepEl = document.getElementById(`step-${currentStep}`);
+            if (currentStepEl) {
+                currentStepEl.classList.remove('active');
+            }
+            
+            // Update step indicator
+            const currentDot = document.querySelector(`.step-dot[data-step="${currentStep}"]`);
+            const nextDot = document.querySelector(`.step-dot[data-step="${stepNumber}"]`);
+            
+            if (currentDot) currentDot.classList.remove('active');
+            if (nextDot) nextDot.classList.add('active');
+            
+            // Show new step
+            const newStepEl = document.getElementById(`step-${stepNumber}`);
+            if (newStepEl) {
+                newStepEl.classList.add('active');
+            }
+            
+            // Update progress bar
+            const progressFill = document.getElementById('progress-fill');
+            if (progressFill) {
+                const progressPercent = (stepNumber / 4) * 100;
+                progressFill.style.width = `${progressPercent}%`;
+            }
+            
+            currentStep = stepNumber;
+        }
+
+        // Simulate download process
+        function startDownload() {
+            const downloadBtn = document.getElementById('install-btn');
+            const downloadStatus = document.getElementById('download-status');
+            const nextBtn = document.getElementById('install-next-btn');
+            
+            if (downloadBtn) {
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = '⏳ Laster ned...';
+            }
+            
+            if (downloadStatus) {
+                downloadStatus.style.display = 'block';
+            }
+            
+            // Simulate download progress
+            setTimeout(() => {
+                if (downloadBtn) {
+                    downloadBtn.textContent = '✅ Nedlasting fullført!';
+                }
+                if (downloadStatus) {
+                    downloadStatus.innerHTML = '<p style="color: #28a745;">✅ AkademiTrack er lastet ned! Du kan nå gå til neste trinn.</p>';
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = false;
+                    nextBtn.style.opacity = '1';
+                }
+            }, 3000);
+        }
+
+        // Copy terminal command
+        function copyCommand() {
+            const commandInput = document.getElementById('terminal-command');
+            if (!commandInput) return;
+            
+            commandInput.select();
+            commandInput.setSelectionRange(0, 99999);
+            
+            try {
+                document.execCommand('copy');
+                const copyBtn = event.target;
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Kopiert!';
+                copyBtn.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '#6c757d';
+                }, 2000);
+            } catch (err) {
+                console.error('Kunne ikke kopiere tekst:', err);
+                alert('Kunne ikke kopiere automatisk. Vennligst merk teksten og kopier manuelt.');
+            }
+        }
+
+        // Complete tutorial and redirect
+        async function completeTutorial() {
+            // Mark tutorial as completed in database
+            if (userEmail) {
+                await markTutorialCompleted(userEmail);
+            }
+            
+            // Redirect to dashboard
+            window.location.href = 'dashboard.html';
+        }
+
+        // Initialize tutorial
+        async function initializeTutorial() {
+            const email = await checkAuth();
+            if (!email) return;
+            
+            // Set up name input listener
+            const nameInput = document.getElementById('user-name-input');
+            const nextBtn = document.getElementById('name-next-btn');
+            
+            if (nameInput && nextBtn) {
+                nameInput.addEventListener('input', function() {
+                    const name = this.value.trim();
+                    if (name.length >= 2) {
+                        nextBtn.disabled = false;
+                        nextBtn.style.opacity = '1';
+                    } else {
+                        nextBtn.disabled = true;
+                        nextBtn.style.opacity = '0.5';
+                    }
+                });
+                
+                // Allow Enter key to proceed
+                nameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !nextBtn.disabled) {
+                        goToStep(2);
+                    }
+                });
+                
+                // Focus on name input
+                nameInput.focus();
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTutorial();
+        });
+    </script>
+</body>
+</html>
