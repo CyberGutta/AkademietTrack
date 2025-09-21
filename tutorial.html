@@ -1293,6 +1293,20 @@
                 );
             }
             
+            // Hide ONLY the "Allerede lastet ned" button, keep download button functional
+            const alreadyDownloadedBtn = document.getElementById('already-downloaded-btn');
+            if (alreadyDownloadedBtn) {
+                alreadyDownloadedBtn.style.display = 'none';
+            }
+            
+            // Enable the "Next" button and make it always available in readonly mode
+            const nextBtn = document.getElementById('install-next-btn');
+            if (nextBtn) {
+                nextBtn.disabled = false;
+                nextBtn.style.opacity = '1';
+                nextBtn.textContent = 'Neste steg';
+            }
+            
             // Override goToStep for readonly mode with 3-step navigation
             window.isReadOnlyMode = true;
             
@@ -1347,7 +1361,8 @@
                 // In readonly mode, go back to dashboard
                 window.location.href = 'dashboard.html';
             };
-
+            
+            // Override startCountdown function for readonly mode
             window.startCountdown = function() {
                 // In readonly mode, don't start countdown, just show completion message
                 const countdownElement = document.getElementById('countdown');
