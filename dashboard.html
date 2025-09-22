@@ -2729,12 +2729,36 @@ async function checkAuth() {
     const userAvatar = document.getElementById('user-avatar');
     const userEmailElement = document.getElementById('user-email');
     
+    const displayName = await getUserDisplayName(userEmail);
+
+
+    async function getUserDisplayName(userEmail) {
+        try {
+            const { data, error } = await supabase
+                .from('user_profiles')
+                .select('display_name')
+                .eq('user_email', userEmail)
+                .single();
+
+            if (error) {
+                console.error('Error fetching display name:', error);
+                return userEmail; // Fallback to email if error
+            }
+
+            return data?.display_name || userEmail; // Return display name or fallback to email
+        } catch (dbError) {
+            console.error('Database error fetching display name:', dbError);
+            return userEmail; // Fallback to email
+        }
+    }
+
     if (userEmailElement) {
-        userEmailElement.textContent = userEmail;
+        userEmailElement.textContent = displayName; // Show display name instead of email
     }
     if (userAvatar) {
-        userAvatar.textContent = userEmail.charAt(0).toUpperCase();
+        userAvatar.textContent = displayName.charAt(0).toUpperCase(); // Use first letter of display name
     }
+
 
     // Add loading state to STU stats
     const stuSessionsElement = document.getElementById('stu-sessions-count');
