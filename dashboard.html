@@ -718,32 +718,6 @@
             z-index: 1000;
         }
 
-        .tutorial-access-card {
-            margin-bottom: 2rem;
-        }
-
-        .tutorial-btn {
-            background: linear-gradient(45deg, #3b82f6, #60a5fa);
-            color: white;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        }
-
-        .tutorial-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-            filter: brightness(1.1);
-        }
-
         .activation-section {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -1520,6 +1494,270 @@
             cursor: not-allowed;
         }
 
+        .footer {
+            padding: 4rem 2rem 4rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            margin-bottom: 2rem;
+        }
+
+        .footer-logo img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            background: rgb(255, 255, 255);
+            box-shadow: -1px 2px 7px rgba(255, 255, 255, 0.822);
+        }
+
+        .footer-text {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.7);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-link:hover::before {
+            left: 100%;
+        }
+
+        .footer-link:active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Special styling for different button types */
+        .footer-link[href*="github"] {
+            background: linear-gradient(45deg, rgba(88, 166, 255, 0.2), rgba(59, 130, 246, 0.3));
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .footer-link[href*="github"]:hover {
+            background: linear-gradient(45deg, rgba(88, 166, 255, 0.4), rgba(59, 130, 246, 0.5));
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+
+        .footer-link[href*="login"] {
+            background: linear-gradient(45deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.3));
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .footer-link[href*="login"]:hover {
+            background: linear-gradient(45deg, rgba(34, 197, 94, 0.4), rgba(22, 163, 74, 0.5));
+            border-color: rgba(34, 197, 94, 0.8);
+        }
+
+        .footer-link[href*="mailto"] {
+            background: linear-gradient(45deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        .footer-link[href*="mailto"]:hover {
+            background: linear-gradient(45deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.5));
+            border-color: rgba(245, 158, 11, 0.8);
+        }
+
+        .footer-bottom {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .nav-btn {
+                white-space: nowrap;
+                min-width: auto;
+                padding: 0.6rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .hero {
+                padding: 8rem 1rem 4rem; /* Increased from 6rem to 8rem */
+            }
+
+            .hero-demo .demo-placeholder {
+                height: 200px;
+                margin: 0 1rem;
+            }
+
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .features {
+                padding: 4rem 1rem;
+            }
+
+            .features-title {
+                font-size: 2.2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .how-it-works {
+                padding: 4rem 1rem;
+            }
+
+            .how-it-works-title {
+                font-size: 2.2rem;
+            }
+
+            .step {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .step:nth-child(even) {
+                flex-direction: column;
+            }
+
+            .step:hover,
+            .step:nth-child(even):hover {
+                transform: translateY(-10px);
+            }
+
+            .cta {
+                padding: 4rem 1rem;
+            }
+
+            .cta-title {
+                font-size: 2.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: center;
+            }
+
+            .footer-link {
+                width: 100%;
+                max-width: 250px;
+                padding: 1rem 2rem;
+            }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .navbar {
@@ -1685,7 +1923,7 @@
                     <div class="welcome-logo">
                         <img src="logo.png" alt="AkademiTrack Logo">
                     </div>
-                    <h2 class="welcome-title">Velkommen Tilbake!</h2>
+                    <h2 class="welcome-title" id="welcome-back-title">Velkommen Tilbake!</h2>
                     <p class="welcome-subtitle">
                         Din akademiske reise fortsetter her. Spor fremgangen din, hold deg organisert, og oppnå målene dine med AkademiTrack.
                     </p>
@@ -1700,31 +1938,6 @@
                         Last Ned Nyeste Versjon
                     </button>
                 </div>
-            </section>
-
-            <section>
-            <div class="card tutorial-access-card">
-            <div class="card-header">
-                    <div class="card-icon">
-                        <span>📖</span>
-                    </div>
-                    <div class="card-title-section">
-                        <h2 class="card-title">Oppsett Tutorial</h2>
-                        <p class="card-subtitle">Se gjennom installasjons- og oppsettguiden</p>
-                    </div>
-                </div>
-                
-                <div class="card-content">
-                    <div class="info-box">
-                        <p><strong>Info:</strong> Trenger du å se installasjonsguiden igjen? Klikk på knappen under for å gå gjennom oppsettsprosessen på nytt.</p>
-                    </div>
-                    
-                    <button onclick="viewTutorial()" class="tutorial-btn">
-                        <span>🎯</span>
-                        Se Tutorial
-                    </button>
-                </div>
-            </div>
             </section>
 
             <section class="activation-section fade-in" id="activation-section">
@@ -1762,11 +1975,11 @@
             <div class="stats-grid">
                 <div class="stat-card fade-in">
                     <span class="stat-number" id="stu-sessions-count">--</span>
-                    <span class="stat-label">STU Økter</span>
+                    <span class="stat-label">Dine registrerte STU Økter med AkademiTrack</span>
                 </div>
                 <div class="stat-card fade-in">
                     <span class="stat-number" id="stu-hours-total">--</span>
-                    <span class="stat-label">STU Timer</span>
+                    <span class="stat-label">Dine registrerte STU Timer med AkademiTrack</span>
                 </div>
             </div>
 
@@ -1778,11 +1991,6 @@
                         <div class="feature-icon">⏰</div>
                         <div class="feature-title">Smart Tidssporing</div>
                         <div class="feature-description">Spor dine studieøkter automatisk med intelligente tidsadministrasjonsfunksjoner.</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">📊</div>
-                        <div class="feature-title">Fremgangsanalyse</div>
-                        <div class="feature-description">Visualiser læringsfremgangen din med detaljerte diagrammer og innsikt.</div>
                     </div>
                     <div class="feature-item">
                         <div class="feature-icon">🎯</div>
@@ -1921,6 +2129,28 @@
     </div>
 </div>
 
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="logo.png" alt="AkademiTrack Logo">
+                    <h3>AkademiTrack</h3>
+                </div>
+                <p class="footer-text">
+                    Automatisk oppmøteregistrering for STU-økter på Akademiet. Et kraftig verktøy som gjør studentlivet enklere.
+                </p>
+                <div class="footer-links">
+                    <a href="https://github.com/CyberGutta/AkademiTrack" class="footer-link" target="_blank">GitHub</a>
+                    <a href="login.html" class="footer-link">Logg Inn</a>
+                    <a href="#features" class="footer-link">Funksjoner</a>
+                    <a href="mailto:cyberbrothershq@gmail.com" class="footer-link">Støtte</a>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 AkademiTrack. Laget med ❤️ for studenter ved Akademiet.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
     <script>
 // Initialize Supabase client
 const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
@@ -1951,31 +2181,6 @@ function validateInput(input, maxLength = 1000) {
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-}
-
-async function getUserDisplayName(userEmail) {
-    try {
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('display_name')
-            .eq('user_email', userEmail)
-            .single();
-
-        if (error) {
-            console.error('Error fetching display name:', error);
-            return userEmail; // Fallback to email if error
-        }
-
-        return data?.display_name || userEmail; // Return display name or fallback to email
-    } catch (dbError) {
-        console.error('Database error fetching display name:', dbError);
-        return userEmail; // Fallback to email
-    }
-}
-
-function viewTutorial() {
-    // Use same tab instead of opening new tab
-    window.location.href = 'tutorial.html?readonly=true';
 }
 
 // Generate a secure activation key
@@ -2461,18 +2666,18 @@ async function checkAuth() {
     const userAvatar = document.getElementById('user-avatar');
     const userEmailElement = document.getElementById('user-email');
     
-    const displayName = await getUserDisplayName(userEmail);
-
     if (userEmailElement) {
-        userEmailElement.textContent = displayName; // Show display name instead of email
+        userEmailElement.textContent = userEmail;
     }
     if (userAvatar) {
-        userAvatar.textContent = displayName.charAt(0).toUpperCase(); // Use first letter of display name
+        userAvatar.textContent = userEmail.charAt(0).toUpperCase();
     }
 
     // Add loading state to STU stats
     const stuSessionsElement = document.getElementById('stu-sessions-count');
     const stuHoursElement = document.getElementById('stu-hours-total');
+
+    // Update welcome message with display name
     
     if (stuSessionsElement && stuHoursElement) {
         const stuSessionsCard = stuSessionsElement.parentElement;
