@@ -547,6 +547,33 @@
             animation: pulse 1.5s ease-in-out infinite alternate;
         }
 
+        .tutorial-access-card {
+            margin-bottom: 2rem;
+        }
+
+        .tutorial-btn {
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .tutorial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
+
         @keyframes pulse {
             from {
                 opacity: 0.5;
@@ -1983,6 +2010,31 @@
                 </div>
             </div>
 
+            <section>
+            <div class="card tutorial-access-card">
+            <div class="card-header">
+                    <div class="card-icon">
+                        <span>📖</span>
+                    </div>
+                    <div class="card-title-section">
+                        <h2 class="card-title">Oppsett Tutorial</h2>
+                        <p class="card-subtitle">Se gjennom installasjons- og oppsettguiden</p>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="info-box">
+                        <p><strong>Info:</strong> Trenger du å se installasjonsguiden igjen? Klikk på knappen under for å gå gjennom oppsettsprosessen på nytt.</p>
+                    </div>
+                    
+                    <button onclick="viewTutorial()" class="tutorial-btn">
+                        <span>🎯</span>
+                        Se Tutorial
+                    </button>
+                </div>
+            </div>
+            </section>
+
             <!-- Features Section -->
             <section class="features-section fade-in">
                 <h3 class="features-title">Hvorfor Velge AkademiTrack?</h3>
@@ -2200,6 +2252,8 @@ function generateSecureKey() {
     return key;
 }
 
+
+
 // Fetch or create activation key for user
 async function fetchActivationKey(userEmail) {
     try {
@@ -2254,6 +2308,8 @@ async function fetchActivationKey(userEmail) {
         return null;
     }
 }
+
+
 
 // Update activation status UI
 function updateActivationStatusUI(activationData) {
@@ -2321,6 +2377,13 @@ async function loadActivationData(userEmail) {
         console.error('Error loading activation data:', error);
         updateActivationStatusUI(null);
     }
+}
+
+function viewTutorial() {
+    // Open tutorial in read-only mode by adding a parameter
+    window.open('tutorial.html?readonly=true', '_blank');
+    // Use same tab instead of opening new tab
+    window.location.href = 'tutorial.html?readonly=true';
 }
 
 // Simplified function to fetch STU registration data without charts
