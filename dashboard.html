@@ -436,9 +436,11 @@
             padding: 8rem 2rem 8rem; /* Increased top padding for fixed navbar */
         }
 
-        /* Welcome Section */
-        .welcome-section {
-            text-align: center;
+        /* Welcome and Stats Section - Side by Side */
+        .welcome-stats-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
             margin-bottom: 3rem;
             padding: 2rem 0;
         }
@@ -499,12 +501,11 @@
             color: #374151;
         }
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 2rem;
-            margin-bottom: 4rem;
+        /* Stats Grid - Compact vertical layout */
+        .stats-grid-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
             animation: fadeInUp 1s ease-out 0.2s both;
         }
 
@@ -547,7 +548,75 @@
             animation: pulse 1.5s ease-in-out infinite alternate;
         }
 
+        @keyframes pulse {
+            from {
+                opacity: 0.5;
+            }
+            to {
+                opacity: 0.8;
+            }
+        }
+
+        /* Tutorial and Download Section - Side by Side */
+        .tutorial-download-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
         .tutorial-access-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 20px rgba(31, 38, 135, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: #374151;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .tutorial-access-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+        }
+
+        .tutorial-access-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(31, 38, 135, 0.2);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .tutorial-access-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-access-card p {
+            color: #64748b;
+            line-height: 1.6;
             margin-bottom: 2rem;
         }
 
@@ -573,28 +642,8 @@
             filter: brightness(1.1);
         }
 
-
-        @keyframes pulse {
-            from {
-                opacity: 0.5;
-            }
-            to {
-                opacity: 0.8;
-            }
-        }
-
-        /* Cards Grid - Single column layout */
-        .cards-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            margin-bottom: 4rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .card {
+        /* Download Card */
+        .download-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 20px;
@@ -605,27 +654,28 @@
             position: relative;
             overflow: hidden;
             color: #374151;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
         }
 
-        .card::before {
+        .download-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            background: linear-gradient(45deg, #16a34a, #22c55e);
         }
 
-        .card:hover {
+        .download-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px rgba(31, 38, 135, 0.2);
         }
 
-        .card-icon {
+        .download-card-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            background: linear-gradient(45deg, #16a34a, #22c55e);
             border-radius: 16px;
             display: flex;
             align-items: center;
@@ -635,14 +685,14 @@
             color: white;
         }
 
-        .card h2 {
+        .download-card h2 {
             font-size: 1.5rem;
             font-weight: 700;
             color: #1e40af;
             margin-bottom: 1rem;
         }
 
-        .card p {
+        .download-card p {
             color: #64748b;
             line-height: 1.6;
             margin-bottom: 2rem;
@@ -669,80 +719,6 @@
         .download-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 30px rgba(34, 197, 94, 0.4);
-        }
-
-        /* Features Section */
-        .features-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 3rem;
-            margin: 3rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.1);
-        }
-
-        .features-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 2.5rem;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2.5rem;
-        }
-
-        .feature-item {
-            text-align: center;
-            padding: 1.5rem;
-            transition: transform 0.3s ease;
-        }
-
-        .feature-item:hover {
-            transform: translateY(-10px);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            font-size: 1.8rem;
-            transition: all 0.3s ease;
-        }
-
-        .feature-item:hover .feature-icon {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
-        }
-
-        .feature-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .feature-description {
-            font-size: 0.95rem;
-            opacity: 0.85;
-            line-height: 1.5;
-        }
-
-        /* Chat Bubble Styles */
-        .chat-bubble {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 1000;
         }
 
         .activation-section {
@@ -867,6 +843,80 @@
 
         .copy-key-btn:hover {
             background: #2563eb;
+        }
+
+        /* Features Section */
+        .features-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 3rem;
+            margin: 3rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.1);
+        }
+
+        .features-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover .feature-icon {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-description {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+
+        /* Chat Bubble Styles */
+        .chat-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
         }
 
         .chat-bubble-button {
@@ -1124,93 +1174,6 @@
             border-radius: 8px;
             font-size: 0.9rem;
             background: white;
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
-        }
-
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Welcome and Download Section - Side by Side */
-        .welcome-download-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 3rem;
-            padding: 2rem 0;
-        }
-
-        .download-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 20px rgba(31, 38, 135, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            color: #374151;
-            animation: fadeInUp 0.8s ease-out 0.1s both;
-        }
-
-        .download-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(45deg, #16a34a, #22c55e);
-        }
-
-        .download-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(31, 38, 135, 0.2);
-        }
-
-        .download-card-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(45deg, #16a34a, #22c55e);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: white;
-        }
-
-        .download-card h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e40af;
-            margin-bottom: 1rem;
-        }
-
-        .download-card p {
-            color: #64748b;
-            line-height: 1.6;
-            margin-bottom: 2rem;
         }
 
         .settings-btn {
@@ -1676,121 +1639,6 @@
                 padding: 1rem;
             }
 
-            .nav-container {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .nav-buttons {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .nav-btn {
-                white-space: nowrap;
-                min-width: auto;
-                padding: 0.6rem 1.5rem;
-                font-size: 0.9rem;
-            }
-
-            .hero {
-                padding: 8rem 1rem 4rem; /* Increased from 6rem to 8rem */
-            }
-
-            .hero-demo .demo-placeholder {
-                height: 200px;
-                margin: 0 1rem;
-            }
-
-
-            .hero-title {
-                font-size: 2.5rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .hero-btn {
-                width: 100%;
-                max-width: 300px;
-                justify-content: center;
-            }
-
-            .features {
-                padding: 4rem 1rem;
-            }
-
-            .features-title {
-                font-size: 2.2rem;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .how-it-works {
-                padding: 4rem 1rem;
-            }
-
-            .how-it-works-title {
-                font-size: 2.2rem;
-            }
-
-            .step {
-                flex-direction: column;
-                text-align: center;
-                gap: 1.5rem;
-            }
-
-            .step:nth-child(even) {
-                flex-direction: column;
-            }
-
-            .step:hover,
-            .step:nth-child(even):hover {
-                transform: translateY(-10px);
-            }
-
-            .cta {
-                padding: 4rem 1rem;
-            }
-
-            .cta-title {
-                font-size: 2.2rem;
-            }
-
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .footer-links {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: center;
-            }
-
-            .footer-link {
-                width: 100%;
-                max-width: 250px;
-                padding: 1rem 2rem;
-            }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .navbar {
-                padding: 1rem;
-            }
-
             .navbar.scrolled {
                 padding: 0.5rem 1rem;
             }
@@ -1813,7 +1661,12 @@
                 padding: 7rem 1rem 6rem;
             }
 
-            .welcome-download-section {
+            .welcome-stats-section {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .tutorial-download-section {
                 grid-template-columns: 1fr;
                 gap: 2rem;
             }
@@ -1830,22 +1683,8 @@
                 font-size: 0.9rem;
             }
 
-            .cards-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .card {
-                padding: 2rem;
-            }
-
             .features-section {
                 padding: 2rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
             }
 
             .stat-card {
@@ -1866,14 +1705,6 @@
         }
 
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-
             .features-grid {
                 grid-template-columns: 1fr;
                 gap: 2rem;
@@ -1944,8 +1775,8 @@
 
         <!-- Main Content -->
         <main class="main-container">
-            <!-- Welcome and Download Section -->
-            <section class="welcome-download-section">
+            <!-- Welcome and Stats Section -->
+            <section class="welcome-stats-section">
                 <div class="welcome-container">
                     <div class="welcome-logo">
                         <img src="logo.png" alt="AkademiTrack Logo">
@@ -1956,14 +1787,16 @@
                     </p>
                 </div>
                 
-                <div class="download-card fade-in">
-                    <div class="download-card-icon">📱</div>
-                    <h2>Last Ned AkademiTrack</h2>
-                    <p>Få den nyeste versjonen av AkademiTrack og glem aldri studietiden din igjen. Vårt kraftige verktøy hjelper deg med å holde deg organisert og fokusert på dine akademiske mål med avanserte sporingsfunksjoner.</p>
-                    <button class="download-btn" onclick="downloadApp()">
-                        <span>⬇️</span>
-                        Last Ned Nyeste Versjon
-                    </button>
+                <!-- Stats Grid -->
+                <div class="stats-grid-compact">
+                    <div class="stat-card fade-in">
+                        <span class="stat-number" id="stu-sessions-count">--</span>
+                        <span class="stat-label">Dine STU Økter med AkademiTrack </span>
+                    </div>
+                    <div class="stat-card fade-in">
+                        <span class="stat-number" id="stu-hours-total">--</span>
+                        <span class="stat-label">Dine STU Timer med AkademiTrack</span>
+                    </div>
                 </div>
             </section>
 
@@ -1998,41 +1831,33 @@
                 </div>
             </section>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card fade-in">
-                    <span class="stat-number" id="stu-sessions-count">--</span>
-                    <span class="stat-label">Dine registrerte STU Økter med AkademiTrack</span>
-                </div>
-                <div class="stat-card fade-in">
-                    <span class="stat-number" id="stu-hours-total">--</span>
-                    <span class="stat-label">Dine registrerte STU Timer med AkademiTrack</span>
-                </div>
-            </div>
-
-            <section>
-            <div class="card tutorial-access-card">
-            <div class="card-header">
+            <!-- Tutorial and Download Section -->
+            <section class="tutorial-download-section">
+                <div class="tutorial-access-card">
                     <div class="card-icon">
                         <span>📖</span>
                     </div>
-                    <div class="card-title-section">
-                        <h2 class="card-title">Oppsett Tutorial</h2>
-                        <p class="card-subtitle">Se gjennom installasjons- og oppsettguiden</p>
-                    </div>
-                </div>
-                
-                <div class="card-content">
-                    <div class="info-box">
-                        <p><strong>Info:</strong> Trenger du å se installasjonsguiden igjen? Klikk på knappen under for å gå gjennom oppsettsprosessen på nytt.</p>
-                    </div>
+                    <h2>Oppsett Tutorial</h2>
+                    <p>Trenger du å se installasjonsguiden igjen? Klikk på knappen under for å gå gjennom oppsettsprosessen på nytt.</p>
                     
                     <button onclick="viewTutorial()" class="tutorial-btn">
                         <span>🎯</span>
                         Se Tutorial
                     </button>
                 </div>
-            </div>
+                
+                <div class="download-card fade-in">
+                    <div class="download-card-icon">📱</div>
+                    <h2>Last Ned AkademiTrack</h2>
+                    <p>Få den nyeste versjonen av AkademiTrack og glem aldri studietiden din igjen. Vårt kraftige verktøy hjelper deg med å holde deg organisert og fokusert på dine akademiske mål med avanserte sporingsfunksjoner.</p>
+                    <button class="download-btn" onclick="downloadApp()">
+                        <span>⬇️</span>
+                        Last Ned Nyeste Versjon
+                    </button>
+                </div>
+            </section>
+
+            <section>
             </section>
 
             <!-- Features Section -->
@@ -2202,7 +2027,6 @@
             </div>
         </footer>
     </div>
-
     <script>
 // Initialize Supabase client
 const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
@@ -2215,6 +2039,7 @@ let currentConversationId = null;
 let isAdminOnline = false;
 let messagesSubscription = null;
 let conversationsByType = {}; // Store conversation IDs by message type
+let currentUserEmail = null; // Store the actual user email globally
 
 // Security: HTML Sanitization function
 function sanitizeHTML(str) {
@@ -2251,8 +2076,6 @@ function generateSecureKey() {
     
     return key;
 }
-
-
 
 // Fetch or create activation key for user
 async function fetchActivationKey(userEmail) {
@@ -2308,8 +2131,6 @@ async function fetchActivationKey(userEmail) {
         return null;
     }
 }
-
-
 
 // Update activation status UI
 function updateActivationStatusUI(activationData) {
@@ -2664,7 +2485,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Replace the existing checkAuth function with this updated version
 // Check if user has completed tutorial
 async function checkTutorialStatus(userEmail) {
     try {
@@ -2689,6 +2509,27 @@ async function checkTutorialStatus(userEmail) {
     }
 }
 
+// Get user display name
+async function getUserDisplayName(userEmail) {
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('display_name')
+            .eq('user_email', userEmail)
+            .single();
+
+        if (error) {
+            console.error('Error fetching display name:', error);
+            return userEmail; // Fallback to email if error
+        }
+
+        return data?.display_name || userEmail; // Return display name or fallback to email
+    } catch (dbError) {
+        console.error('Database error fetching display name:', dbError);
+        return userEmail; // Fallback to email
+    }
+}
+
 // Replace the existing checkAuth function with this updated version
 async function checkAuth() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -2707,6 +2548,9 @@ async function checkAuth() {
         window.location.href = 'index.html';
         return;
     }
+    
+    // Store the actual user email globally
+    currentUserEmail = userEmail;
     
     // Check if user is admin
     if (userEmail === 'cyberbrothershq@gmail.com') {
@@ -2731,27 +2575,6 @@ async function checkAuth() {
     
     const displayName = await getUserDisplayName(userEmail);
 
-
-    async function getUserDisplayName(userEmail) {
-        try {
-            const { data, error } = await supabase
-                .from('user_profiles')
-                .select('display_name')
-                .eq('user_email', userEmail)
-                .single();
-
-            if (error) {
-                console.error('Error fetching display name:', error);
-                return userEmail; // Fallback to email if error
-            }
-
-            return data?.display_name || userEmail; // Return display name or fallback to email
-        } catch (dbError) {
-            console.error('Database error fetching display name:', dbError);
-            return userEmail; // Fallback to email
-        }
-    }
-
     if (userEmailElement) {
         userEmailElement.textContent = displayName; // Show display name instead of email
     }
@@ -2759,13 +2582,10 @@ async function checkAuth() {
         userAvatar.textContent = displayName.charAt(0).toUpperCase(); // Use first letter of display name
     }
 
-
     // Add loading state to STU stats
     const stuSessionsElement = document.getElementById('stu-sessions-count');
     const stuHoursElement = document.getElementById('stu-hours-total');
 
-    // Update welcome message with display name
-    
     if (stuSessionsElement && stuHoursElement) {
         const stuSessionsCard = stuSessionsElement.parentElement;
         const stuHoursCard = stuHoursElement.parentElement;
@@ -2864,20 +2684,18 @@ function toggleChat() {
 
 // Initialize chat when opened
 async function initializeChat() {
-    const userEmailElement = document.getElementById('user-email');
-    const userEmail = userEmailElement ? userEmailElement.textContent : '';
     const messageTypeSelect = document.getElementById('message-type');
     const currentMessageType = messageTypeSelect ? messageTypeSelect.value : 'support';
     
-    // Security: Validate email before proceeding
-    if (!userEmail || !isValidEmail(userEmail)) {
-        console.error('Invalid user email');
+    // Use the globally stored email instead of getting from DOM
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        console.error('No valid user email available');
         return;
     }
     
     try {
         // Get or create conversation for current message type
-        await getOrCreateConversation(userEmail, currentMessageType);
+        await getOrCreateConversation(currentUserEmail, currentMessageType);
         
         // Load existing messages for this conversation
         await loadMessages();
@@ -3107,11 +2925,7 @@ async function signOut() {
 
 // Download functionality
 function downloadApp() {
-    const userEmailElement = document.getElementById('user-email');
-    const userEmail = userEmailElement ? userEmailElement.textContent : 'unknown';
-    
-    console.log('Nedlasting startet for bruker:', sanitizeHTML(userEmail));
-    alert('Nedlasting starter snart! (Demo - ingen faktisk fil tilgjengelig)');
+    window.location.href = 'https://github.com/CyberGutta/AkademiTrack/releases/download/v1.0.0/Mac.zip';
 }
 
 // Event listeners for chat functionality
@@ -3143,13 +2957,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Get user email
-            const userEmailElement = document.getElementById('user-email');
-            const userEmail = userEmailElement ? userEmailElement.textContent : '';
-            
-            // Security: Validate email
-            if (!userEmail || !isValidEmail(userEmail)) {
-                console.error('Invalid user email');
+            // Use the globally stored email instead of getting from DOM
+            if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+                console.error('No valid user email available for chat');
+                alert('Feil: Ingen gyldig e-post tilgjengelig. Prøv å laste siden på nytt.');
                 return;
             }
             
@@ -3158,7 +2969,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const validatedMessageType = validMessageTypes.includes(selectedMessageType) ? selectedMessageType : 'other';
             
             // Ensure we have the right conversation for this message type
-            await getOrCreateConversation(userEmail, validatedMessageType);
+            await getOrCreateConversation(currentUserEmail, validatedMessageType);
             
             if (!currentConversationId) {
                 console.error('No conversation ID available after creation attempt');
@@ -3173,7 +2984,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .from('chat_messages')
                     .insert([{
                         conversation_id: currentConversationId,
-                        sender_email: userEmail,
+                        sender_email: currentUserEmail,
                         sender_type: 'user',
                         message_text: messageText
                         // Don't include message_type here - it's stored in the conversation
@@ -3197,11 +3008,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageTypeSelect = document.getElementById('message-type');
     if (messageTypeSelect) {
         messageTypeSelect.addEventListener('change', async function() {
-            const userEmailElement = document.getElementById('user-email');
-            const userEmail = userEmailElement ? userEmailElement.textContent : '';
-            
-            if (!userEmail || !isValidEmail(userEmail)) {
-                console.error('Invalid user email');
+            // Use the globally stored email instead of getting from DOM
+            if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+                console.error('No valid user email available for message type change');
                 return;
             }
 
@@ -3215,7 +3024,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Get or create conversation for new message type
-                await getOrCreateConversation(userEmail, selectedMessageType);
+                await getOrCreateConversation(currentUserEmail, selectedMessageType);
                 
                 // Load messages for this conversation
                 await loadMessages();
