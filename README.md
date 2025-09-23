@@ -2,7 +2,7 @@
 
 This is the official website for AkademiTrack, a study time automation tool for students.
 
-![Website interface](https://github.com/user-attachments/assets/0331bd6f-a85d-4e8e-b2c9-6cfc698c992f)
+![Website interface](https://github.com/user-attachments/assets/7841f28d-f2fb-430a-ab7d-4c12f47f171b)
 
 ## About
 
