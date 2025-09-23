@@ -2201,9 +2201,7 @@ async function loadActivationData(userEmail) {
 }
 
 function viewTutorial() {
-    // Open tutorial in read-only mode by adding a parameter
-    window.open('tutorial.html?readonly=true', '_blank');
-    // Use same tab instead of opening new tab
+    // Navigate to tutorial in the current tab only
     window.location.href = 'tutorial.html?readonly=true';
 }
 

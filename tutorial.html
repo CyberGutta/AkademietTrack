@@ -1051,6 +1051,9 @@
                 return;
             }
             
+            // Show alert with instructions
+            alert('Nedlasting starter nå!\n\nViktig: Etter at filen er lastet ned:\n• Finn filen i nedlastingsmappen din\n• Klikk deretter "Neste - Jeg har installert appen" knappen nedenfor\n\nIkke gå videre før filen er ferdig nedlastet!');
+            
             const downloadBtn = document.getElementById('install-btn');
             const downloadStatus = document.getElementById('download-status');
             const nextBtn = document.getElementById('install-next-btn');
@@ -1102,7 +1105,15 @@
                 if (nextBtn) {
                     nextBtn.disabled = false;
                     nextBtn.style.opacity = '1';
+                    // Make the next button more prominent after download
+                    nextBtn.style.animation = 'pulse 2s infinite';
                 }
+                
+                // Show another helpful alert after download completes
+                setTimeout(() => {
+                    alert('Nedlasting fullført!\n\nNå kan du klikke "Neste - Jeg har installert appen" for å fortsette.');
+                }, 500);
+                
             }, 2000);
         }
 
