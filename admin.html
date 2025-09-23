@@ -667,6 +667,7 @@
 
     <script>
 // Initialize Supabase client
+// Initialize Supabase client
 const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
 
@@ -862,6 +863,10 @@ async function selectConversation(conversationId) {
     });
     event.currentTarget.classList.add('active');
     
+    // Clear messages container immediately when switching conversations
+    const messagesContainer = document.getElementById('messages-container');
+    messagesContainer.innerHTML = '';
+    
     // Load conversation details
     await loadConversationDetails(conversationId);
     await loadMessages(conversationId);
@@ -905,19 +910,33 @@ async function loadMessages(conversationId) {
         if (error) throw error;
 
         const messagesContainer = document.getElementById('messages-container');
-        const currentMessageCount = messagesContainer.children.length;
         
-        if (messages && messages.length > currentMessageCount) {
-            // Only add new messages
-            const newMessages = messages.slice(currentMessageCount);
-            newMessages.forEach(message => {
-                displayMessage(message);
-            });
-            scrollToBottom();
-        } else if (messages && messages.length !== currentMessageCount) {
-            // If message count doesn't match, reload all messages
+        // Only use smart loading if we're polling the same conversation
+        // If conversation changed or container is empty, reload all messages
+        if (currentConversationId === conversationId && messagesContainer.children.length > 0) {
+            const currentMessageCount = messagesContainer.children.length;
+            
+            if (messages && messages.length > currentMessageCount) {
+                // Only add new messages
+                const newMessages = messages.slice(currentMessageCount);
+                newMessages.forEach(message => {
+                    displayMessage(message);
+                });
+                scrollToBottom();
+            } else if (messages && messages.length !== currentMessageCount) {
+                // If message count doesn't match, reload all messages
+                messagesContainer.innerHTML = '';
+                if (messages.length > 0) {
+                    messages.forEach(message => {
+                        displayMessage(message);
+                    });
+                    scrollToBottom();
+                }
+            }
+        } else {
+            // Fresh load - clear and load all messages
             messagesContainer.innerHTML = '';
-            if (messages.length > 0) {
+            if (messages && messages.length > 0) {
                 messages.forEach(message => {
                     displayMessage(message);
                 });
@@ -1231,7 +1250,7 @@ async function signOut() {
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
-    checkAuth();    
+    checkAuth();
 });
 
 // Set admin offline when page is closed - ONLY if admin manually turned off
