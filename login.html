@@ -1128,7 +1128,7 @@
             
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/AkademietTrack/reset-password.html`
+                    redirectTo: `https://cybergutta.github.io/AkademietTrack/reset-password.html`
                 });
                 
                 if (error) throw error;
