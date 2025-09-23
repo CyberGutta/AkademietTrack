@@ -233,8 +233,8 @@
 
         .media-container {
             width: 100%;
-            max-width: 400px;
-            height: 300px;
+            max-width: 500px;
+            height: 400px;
             background: rgba(255, 255, 255, 0.8);
             border: 2px dashed #d1d5db;
             border-radius: 16px;
@@ -475,6 +475,91 @@
             color: #3b82f6;
         }
 
+                /* Popup Modal Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .popup-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+            animation: popupSlideIn 0.3s ease;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .popup-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f59e0b;
+            margin-bottom: 1rem;
+        }
+
+        .popup-message {
+            font-size: 1rem;
+            color: #4b5563;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .popup-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup-btn-primary {
+            background: linear-gradient(45deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .popup-btn-primary:hover {
+            background: linear-gradient(45deg, #2563eb, #1d4ed8);
+        }
+
+        .popup-btn-secondary {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .popup-btn-secondary:hover {
+            background: #d1d5db;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .tutorial-container {
@@ -621,7 +706,7 @@
                         </div>
 
                         <div class="button-container">
-                            <button class="download-button" onclick="startDownload()" id="install-btn">
+                            <button class="download-button" onclick="showDownloadPopup()" id="install-btn">
                                 <span>📥</span>
                                 <span id="download-text">Last ned AkademiTrack</span>
                             </button>
@@ -642,7 +727,7 @@
                 </div>
                 <div class="content-right">
                     <div class="media-container">
-                        <img src="Lastned.gif" alt="Animated GIF" style="width: 400px; height: 300px;">
+                        <img src="Lastned.gif" alt="Animated GIF" style="width: 480px; height: 300px;">
                     </div>
                 </div>
             </div>
@@ -688,7 +773,7 @@
                 </div>
                 <div class="content-right">
                 <div class="media-container">
-                    <img src="Komandotut.gif" alt="Animated GIF" style="width: 350px; height: 270px;">
+                    <img src="Komandotut.gif" alt="Animated GIF" style="width: 480px; height: 300px;">
                 </div>
             </div>
             </div>
@@ -731,6 +816,26 @@
                         <div style="font-size: 4rem; animation: bounce 2s infinite;">✅</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Warning Popup -->
+    <div class="popup-overlay" id="downloadPopup">
+        <div class="popup-modal">
+            <div class="popup-title">⚠️ Viktig påminnelse!</div>
+            <div class="popup-message">
+                Nedlastingen starter nå. Når du har åpnet zip-filen og appen ligger i nedlastingsmappen din, må du komme tilbake til denne nettsiden for å fullføre oppsettet.
+                <br><br>
+                <strong>Ikke lukk denne fanen!</strong>
+            </div>
+            <div class="popup-buttons">
+                <button class="popup-btn popup-btn-secondary" onclick="closeDownloadPopup()">
+                    Avbryt
+                </button>
+                <button class="popup-btn popup-btn-primary" onclick="confirmDownload()">
+                    OK, start nedlasting
+                </button>
             </div>
         </div>
     </div>
@@ -1044,15 +1149,35 @@
             currentStep = stepNumber;
         }
 
-        // Start download process
-        function startDownload() {
+                // Start download process
+        // Show download popup
+        function showDownloadPopup() {
+            const popup = document.getElementById('downloadPopup');
+            if (popup) {
+                popup.style.display = 'flex';
+            }
+        }
+
+        // Close download popup
+        function closeDownloadPopup() {
+            const popup = document.getElementById('downloadPopup');
+            if (popup) {
+                popup.style.display = 'none';
+            }
+        }
+
+        // Confirm and start download
+        function confirmDownload() {
+            closeDownloadPopup();
+            actuallyStartDownload();
+        }
+
+        // Actual download function (renamed from startDownload)
+        function actuallyStartDownload() {
             if (!downloadURL) {
                 alert('Kunne ikke bestemme nedlastingslenke. Prøv å laste siden på nytt.');
                 return;
             }
-            
-            // Show alert with instructions
-            alert('Nedlasting starter nå!\n\nViktig: Etter at filen er lastet ned:\n• Finn filen i nedlastingsmappen din\n• Klikk deretter "Neste - Jeg har installert appen" knappen nedenfor\n\nIkke gå videre før filen er ferdig nedlastet!');
             
             const downloadBtn = document.getElementById('install-btn');
             const downloadStatus = document.getElementById('download-status');
@@ -1105,15 +1230,7 @@
                 if (nextBtn) {
                     nextBtn.disabled = false;
                     nextBtn.style.opacity = '1';
-                    // Make the next button more prominent after download
-                    nextBtn.style.animation = 'pulse 2s infinite';
                 }
-                
-                // Show another helpful alert after download completes
-                setTimeout(() => {
-                    alert('Nedlasting fullført!\n\nNå kan du klikke "Neste - Jeg har installert appen" for å fortsette.');
-                }, 500);
-                
             }, 2000);
         }
 
