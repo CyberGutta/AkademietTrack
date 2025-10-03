@@ -2114,6 +2114,8 @@ function generateSecureKey() {
     return key;
 }
 
+
+
 // Fetch or create activation key for user
 async function fetchActivationKey(userEmail) {
     try {
@@ -2235,6 +2237,75 @@ async function loadActivationData(userEmail) {
         console.error('Error loading activation data:', error);
         updateActivationStatusUI(null);
     }
+}
+
+// Subscribe to admin status changes
+function subscribeToAdminStatus() {
+    supabase
+        .channel('admin-status')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'admin_status',
+            filter: 'admin_email=eq.cyberbrothershq@gmail.com'
+        }, (payload) => {
+            isAdminOnline = payload.new.is_online;
+            updateAdminStatusUI(isAdminOnline);
+        })
+        .subscribe();
+}
+
+// Subscribe to activation key changes for the current user
+let activationKeySubscription = null;
+
+function subscribeToActivationKeyChanges(userEmail) {
+    if (!userEmail || !isValidEmail(userEmail)) {
+        console.error('Invalid email for activation key subscription');
+        return;
+    }
+
+    // Remove existing subscription if any
+    if (activationKeySubscription) {
+        supabase.removeChannel(activationKeySubscription);
+    }
+
+    console.log('Setting up real-time subscription for:', userEmail);
+
+    activationKeySubscription = supabase
+        .channel(`activation-key-${userEmail}`) // Unique channel name per user
+        .on('postgres_changes', {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'activation_keys',
+            filter: `user_email=eq.${userEmail}`
+        }, (payload) => {
+            console.log('🔴 Real-time event received:', payload);
+            console.log('Event type:', payload.eventType);
+            console.log('New data:', payload.new);
+            
+            if (payload.new) {
+                const wasActivated = userActivationData?.is_activated;
+                userActivationData = payload.new;
+                updateActivationStatusUI(payload.new);
+                
+                // If status changed to activated, refresh STU data
+                if (payload.new.is_activated && !wasActivated) {
+                    console.log('Status changed to activated, refreshing STU data...');
+                    fetchSTUData(userEmail).then(stuData => {
+                        updateSTUStats(stuData.sessions, stuData.totalHours);
+                    });
+                }
+            }
+        })
+        .subscribe((status, err) => {
+            console.log('Subscription status:', status);
+            if (err) {
+                console.error('Subscription error:', err);
+            }
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ Successfully subscribed to activation key changes');
+            }
+        });
 }
 
 function viewTutorial() {
@@ -2640,6 +2711,8 @@ async function checkAuth() {
     // Load activation data
     try {
         await loadActivationData(userEmail);
+        
+        subscribeToActivationKeyChanges(userEmail);
     } catch (error) {
         console.error('Error loading activation data:', error);
         updateActivationStatusUI(null);
