@@ -1633,6 +1633,31 @@
             transform: translateY(0);
         }
 
+        .regenerate-key-btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #f59e0b, #fbbf24);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .regenerate-key-btn:hover:not(:disabled) {
+            background: linear-gradient(45deg, #d97706, #f59e0b);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .regenerate-key-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .navbar {
@@ -1822,6 +1847,18 @@
                     <div class="activation-key-value" id="activation-key-display">-</div>
                     <button class="copy-key-btn" onclick="copyActivationKey()" title="Kopier nøkkel">📋</button>
                 </div>
+
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+    <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #92400e; line-height: 1.4;">
+        <strong>Mistet nøkkelen din?</strong> Du kan generere en ny aktiverings nøkkel. 
+        Den gamle nøkkelen vil bli ugyldig.
+    </p>
+    <button class="regenerate-key-btn" onclick="regenerateActivationKey()" id="regen-btn">
+        🔄 Generer ny nøkkel
+    </button>
+    <div id="regen-cooldown-msg" style="display: none; margin-top: 0.5rem; color: #dc2626; font-size: 0.85rem; font-weight: 600;">
+    </div>
+</div>
                 
                 <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
                     <p style="margin: 0; font-size: 0.9rem; color: #1e40af; line-height: 1.4;">
@@ -2662,6 +2699,98 @@ async function copyActivationKey() {
         }
     }
 }
+
+async function regenerateActivationKey() {
+    const regenBtn = document.getElementById('regen-btn');
+    const cooldownMsg = document.getElementById('regen-cooldown-msg');
+    
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        alert('Feil: Ingen gyldig bruker funnet');
+        return;
+    }
+    
+    // Confirm action
+    const confirmed = confirm(
+        '⚠️ Er du sikker?\n\n' +
+        'Dette vil:\n' +
+        '• Generere en ny aktiverings nøkkel\n' +
+        '• Gjøre din gamle nøkkel ugyldig\n' +
+        '• Deaktivere programmet ditt (må aktiveres på nytt)\n\n' +
+        'Fortsett?'
+    );
+    
+    if (!confirmed) return;
+    
+    regenBtn.disabled = true;
+    regenBtn.textContent = '⏳ Genererer...';
+    cooldownMsg.style.display = 'none';
+    
+    try {
+        // Call the database function
+        const { data, error } = await supabase.rpc('regenerate_activation_key', {
+            p_user_email: currentUserEmail
+        });
+        
+        if (error) throw error;
+        
+        // Handle response
+        if (data && data.length > 0) {
+            const result = data[0];
+            
+            if (result.success) {
+                // Success - update UI with new key
+                userActivationData = {
+                    activation_key: result.new_key,
+                    is_activated: false,
+                    activated_at: null
+                };
+                
+                updateActivationStatusUI(userActivationData);
+                
+                alert(
+                    '✅ Ny aktiverings nøkkel generert!\n\n' +
+                    'Din nye nøkkel: ' + result.new_key + '\n\n' +
+                    'Bruk denne i AkademiTrack programmet for å aktivere kontoen din på nytt. Nøkkelen her vises også på nettsiden, altså du kan kopiere den derfra.'
+                );
+                
+                // Flash the key container to draw attention
+                const keyContainer = document.getElementById('activation-key-container');
+                if (keyContainer) {
+                    keyContainer.style.animation = 'none';
+                    setTimeout(() => {
+                        keyContainer.style.animation = 'flash 0.5s ease-in-out 3';
+                    }, 10);
+                }
+                
+            } else {
+                // Rate limited or error
+                if (result.cooldown_remaining > 0) {
+                    cooldownMsg.textContent = `⏱️ ${result.message}. Prøv igjen om ${result.cooldown_remaining} minutter.`;
+                    cooldownMsg.style.display = 'block';
+                } else {
+                    cooldownMsg.textContent = `⚠️ ${result.message}`;
+                    cooldownMsg.style.display = 'block';
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error regenerating activation key:', error);
+        alert('Feil ved generering av ny nøkkel. Prøv igjen senere eller kontakt support.');
+    } finally {
+        regenBtn.disabled = false;
+        regenBtn.textContent = '🔄 Generer ny nøkkel';
+    }
+}
+
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes flash {
+        0%, 100% { background: #f8fafc; }
+        50% { background: #fef3c7; }
+    }
+`;
+document.head.appendChild(style);
 
 // Chat functionality
 function toggleChat() {
