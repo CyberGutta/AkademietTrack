@@ -841,7 +841,7 @@
                         <div class="terminal-steps" id="terminal-instructions">
                             <h4>Følg disse stegene:</h4>
                             <ol id="terminal-steps-list">
-                                <li>Åpne Terminal (trykk Cmd + Space, skriv "Terminal")</li>
+                                <li>Åpne Terminal (trykk Command + Space, skriv "Terminal")</li>
                                 <li>Kopier kommandoen nedenfor</li>
                                 <li>Lim den inn i Terminal og trykk Enter</li>
                                 <li>Vent til kommandoen er ferdig</li>
@@ -854,7 +854,7 @@
                                 type="text" 
                                 class="command-input" 
                                 id="terminal-command" 
-                                value="xattr -cr ~/Downloads/AkademiTrack.app"
+                                value="xattr -cr ~/Downloads/AkademiTrack-osx-Setup.pkg"
                                 readonly
                             >
                             <button class="copy-button" onclick="copyCommand()">📋 Kopier</button>
@@ -964,11 +964,11 @@
 
         // OS Detection and Download URLs
         const GITHUB_RELEASES = {
-            baseURL: 'https://github.com/CyberGutta/AkademiTrack/releases/download/v1.0.0/',
+            baseURL: 'https://github.com/CyberGutta/AkademiTrack/releases/latest/download/',
             files: {
-                windows: 'Windows.zip',
-                mac: 'Mac.zip',
-                linux: 'Linux.zip'
+                windows: 'AkademiTrack-win-Setup.exe',
+                mac: 'AkademiTrack-osx-Setup.pkg',
+                linux: 'AkademiTrack.AppImage'
             }
         };
 
@@ -1049,7 +1049,7 @@
                     `;
                 }
                 if (commandInput) {
-                    commandInput.value = 'xattr -cr ~/Downloads/AkademiTrack.app';
+                    commandInput.value = 'xattr -cr ~/Downloads/AkademiTrack-osx-Setup.pkg';
                 }
                 if (tip) {
                     tip.innerHTML = '<strong>Tips:</strong> Hvis du ikke finner appen i Downloads, sjekk hvor du lagret den og erstatt stien i kommandoen.';
