@@ -17,7 +17,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: gh-pages # or your Pages branch name
+          fetch-depth: 0 # Fetch all history for all branches
+          
+      - name: Setup gh-pages branch
+        run: |
+          # Check if gh-pages branch exists
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            echo "gh-pages branch exists, checking it out"
+            git checkout gh-pages
+          else
+            echo "gh-pages branch doesn't exist, creating it"
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "# Update API" > README.md
+          fi
           
       - name: Fetch latest release info
         id: release
