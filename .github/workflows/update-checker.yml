@@ -56,11 +56,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
+          # Always add the file
+          git add update.json
+          
           # Check if there are changes
-          if git diff --quiet update.json; then
+          if git diff --staged --quiet; then
             echo "No changes to update.json"
           else
-            git add update.json
             git commit -m "Update release info - $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)"
             git push
           fi
