@@ -17,25 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for all branches
-          
-      - name: Setup gh-pages branch
-        run: |
-          # Check if gh-pages branch exists
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            echo "gh-pages branch exists, checking it out"
-            git checkout gh-pages
-          else
-            echo "gh-pages branch doesn't exist, creating it"
-            git checkout --orphan gh-pages
-            git rm -rf .
-            echo "# Update API" > README.md
-          fi
+          ref: main
           
       - name: Fetch latest release info
         id: release
         run: |
-          # Fetch latest release from GitHub API
+          # Fetch latest release from your APP repo
           RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/CyberGutta/AkademiTrack/releases/latest")
           
