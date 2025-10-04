@@ -1,0 +1,66 @@
+name: Update JSON Generator
+
+on:
+  schedule:
+    # Runs every 2 minutes
+    - cron: '*/2 * * * *'
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages # or your Pages branch name
+          
+      - name: Fetch latest release info
+        id: release
+        run: |
+          # Fetch latest release from GitHub API
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/CyberGutta/AkademiTrack/releases/latest")
+          
+          # Extract relevant information
+          VERSION=$(echo "$RESPONSE" | jq -r '.tag_name')
+          DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.assets[0].browser_download_url // empty')
+          NOTES=$(echo "$RESPONSE" | jq -r '.body // "No release notes available"')
+          PUBLISHED_AT=$(echo "$RESPONSE" | jq -r '.published_at')
+          
+          # If no assets, use zipball_url as fallback
+          if [ -z "$DOWNLOAD_URL" ]; then
+            DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.zipball_url')
+          fi
+          
+          # Create JSON file
+          cat > update.json << EOF
+          {
+            "latest_version": "$VERSION",
+            "download_url": "$DOWNLOAD_URL",
+            "notes": $(echo "$NOTES" | jq -Rs .),
+            "published_at": "$PUBLISHED_AT",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          
+          # Pretty print the JSON
+          jq . update.json > update.json.tmp && mv update.json.tmp update.json
+          
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if there are changes
+          if git diff --quiet update.json; then
+            echo "No changes to update.json"
+          else
+            git add update.json
+            git commit -m "Update release info - $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)"
+            git push
+          fi
