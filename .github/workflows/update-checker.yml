@@ -29,6 +29,9 @@ jobs:
           NOTES=$(echo "$RESPONSE" | jq -r '.body // "No release notes available"')
           PUBLISHED_AT=$(echo "$RESPONSE" | jq -r '.published_at')
           
+          # Store version for later use
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          
           # If no assets, use zipball_url as fallback
           if [ -z "$DOWNLOAD_URL" ]; then
             DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.zipball_url')
