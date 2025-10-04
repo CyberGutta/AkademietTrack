@@ -1,14 +1,11 @@
 name: Update JSON Generator
-
 on:
   schedule:
-    # Runs every 2 minutes
-    - cron: '*/2 * * * *'
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
   workflow_dispatch: # Allows manual trigger
-
 permissions:
   contents: write
-
 jobs:
   update-json:
     runs-on: ubuntu-latest
@@ -37,32 +34,42 @@ jobs:
             DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.zipball_url')
           fi
           
-          # Create JSON file
-          cat > update.json << EOF
+          # Create new JSON content
+          cat > update.json.new << EOF
           {
             "latest_version": "$VERSION",
             "download_url": "$DOWNLOAD_URL",
             "notes": $(echo "$NOTES" | jq -Rs .),
-            "published_at": "$PUBLISHED_AT",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            "published_at": "$PUBLISHED_AT"
           }
           EOF
           
           # Pretty print the JSON
-          jq . update.json > update.json.tmp && mv update.json.tmp update.json
+          jq . update.json.new > update.json.tmp && mv update.json.tmp update.json.new
+          
+          # Check if update.json exists and compare
+          if [ -f update.json ]; then
+            # Compare the files (excluding any whitespace differences)
+            if diff -w update.json update.json.new > /dev/null; then
+              echo "No changes detected"
+              echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            else
+              echo "Changes detected"
+              echo "HAS_CHANGES=true" >> $GITHUB_ENV
+              mv update.json.new update.json
+            fi
+          else
+            echo "First run - creating update.json"
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            mv update.json.new update.json
+          fi
           
       - name: Commit and push if changed
+        if: env.HAS_CHANGES == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Always add the file
           git add update.json
-          
-          # Check if there are changes
-          if git diff --staged --quiet; then
-            echo "No changes to update.json"
-          else
-            git commit -m "Update release info - $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)"
-            git push
-          fi
+          git commit -m "Update release info to ${{ steps.release.outputs.VERSION }}"
+          git push
