@@ -1,6 +1,6 @@
 **Version:** 1.1     
-**Last Updated:** October 7, 2025      
-**Effective Date:** October 7, 2025
+**Last Updated:** October 6, 2025      
+**Effective Date:** October 6, 2025
 
 ---
    
