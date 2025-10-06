@@ -227,7 +227,7 @@ AkademiTrack er primært designet for elever ved Akademiet, inkludert mindreåri
 
 ## Changelog
 
-### Version 2.0
+### Version 1.1
 - Lagt til støtte for automatisk backup av data
 - Oppdatert informasjon om tredjepartstjenester
 - Forbedret beskrivelse av brukerrettigheter under GDPR
