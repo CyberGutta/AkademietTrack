@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personvernerklæring - AkademiTrack</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -14,8 +13,8 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,206 +23,225 @@
         }
 
         .container {
-            max-width: 650px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
             width: 100%;
-            height: 85vh;
-            max-height: 700px;
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
         .header {
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            background: linear-gradient(135deg, #4a5fd9 0%, #5b3f9e 100%);
             color: white;
-            padding: 25px 30px;
+            padding: 30px;
             text-align: center;
-            flex-shrink: 0;
         }
 
         .header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
+            font-size: 2em;
+            margin-bottom: 5px;
         }
 
         .header p {
-            font-size: 0.95rem;
-            opacity: 0.95;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
         }
 
         .content-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
             padding: 30px;
-            min-height: 0;
         }
 
         .scrollable-content {
-            flex: 1;
+            max-height: 400px;
             overflow-y: auto;
-            padding-right: 15px;
             margin-bottom: 20px;
-            color: #1f2937;
-        }
-
-        .scrollable-content::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .scrollable-content::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-
-        .scrollable-content::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .scrollable-content::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
         }
 
         .info-section {
-            background: #f0f4ff;
-            border-left: 4px solid #3b82f6;
-            padding: 18px;
-            margin: 15px 0;
-            border-radius: 8px;
+            margin-bottom: 25px;
         }
 
         .info-section h3 {
-            color: #1e3a8a;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
+            color: #4a5fd9;
+            margin-bottom: 12px;
+            font-size: 1.2em;
         }
 
         .info-section ul {
-            margin: 8px 0 8px 20px;
-            line-height: 1.7;
+            list-style: none;
+            padding: 0;
         }
 
         .info-section li {
-            margin: 6px 0;
-            font-size: 0.95rem;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .info-section li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4a5fd9;
+            font-weight: bold;
+        }
+
+        .info-section strong {
+            color: #2d3748;
         }
 
         .warning {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid #f59e0b;
-            color: #92400e;
+            background: #fff5f5;
+            border-left: 4px solid #e53e3e;
             padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-size: 0.93rem;
-            line-height: 1.5;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning strong {
+            color: #c53030;
+        }
+
+        .changes-section {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .changes-section h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .changes-section .version-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+
+        .changes-section .version-info span {
+            color: #78350f;
+        }
+
+        .changes-list {
+            background: white;
+            padding: 15px 15px 15px 40px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .changes-list ul {
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        .changes-list li {
+            margin-bottom: 8px;
+            color: #1f2937;
+            margin-left: 0;
         }
 
         .full-policy-link {
             text-align: center;
-            margin: 15px 0;
+            margin: 25px 0;
         }
 
         .full-policy-link a {
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
-            background: #f0f4ff;
-            border-radius: 50px;
-            transition: all 0.3s ease;
+            color: #4a5fd9;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: 2px solid #4a5fd9;
+            border-radius: 8px;
+            transition: all 0.3s;
         }
 
         .full-policy-link a:hover {
-            background: #3b82f6;
+            background: #4a5fd9;
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-        }
-
-        .fixed-bottom {
-            flex-shrink: 0;
-            padding-top: 15px;
-            border-top: 2px solid #e5e7eb;
         }
 
         .checkbox-container {
             display: flex;
-            align-items: start;
+            align-items: flex-start;
             gap: 12px;
             padding: 15px;
-            background: #f9fafb;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            margin-bottom: 15px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
+            margin-bottom: 15px;
         }
 
         .checkbox-container:hover {
-            border-color: #3b82f6;
-            background: #f0f4ff;
+            border-color: #4a5fd9;
+            background: #f9fafb;
         }
 
         .checkbox-container.checked {
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.05);
+            border-color: #4a5fd9;
+            background: #eff6ff;
         }
 
-        .checkbox-container input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
+        #accept-checkbox {
+            margin-top: 4px;
             cursor: pointer;
+            width: 20px;
+            height: 20px;
             flex-shrink: 0;
-            margin-top: 2px;
         }
 
         .checkbox-container label {
-            flex: 1;
             cursor: pointer;
-            line-height: 1.5;
-            font-size: 0.95rem;
+            color: #374151;
+            line-height: 1.6;
+            flex: 1;
         }
 
         .accept-button {
             width: 100%;
-            background: linear-gradient(45deg, #10b981, #059669);
+            padding: 16px;
+            background: linear-gradient(135deg, #4a5fd9 0%, #5b3f9e 100%);
             color: white;
             border: none;
-            padding: 14px 28px;
-            font-size: 1.05rem;
+            border-radius: 8px;
+            font-size: 1.1em;
             font-weight: 600;
-            border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.2s, opacity 0.3s;
         }
 
         .accept-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
-            background: linear-gradient(45deg, #059669, #047857);
         }
 
         .accept-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
-            background: #9ca3af;
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 15px;
+            margin-top: 15px;
+            color: #4a5fd9;
         }
 
         .loading.active {
@@ -231,13 +249,13 @@
         }
 
         .spinner {
-            border: 3px solid rgba(59, 130, 246, 0.3);
-            border-top: 3px solid #3b82f6;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #4a5fd9;
             border-radius: 50%;
-            width: 35px;
-            height: 35px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 8px;
+            margin: 0 auto 10px;
         }
 
         @keyframes spin {
@@ -245,46 +263,18 @@
             100% { transform: rotate(360deg); }
         }
 
-        @media (max-width: 768px) {
-            .container {
-                height: 90vh;
-                max-height: none;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .content-wrapper {
-                padding: 20px;
-            }
-
-            .scrollable-content {
-                padding-right: 10px;
-            }
-
-            .info-section {
-                padding: 15px;
-            }
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
         }
 
-        @media (max-height: 700px) {
-            .container {
-                height: 95vh;
-            }
-
-            .header {
-                padding: 20px;
-            }
-
-            .content-wrapper {
-                padding: 20px;
-            }
-
-            .info-section {
-                padding: 12px;
-                margin: 10px 0;
-            }
+        .error-message.active {
+            display: block;
         }
     </style>
 </head>
@@ -292,11 +282,108 @@
     <div class="container">
         <div class="header">
             <h1>🔒 Personvernerklæring</h1>
-            <p>Før du kan bruke AkademiTrack</p>
+            <p id="header-subtitle">Før du kan bruke AkademiTrack</p>
+            <div class="version-badge" id="version-badge">Laster versjon...</div>
         </div>
 
         <div class="content-wrapper">
-            <div class="scrollable-content">
+            <div class="scrollable-content" id="content">
+                <!-- Content will be injected here -->
+            </div>
+
+            <div class="full-policy-link">
+                <a href="privacy-policy.html" target="_blank" id="full-policy-link">
+                    📄 Les full personvernerklæring
+                    <span>→</span>
+                </a>
+            </div>
+
+            <div class="checkbox-container" id="checkbox-wrapper">
+                <input type="checkbox" id="accept-checkbox">
+                <label for="accept-checkbox" id="checkbox-label">
+                    Jeg har lest og godtar <a href="privacy-policy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen</a>. Jeg forstår hvordan mine data behandles og at jeg kan trekke tilbake samtykket mitt når som helst.
+                </label>
+            </div>
+
+            <button class="accept-button" id="accept-button" disabled>
+                Godta og fortsett
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Lagrer ditt samtykke...</p>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
+        const PRIVACY_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentPrivacyPolicy = null;
+        let userProfile = null;
+        let isReturningUser = false;
+
+        const checkbox = document.getElementById('accept-checkbox');
+        const acceptButton = document.getElementById('accept-button');
+        const checkboxWrapper = document.getElementById('checkbox-wrapper');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('error-message');
+        const content = document.getElementById('content');
+        const versionBadge = document.getElementById('version-badge');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        const checkboxLabel = document.getElementById('checkbox-label');
+
+        async function fetchPrivacyPolicy() {
+            try {
+                const response = await fetch(PRIVACY_JSON_URL);
+                if (!response.ok) throw new Error('Kunne ikke laste personvernerklæring');
+                currentPrivacyPolicy = await response.json();
+                return currentPrivacyPolicy;
+            } catch (error) {
+                console.error('Error fetching privacy policy:', error);
+                showError('Kunne ikke laste personvernerklæring. Vennligst prøv igjen.');
+                return null;
+            }
+        }
+
+        async function getUserProfile(email) {
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('privacy_policy_accepted, privacy_policy_version, privacy_policy_accepted_at')
+                    .eq('user_email', email)
+                    .maybeSingle();
+
+                if (error && error.code !== 'PGRST116') throw error;
+                return data;
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                return null;
+            }
+        }
+
+        function compareVersions(v1, v2) {
+            const parts1 = v1.split('.').map(Number);
+            const parts2 = v2.split('.').map(Number);
+            
+            for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+                const part1 = parts1[i] || 0;
+                const part2 = parts2[i] || 0;
+                
+                if (part1 > part2) return 1;
+                if (part1 < part2) return -1;
+            }
+            return 0;
+        }
+
+        function renderFirstTimeUser() {
+            content.innerHTML = `
                 <div class="info-section">
                     <h3>Hva vi samler inn og bruker:</h3>
                     <ul>
@@ -330,45 +417,107 @@
                 <div class="warning">
                     <strong>⚠️ Viktig:</strong> Ved å godta gir du AkademiTrack tillatelse til å logge inn på iSkole.net på dine vegne og automatisk registrere studietid. Du kan når som helst trekke tilbake samtykket ditt ved å slette kontoen din.
                 </div>
+            `;
+        }
 
-                <div class="full-policy-link">
-                    <a href="privacy.html" target="_blank">
-                        📄 Les full personvernerklæring
-                        <span>→</span>
-                    </a>
+        function getChangesSummary(oldVersion, newVersion) {
+            // Try to get changes from the JSON API first
+            if (currentPrivacyPolicy?.changelog?.[newVersion]) {
+                return currentPrivacyPolicy.changelog[newVersion];
+            }
+            
+            // Fallback to default message if no changelog found
+            return [
+                'Mindre oppdateringer og forbedringer i personvernerklæringen',
+                'Les den fullstendige versjonen for alle detaljer'
+            ];
+        }
+
+        function renderReturningUser(oldVersion, newVersion) {
+            const changes = getChangesSummary(oldVersion, newVersion);
+            const acceptedDate = userProfile.privacy_policy_accepted_at 
+                ? new Date(userProfile.privacy_policy_accepted_at).toLocaleDateString('nb-NO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
+                : 'Ukjent dato';
+
+            headerSubtitle.textContent = 'Vi har oppdatert personvernerklæringen vår';
+            checkboxLabel.innerHTML = `Jeg har lest endringene og godtar den nye <a href="privacy-policy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen (v${newVersion})</a>.`;
+
+            content.innerHTML = `
+                <div class="changes-section">
+                    <h3>📝 Hva har endret seg?</h3>
+                    <div class="version-info">
+                        <span><strong>Din godkjente versjon:</strong> v${oldVersion} (${acceptedDate})</span>
+                        <span><strong>Ny versjon:</strong> v${newVersion}</span>
+                    </div>
+                    <div class="changes-list">
+                        <ul>
+                            ${changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    </div>
                 </div>
-            </div>
 
-            <div class="fixed-bottom">
-                <div class="checkbox-container" id="checkbox-wrapper">
-                    <input type="checkbox" id="accept-checkbox">
-                    <label for="accept-checkbox">
-                        Jeg har lest og godtar <a href="privacy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen</a>. Jeg forstår hvordan mine data behandles og at jeg kan trekke tilbake samtykket mitt når som helst.
-                    </label>
+                <div class="info-section">
+                    <h3>Viktig informasjon:</h3>
+                    <ul>
+                        <li>Du må godta den nye versjonen for å fortsette å bruke AkademiTrack</li>
+                        <li>Vi behandler fortsatt dine data på samme sikre måte</li>
+                        <li>Du kan når som helst trekke tilbake samtykket ved å slette kontoen din</li>
+                    </ul>
                 </div>
 
-                <button class="accept-button" id="accept-button" disabled>
-                    Godta og fortsett
-                </button>
-
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p>Lagrer ditt samtykke...</p>
+                <div class="warning">
+                    <strong>💡 Tips:</strong> Les gjennom den fullstendige personvernerklæringen for å se alle detaljene om endringene.
                 </div>
-            </div>
-        </div>
-    </div>
+            `;
+        }
 
-    <script>
-        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
+        async function initializePage() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session || !session.user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const policy = await fetchPrivacyPolicy();
+                if (!policy) return;
 
-        const checkbox = document.getElementById('accept-checkbox');
-        const acceptButton = document.getElementById('accept-button');
-        const checkboxWrapper = document.getElementById('checkbox-wrapper');
-        const loading = document.getElementById('loading');
+                versionBadge.textContent = `Versjon ${policy.version} | ${policy.lastUpdated}`;
+
+                userProfile = await getUserProfile(session.user.email);
+
+                if (userProfile && userProfile.privacy_policy_accepted) {
+                    const userVersion = userProfile.privacy_policy_version || '1.0';
+                    
+                    if (compareVersions(policy.version, userVersion) > 0) {
+                        isReturningUser = true;
+                        renderReturningUser(userVersion, policy.version);
+                    } else {
+                        window.location.href = 'tutorial.html';
+                        return;
+                    }
+                } else {
+                    renderFirstTimeUser();
+                }
+
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                showError('En feil oppstod. Vennligst last inn siden på nytt.');
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 5000);
+        }
 
         checkbox.addEventListener('change', function() {
             acceptButton.disabled = !this.checked;
@@ -406,7 +555,7 @@
                         user_email: userEmail,
                         privacy_policy_accepted: true,
                         privacy_policy_accepted_at: new Date().toISOString(),
-                        privacy_policy_version: '1.0', // Add this line
+                        privacy_policy_version: currentPrivacyPolicy.version,
                         updated_at: new Date().toISOString()
                     }], { onConflict: 'user_email' });
 
@@ -418,36 +567,13 @@
 
             } catch (error) {
                 console.error('Error accepting privacy policy:', error);
-                alert('Kunne ikke lagre samtykket ditt: ' + error.message);
+                showError('Kunne ikke lagre samtykket ditt: ' + error.message);
                 loading.classList.remove('active');
                 acceptButton.disabled = false;
             }
         });
 
-        async function checkAuth() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                
-                if (!session || !session.user) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                const { data, error } = await supabase
-                    .from('user_profiles')
-                    .select('privacy_policy_accepted')
-                    .eq('user_email', session.user.email)
-                    .maybeSingle();
-
-                if (!error && data?.privacy_policy_accepted === true) {
-                    window.location.href = 'tutorial.html';
-                }
-            } catch (error) {
-                console.error('Error checking auth:', error);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', checkAuth);
+        document.addEventListener('DOMContentLoaded', initializePage);
     </script>
 </body>
 </html>

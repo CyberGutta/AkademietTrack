@@ -2735,9 +2735,21 @@ async function checkAuth() {
 // Add this function after checkAuth() and before checkTutorialStatus()
 async function checkPrivacyPolicyAccepted(userEmail) {
     try {
+        const PRIVACY_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json';
+        
+        // Fetch current privacy policy version
+        const response = await fetch(PRIVACY_JSON_URL);
+        if (!response.ok) {
+            console.error('Could not fetch privacy policy version');
+            return false;
+        }
+        const currentPolicy = await response.json();
+        const currentVersion = currentPolicy.version;
+        
+        // Get user's accepted version
         const { data, error } = await supabase
             .from('user_profiles')
-            .select('privacy_policy_accepted')
+            .select('privacy_policy_accepted, privacy_policy_version')
             .eq('user_email', userEmail)
             .maybeSingle();
 
@@ -2745,12 +2757,38 @@ async function checkPrivacyPolicyAccepted(userEmail) {
             console.error('Error checking privacy policy:', error);
             return false;
         }
-
-        return data?.privacy_policy_accepted === true;
+        
+        // If user hasn't accepted at all
+        if (!data?.privacy_policy_accepted) {
+            return false;
+        }
+        
+        // Compare versions
+        const userVersion = data.privacy_policy_version || '1.0';
+        const versionComparison = compareVersions(currentVersion, userVersion);
+        
+        // If current version is newer, user needs to accept again
+        return versionComparison <= 0;
+        
     } catch (error) {
         console.error('Error in checkPrivacyPolicyAccepted:', error);
         return false;
     }
+}
+
+// Add compareVersions function to dashboard
+function compareVersions(v1, v2) {
+    const parts1 = v1.split('.').map(Number);
+    const parts2 = v2.split('.').map(Number);
+    
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        const part1 = parts1[i] || 0;
+        const part2 = parts2[i] || 0;
+        
+        if (part1 > part2) return 1;
+        if (part1 < part2) return -1;
+    }
+    return 0;
 }
 
 // Copy activation key to clipboard
