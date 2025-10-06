@@ -1,4 +1,4 @@
-**Version:** 2.0     
+**Version:** 1.0     
 **Last Updated:** October 7, 2025      
 **Effective Date:** October 7, 2025
    
