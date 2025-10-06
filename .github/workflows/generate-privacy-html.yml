@@ -48,6 +48,11 @@ jobs:
           const lastUpdated = dateMatch ? dateMatch[1] : 'October 6, 2025';
           const effectiveDate = effectiveDateMatch ? effectiveDateMatch[1] : 'October 6, 2025';
           
+          console.log('Extracted data:');
+          console.log('Version:', version);
+          console.log('Last Updated:', lastUpdated);
+          console.log('Effective Date:', effectiveDate);
+          
           // Convert markdown to HTML
           const contentHtml = marked.parse(markdown);
           
@@ -349,8 +354,6 @@ jobs:
           // Write the HTML file
           fs.writeFileSync('privacy-policy.html', html, 'utf8');
           console.log('✅ Generated privacy-policy.html');
-          console.log('Version:', version);
-          console.log('Last Updated:', lastUpdated);
           
           // Generate JSON API file
           const jsonApi = {
@@ -363,22 +366,31 @@ jobs:
           
           fs.writeFileSync('privacy-policy.json', JSON.stringify(jsonApi, null, 2), 'utf8');
           console.log('✅ Generated privacy-policy.json');
+          console.log('JSON content:', JSON.stringify(jsonApi, null, 2));
           EOFSCRIPT
       
-      - name: Generate HTML from Markdown
+      - name: Generate HTML and JSON from Markdown
         run: node generate.js
+      
+      - name: List generated files
+        run: |
+          echo "Files in current directory:"
+          ls -la *.html *.json 2>/dev/null || echo "No HTML or JSON files found"
+          echo ""
+          echo "Contents of privacy-policy.json (if exists):"
+          cat privacy-policy.json 2>/dev/null || echo "privacy-policy.json not found"
       
       - name: Commit and push if changed
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          git add privacy-policy.html
+          git add privacy-policy.html privacy-policy.json
           
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "🤖 Auto-generate privacy-policy.html from markdown [skip ci]"
+            git commit -m "🤖 Auto-generate privacy-policy.html and privacy-policy.json from markdown [skip ci]"
             git push
-            echo "✅ Privacy policy HTML updated"
+            echo "✅ Privacy policy HTML and JSON updated"
           fi
