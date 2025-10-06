@@ -20,3 +20,6 @@ AkademiTrack is an automated study time registration tool...
 
 ### Version 1.0 (October 6, 2025)
 - Initial release of Terms of Use
+- Defined user responsibilities and acceptable use
+- Established service description and limitations
+- Added account termination policies
