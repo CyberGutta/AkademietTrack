@@ -26,7 +26,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          npm install -g marked
+          npm install marked
       
       - name: Create generator script
         run: |
