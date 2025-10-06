@@ -65,6 +65,9 @@ jobs:
               <meta name="description" content="AkademiTrack Privacy Policy - Learn how we protect your data and comply with GDPR">
               <meta name="keywords" content="privacy policy, GDPR, data protection, AkademiTrack">
               <title>Privacy Policy - AkademiTrack v${version}</title>
+              <link rel="icon" type="image/png" href="logo.png">
+              <link rel="shortcut icon" href="logo.png">
+              <link rel="apple-touch-icon" href="logo.png">
               <style>
                   * {
                       margin: 0;
