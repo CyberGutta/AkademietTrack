@@ -1,6 +1,8 @@
-**Version:** 1.0     
+**Version:** 1.1     
 **Last Updated:** October 7, 2025      
 **Effective Date:** October 7, 2025
+
+---
    
 ### 1. Hvem vi er
 
@@ -230,16 +232,8 @@ Hvis du har spørsmål om denne personvernerklæringen eller hvordan vi behandle
 - **E-post:** contact@akademitrack.no
 - **GitHub:** [github.com/CyberGutta/AkademiTrack/issues](https://github.com/CyberGutta/AkademiTrack/issues)
 - **Responstid:** Vi svarer normalt innen 5 virkedager
+  
 ---
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | October 6, 2025 | Initial release |
-
----
-
 **© 2025 AkademiTrack - Developed by Mathias Hansen & Andreas Nilsen**
 
 *This application is not officially affiliated with Akademiet or iSkole.net*
