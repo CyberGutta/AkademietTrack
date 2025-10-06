@@ -1,6 +1,6 @@
 # Terms of Use
 
-**Version:** 1.0
+**Version:** 1.1
 **Last Updated:** October 6, 2025
 **Effective Date:** October 6, 2025
 
@@ -18,7 +18,6 @@ AkademiTrack is an automated study time registration tool...
 
 ## Changelog
 
-### Version 1.0 (October 6, 2025)
+### Version 1.1 (October 6, 2025)
 - Initial release of Terms of Use
-- Defined user responsibilities and acceptable use
 - Established service description and limitations
