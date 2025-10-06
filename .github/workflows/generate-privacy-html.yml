@@ -12,6 +12,8 @@ on:
 jobs:
   generate-html:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout repository
@@ -349,6 +351,18 @@ jobs:
           console.log('✅ Generated privacy-policy.html');
           console.log('Version:', version);
           console.log('Last Updated:', lastUpdated);
+          
+          // Generate JSON API file
+          const jsonApi = {
+            version: version,
+            lastUpdated: lastUpdated,
+            effectiveDate: effectiveDate,
+            url: 'https://cybergutta.github.io/AkademietTrack/privacy-policy.html',
+            markdownUrl: 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.md'
+          };
+          
+          fs.writeFileSync('privacy-policy.json', JSON.stringify(jsonApi, null, 2), 'utf8');
+          console.log('✅ Generated privacy-policy.json');
           EOFSCRIPT
       
       - name: Generate HTML from Markdown
