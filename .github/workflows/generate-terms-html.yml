@@ -356,36 +356,52 @@ jobs:
           console.log('✅ Generated terms-of-use.html');
           
           // Extract changelog from markdown (if exists)
-          const changelogMatch = markdown.match(/##\s*Changelog\s*\n([\s\S]*)/);
           let changelog = {};
           
-          if (changelogMatch) {
-            const changelogText = changelogMatch[1];
+          // Find the Changelog section
+          const changelogIndex = markdown.indexOf('## Changelog');
+          
+          if (changelogIndex !== -1) {
+            const changelogText = markdown.substring(changelogIndex);
             console.log('Found changelog section');
-            console.log('Changelog text:', changelogText.substring(0, 200));
+            console.log('Full changelog text length:', changelogText.length);
             
-            // Parse version-specific changes - more flexible regex
-            const versionRegex = /###\s*Version\s+([\d.]+)[^\n]*\n([\s\S]*?)(?=\n###\s*Version|\n##\s|\z)/g;
-            let match;
+            // Split by ### headings to find versions
+            const lines = changelogText.split('\n');
+            let currentVersion = null;
+            let currentChanges = [];
             
-            while ((match = versionRegex.exec(changelogText)) !== null) {
-              const changeVersion = match[1];
-              const changesText = match[2];
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim();
               
-              console.log('Found version:', changeVersion);
-              console.log('Changes text:', changesText.substring(0, 100));
-              
-              // Extract bullet points
-              const changes = changesText
-                .split('\n')
-                .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
-                .map(line => line.trim().replace(/^[-*]\s+/, ''));
-              
-              console.log('Extracted changes:', changes);
-              
-              if (changes.length > 0) {
-                changelog[changeVersion] = changes;
+              // Check if this is a version heading
+              if (line.startsWith('### Version')) {
+                // Save previous version if exists
+                if (currentVersion && currentChanges.length > 0) {
+                  changelog[currentVersion] = currentChanges;
+                  console.log('Saved version', currentVersion, 'with', currentChanges.length, 'changes');
+                }
+                
+                // Extract version number
+                const versionMatch = line.match(/Version\s+([\d.]+)/);
+                if (versionMatch) {
+                  currentVersion = versionMatch[1];
+                  currentChanges = [];
+                  console.log('Found version:', currentVersion);
+                }
+              } else if (line.startsWith('-') || line.startsWith('*')) {
+                // This is a changelog item
+                const change = line.replace(/^[-*]\s+/, '');
+                if (change) {
+                  currentChanges.push(change);
+                }
               }
+            }
+            
+            // Don't forget the last version
+            if (currentVersion && currentChanges.length > 0) {
+              changelog[currentVersion] = currentChanges;
+              console.log('Saved final version', currentVersion, 'with', currentChanges.length, 'changes');
             }
           } else {
             console.log('No changelog section found');
