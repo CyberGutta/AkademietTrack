@@ -1198,6 +1198,27 @@
             return userEmail;
         }
 
+        // Add this function after the checkAuth() function
+        async function checkPrivacyPolicyAccepted(userEmail) {
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('privacy_policy_accepted')
+                    .eq('user_email', userEmail)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error('Error checking privacy policy:', error);
+                    return false;
+                }
+
+                return data?.privacy_policy_accepted === true;
+            } catch (error) {
+                console.error('Error in checkPrivacyPolicyAccepted:', error);
+                return false;
+            }
+        }
+
         // Navigate to specific step
         async function goToStep(stepNumber) {
             if (stepNumber < 1 || stepNumber > 4) return;
@@ -1426,6 +1447,7 @@
         }
 
         // Initialize tutorial
+        // Replace the existing initializeTutorial() function with this updated version
         async function initializeTutorial() {
             const email = await checkAuth();
             if (!email) return;
@@ -1438,6 +1460,14 @@
                 // Set up readonly tutorial without checking completion status
                 setupReadOnlyTutorial();
                 updateOSContent();
+                return;
+            }
+            
+            // Check if user has accepted privacy policy
+            const hasAcceptedPrivacy = await checkPrivacyPolicyAccepted(email);
+            if (!hasAcceptedPrivacy) {
+                // Redirect to accept.html if they haven't accepted
+                window.location.href = 'accept.html';
                 return;
             }
             

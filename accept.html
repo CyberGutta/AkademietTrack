@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personvernerklæring - AkademiTrack</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 650px;
+            width: 100%;
+            height: 85vh;
+            max-height: 700px;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            min-height: 0;
+        }
+
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 15px;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .info-section {
+            background: #f0f4ff;
+            border-left: 4px solid #3b82f6;
+            padding: 18px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+
+        .info-section h3 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .info-section ul {
+            margin: 8px 0 8px 20px;
+            line-height: 1.7;
+        }
+
+        .info-section li {
+            margin: 6px 0;
+            font-size: 0.95rem;
+        }
+
+        .warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.93rem;
+            line-height: 1.5;
+        }
+
+        .full-policy-link {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .full-policy-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #f0f4ff;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+
+        .full-policy-link a:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .fixed-bottom {
+            flex-shrink: 0;
+            padding-top: 15px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 15px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-container:hover {
+            border-color: #3b82f6;
+            background: #f0f4ff;
+        }
+
+        .checkbox-container.checked {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .checkbox-container label {
+            flex: 1;
+            cursor: pointer;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .accept-button {
+            width: 100%;
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .accept-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(45deg, #059669, #047857);
+        }
+
+        .accept-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            background: #9ca3af;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 15px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 90vh;
+                max-height: none;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .content-wrapper {
+                padding: 20px;
+            }
+
+            .scrollable-content {
+                padding-right: 10px;
+            }
+
+            .info-section {
+                padding: 15px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .container {
+                height: 95vh;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .content-wrapper {
+                padding: 20px;
+            }
+
+            .info-section {
+                padding: 12px;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Personvernerklæring</h1>
+            <p>Før du kan bruke AkademiTrack</p>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="scrollable-content">
+                <div class="info-section">
+                    <h3>Hva vi samler inn og bruker:</h3>
+                    <ul>
+                        <li><strong>Feide-pålogging:</strong> Brukernavn og passord (lagret kryptert lokalt på din enhet)</li>
+                        <li><strong>E-postadresse:</strong> For brukerkonto og kommunikasjon</li>
+                        <li><strong>Studietidsdata:</strong> Automatiske registreringer og timeplan fra iSkole.net</li>
+                        <li><strong>Profilinformasjon:</strong> Valgfri data du legger til selv</li>
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Dine rettigheter (GDPR):</h3>
+                    <ul>
+                        <li>Rett til innsyn i dine data</li>
+                        <li>Rett til å rette eller slette dine data</li>
+                        <li>Rett til å trekke tilbake samtykke når som helst</li>
+                        <li>Rett til dataportabilitet</li>
+                    </ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Hvordan vi beskytter dine data:</h3>
+                    <ul>
+                        <li>Kryptering av sensitive påloggingsdata</li>
+                        <li>HTTPS for all nettverkskommunikasjon</li>
+                        <li>Lokal lagring av passord (ikke i skyen)</li>
+                        <li>Supabase Row Level Security (RLS)</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Viktig:</strong> Ved å godta gir du AkademiTrack tillatelse til å logge inn på iSkole.net på dine vegne og automatisk registrere studietid. Du kan når som helst trekke tilbake samtykket ditt ved å slette kontoen din.
+                </div>
+
+                <div class="full-policy-link">
+                    <a href="privacy.html" target="_blank">
+                        📄 Les full personvernerklæring
+                        <span>→</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="fixed-bottom">
+                <div class="checkbox-container" id="checkbox-wrapper">
+                    <input type="checkbox" id="accept-checkbox">
+                    <label for="accept-checkbox">
+                        Jeg har lest og godtar <a href="privacy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen</a>. Jeg forstår hvordan mine data behandles og at jeg kan trekke tilbake samtykket mitt når som helst.
+                    </label>
+                </div>
+
+                <button class="accept-button" id="accept-button" disabled>
+                    Godta og fortsett
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Lagrer ditt samtykke...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const checkbox = document.getElementById('accept-checkbox');
+        const acceptButton = document.getElementById('accept-button');
+        const checkboxWrapper = document.getElementById('checkbox-wrapper');
+        const loading = document.getElementById('loading');
+
+        checkbox.addEventListener('change', function() {
+            acceptButton.disabled = !this.checked;
+            
+            if (this.checked) {
+                checkboxWrapper.classList.add('checked');
+            } else {
+                checkboxWrapper.classList.remove('checked');
+            }
+        });
+
+        checkboxWrapper.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'A') {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+
+        acceptButton.addEventListener('click', async function() {
+            try {
+                loading.classList.add('active');
+                acceptButton.disabled = true;
+
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError || !session || !session.user) {
+                    throw new Error('Ingen aktiv økt. Vennligst logg inn på nytt.');
+                }
+
+                const userEmail = session.user.email;
+
+                const { error: updateError } = await supabase
+                    .from('user_profiles')
+                    .upsert([{
+                        user_email: userEmail,
+                        privacy_policy_accepted: true,
+                        privacy_policy_accepted_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }], { onConflict: 'user_email' });
+
+                if (updateError) {
+                    throw new Error('Kunne ikke lagre samtykke: ' + updateError.message);
+                }
+
+                window.location.href = 'tutorial.html';
+
+            } catch (error) {
+                console.error('Error accepting privacy policy:', error);
+                alert('Kunne ikke lagre samtykket ditt: ' + error.message);
+                loading.classList.remove('active');
+                acceptButton.disabled = false;
+            }
+        });
+
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session || !session.user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('privacy_policy_accepted')
+                    .eq('user_email', session.user.email)
+                    .maybeSingle();
+
+                if (!error && data?.privacy_policy_accepted === true) {
+                    window.location.href = 'tutorial.html';
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+</body>
+</html>

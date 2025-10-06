@@ -2664,7 +2664,14 @@ async function checkAuth() {
         return;
     }
 
-    // Check tutorial status FIRST before showing dashboard
+    // Check privacy policy FIRST
+    const hasAcceptedPrivacy = await checkPrivacyPolicyAccepted(userEmail);
+    if (!hasAcceptedPrivacy) {
+        window.location.href = 'accept.html';
+        return;
+    }
+
+    // Check tutorial status AFTER privacy check
     const tutorialStatus = await checkTutorialStatus(userEmail);
     
     if (!tutorialStatus.completed) {
@@ -2682,10 +2689,10 @@ async function checkAuth() {
     const displayName = await getUserDisplayName(userEmail);
 
     if (userEmailElement) {
-        userEmailElement.textContent = displayName; // Show display name instead of email
+        userEmailElement.textContent = displayName;
     }
     if (userAvatar) {
-        userAvatar.textContent = displayName.charAt(0).toUpperCase(); // Use first letter of display name
+        userAvatar.textContent = displayName.charAt(0).toUpperCase();
     }
 
     // Add loading state to STU stats
@@ -2723,6 +2730,27 @@ async function checkAuth() {
     
     // Subscribe to admin status changes
     subscribeToAdminStatus();
+}
+
+// Add this function after checkAuth() and before checkTutorialStatus()
+async function checkPrivacyPolicyAccepted(userEmail) {
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('privacy_policy_accepted')
+            .eq('user_email', userEmail)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Error checking privacy policy:', error);
+            return false;
+        }
+
+        return data?.privacy_policy_accepted === true;
+    } catch (error) {
+        console.error('Error in checkPrivacyPolicyAccepted:', error);
+        return false;
+    }
 }
 
 // Copy activation key to clipboard
