@@ -3124,8 +3124,64 @@ async function signOut() {
 }
 
 // Download functionality
+
+// OS Detection and Download URLs (same as tutorial)
+const GITHUB_RELEASES = {
+    baseURL: 'https://github.com/CyberGutta/AkademiTrack/releases/latest/download/',
+    files: {
+        windows: 'AkademiTrack-win-Setup.exe',
+        mac: 'AkademiTrack-osx-Setup.pkg',
+        linux: 'AkademiTrack.AppImage'
+    }
+};
+
+let userOS = '';
+let downloadURL = '';
+
+// Detect user's operating system
+function detectOS() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const platform = window.navigator.platform.toLowerCase();
+    
+    if (platform.includes('mac') || userAgent.includes('mac')) {
+        return 'mac';
+    } else if (platform.includes('win') || userAgent.includes('win')) {
+        return 'windows';
+    } else if (platform.includes('linux') || userAgent.includes('linux')) {
+        return 'linux';
+    } else {
+        if (userAgent.includes('mac os x') || userAgent.includes('macintosh')) {
+            return 'mac';
+        } else if (userAgent.includes('windows nt')) {
+            return 'windows';
+        } else {
+            return 'linux';
+        }
+    }
+}
+
+// Download functionality
 function downloadApp() {
-    window.location.href = 'https://github.com/CyberGutta/AkademiTrack/releases/download/v1.0.0/Mac.zip';
+    userOS = detectOS();
+    const filename = GITHUB_RELEASES.files[userOS];
+    downloadURL = GITHUB_RELEASES.baseURL + filename;
+    
+    if (!downloadURL) {
+        alert('Kunne ikke bestemme nedlastingslenke. Prøv å laste siden på nytt.');
+        return;
+    }
+    
+    try {
+        const link = document.createElement('a');
+        link.href = downloadURL;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Download error:', error);
+        alert('Nedlasting feilet. Prøv igjen eller last ned manuelt fra GitHub.');
+    }
 }
 
 // Event listeners for chat functionality
