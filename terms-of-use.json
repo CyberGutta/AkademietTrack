@@ -1,13 +1,12 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "lastUpdated": "October 6, 2025",
   "effectiveDate": "October 6, 2025",
   "url": "https://cybergutta.github.io/AkademietTrack/terms-of-use.html",
   "markdownUrl": "https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/terms-of-use.md",
   "changelog": {
-    "1.0": [
+    "1.1": [
       "Initial release of Terms of Use",
-      "Defined user responsibilities and acceptable use",
       "Established service description and limitations"
     ]
   }
