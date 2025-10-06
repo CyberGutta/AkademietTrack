@@ -356,18 +356,24 @@ jobs:
           console.log('✅ Generated terms-of-use.html');
           
           // Extract changelog from markdown (if exists)
-          const changelogMatch = markdown.match(/## Changelog\s+([\s\S]*?)(?=\n## |\n---|\z)/);
+          const changelogMatch = markdown.match(/##\s*Changelog\s*\n([\s\S]*)/);
           let changelog = {};
           
           if (changelogMatch) {
             const changelogText = changelogMatch[1];
-            // Parse version-specific changes
-            const versionRegex = /### Version ([\d.]+)[^\n]*\n([\s\S]*?)(?=### Version|\z)/g;
+            console.log('Found changelog section');
+            console.log('Changelog text:', changelogText.substring(0, 200));
+            
+            // Parse version-specific changes - more flexible regex
+            const versionRegex = /###\s*Version\s+([\d.]+)[^\n]*\n([\s\S]*?)(?=###\s*Version|\z)/g;
             let match;
             
             while ((match = versionRegex.exec(changelogText)) !== null) {
               const changeVersion = match[1];
               const changesText = match[2];
+              
+              console.log('Found version:', changeVersion);
+              console.log('Changes text:', changesText.substring(0, 100));
               
               // Extract bullet points
               const changes = changesText
@@ -375,10 +381,14 @@ jobs:
                 .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
                 .map(line => line.trim().replace(/^[-*]\s+/, ''));
               
+              console.log('Extracted changes:', changes);
+              
               if (changes.length > 0) {
                 changelog[changeVersion] = changes;
               }
             }
+          } else {
+            console.log('No changelog section found');
           }
           
           // Generate JSON API file
