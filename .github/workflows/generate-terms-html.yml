@@ -365,7 +365,7 @@ jobs:
             console.log('Changelog text:', changelogText.substring(0, 200));
             
             // Parse version-specific changes - more flexible regex
-            const versionRegex = /###\s*Version\s+([\d.]+)[^\n]*\n([\s\S]*?)(?=###\s*Version|\z)/g;
+            const versionRegex = /###\s*Version\s+([\d.]+)[^\n]*\n([\s\S]*?)(?=\n###\s*Version|\n##\s|\z)/g;
             let match;
             
             while ((match = versionRegex.exec(changelogText)) !== null) {
