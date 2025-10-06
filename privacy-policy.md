@@ -1,6 +1,6 @@
 **Version:** 1.1     
-**Last Updated:** October 7, 2025      
-**Effective Date:** October 7, 2025
+**Last Updated:** October 6, 2025      
+**Effective Date:** October 6, 2025
 
 ---
    
@@ -227,7 +227,7 @@ AkademiTrack er primært designet for elever ved Akademiet, inkludert mindreåri
 
 ## Changelog
 
-### Version 2.0
+### Version 1.1
 - Lagt til støtte for automatisk backup av data
 - Oppdatert informasjon om tredjepartstjenester
 - Forbedret beskrivelse av brukerrettigheter under GDPR

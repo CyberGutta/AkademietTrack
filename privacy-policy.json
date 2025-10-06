@@ -1,11 +1,11 @@
 {
   "version": "1.1",
-  "lastUpdated": "October 7, 2025      ",
-  "effectiveDate": "October 7, 2025",
+  "lastUpdated": "October 6, 2025      ",
+  "effectiveDate": "October 6, 2025",
   "url": "https://cybergutta.github.io/AkademietTrack/privacy-policy.html",
   "markdownUrl": "https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.md",
   "changelog": {
-    "2.0": [
+    "1.1": [
       "Lagt til støtte for automatisk backup av data",
       "Oppdatert informasjon om tredjepartstjenester",
       "Forbedret beskrivelse av brukerrettigheter under GDPR",
