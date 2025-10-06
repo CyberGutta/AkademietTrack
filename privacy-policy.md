@@ -1,4 +1,7 @@
-
+**Version:** 2.0     
+**Last Updated:** October 7, 2025      
+**Effective Date:** October 7, 2025
+   
 ### 1. Hvem vi er
 
 AkademiTrack er en applikasjon utviklet av Mathias Hansen og Andreas Nilsen (heretter kalt "vi", "oss" eller "vårt team") for å automatisere registrering av studietid på iSkole.net for elever ved Akademiet.
