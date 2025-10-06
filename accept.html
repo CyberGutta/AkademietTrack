@@ -406,6 +406,7 @@
                         user_email: userEmail,
                         privacy_policy_accepted: true,
                         privacy_policy_accepted_at: new Date().toISOString(),
+                        privacy_policy_version: '1.0', // Add this line
                         updated_at: new Date().toISOString()
                     }], { onConflict: 'user_email' });
 
