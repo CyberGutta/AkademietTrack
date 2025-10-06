@@ -1199,48 +1199,61 @@
         }
 
         // Add this function after the checkAuth() function
-        async function checkPrivacyPolicyAccepted(email) {
+        async function checkPrivacyAndTermsAccepted(email) {
             try {
                 const PRIVACY_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json';
+                const TERMS_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/terms-of-use.json';
                 
-                // Fetch current privacy policy version
-                const response = await fetch(PRIVACY_JSON_URL);
-                if (!response.ok) {
-                    console.error('Could not fetch privacy policy version');
+                // Fetch both current versions
+                const [privacyResponse, termsResponse] = await Promise.all([
+                    fetch(PRIVACY_JSON_URL),
+                    fetch(TERMS_JSON_URL)
+                ]);
+                
+                if (!privacyResponse.ok || !termsResponse.ok) {
+                    console.error('Could not fetch policy/terms versions');
                     return false;
                 }
-                const currentPolicy = await response.json();
-                const currentVersion = currentPolicy.version;
                 
-                // Get user's accepted version
+                const currentPolicy = await privacyResponse.json();
+                const currentTerms = await termsResponse.json();
+                const currentPrivacyVersion = currentPolicy.version;
+                const currentTermsVersion = currentTerms.version;
+                
+                // Get user's accepted versions
                 const { data, error } = await supabase
                     .from('user_profiles')
-                    .select('privacy_policy_accepted, privacy_policy_version')
+                    .select('privacy_policy_accepted, privacy_policy_version, terms_of_use_accepted, terms_of_use_version')
                     .eq('user_email', email)
                     .maybeSingle();
 
                 if (error) {
-                    console.error('Error checking privacy policy:', error);
+                    console.error('Error checking privacy policy and terms:', error);
                     return false;
                 }
                 
-                // If user hasn't accepted at all
-                if (!data?.privacy_policy_accepted) {
+                // Check if user hasn't accepted either document
+                if (!data?.privacy_policy_accepted || !data?.terms_of_use_accepted) {
                     return false;
                 }
                 
-                // Compare versions
-                const userVersion = data.privacy_policy_version || '1.0';
-                const versionComparison = compareVersions(currentVersion, userVersion);
+                // Compare versions for privacy policy
+                const userPrivacyVersion = data.privacy_policy_version || '1.0';
+                const privacyVersionComparison = compareVersions(currentPrivacyVersion, userPrivacyVersion);
                 
-                // If current version is newer, user needs to accept again
-                return versionComparison <= 0;
+                // Compare versions for terms of use
+                const userTermsVersion = data.terms_of_use_version || '1.0';
+                const termsVersionComparison = compareVersions(currentTermsVersion, userTermsVersion);
+                
+                // Both must be up to date
+                return privacyVersionComparison <= 0 && termsVersionComparison <= 0;
                 
             } catch (error) {
-                console.error('Error in checkPrivacyPolicyAccepted:', error);
+                console.error('Error in checkPrivacyAndTermsAccepted:', error);
                 return false;
             }
         }
+
 
         // Add compareVersions function to tutorial
         function compareVersions(v1, v2) {
@@ -1256,6 +1269,9 @@
             }
             return 0;
         }
+
+
+
         // Navigate to specific step
         async function goToStep(stepNumber) {
             if (stepNumber < 1 || stepNumber > 4) return;
@@ -1501,12 +1517,13 @@
             }
             
             // Check if user has accepted privacy policy
-            const hasAcceptedPrivacy = await checkPrivacyPolicyAccepted(email);
-            if (!hasAcceptedPrivacy) {
-                // Redirect to accept.html if they haven't accepted
-                window.location.href = 'accept.html';
-                return;
-            }
+            // Check if user has accepted BOTH privacy policy AND terms of use
+            const hasAcceptedBoth = await checkPrivacyAndTermsAccepted(email);
+                if (!hasAcceptedBoth) {
+                    // Redirect to accept.html if they haven't accepted both
+                    window.location.href = 'accept.html';
+                    return;
+                }
             
             // Only check tutorial completion if NOT in readonly mode
             try {
