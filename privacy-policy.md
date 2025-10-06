@@ -225,6 +225,19 @@ AkademiTrack er primært designet for elever ved Akademiet, inkludert mindreåri
 
 ---
 
+## Changelog
+
+### Version 2.0
+- Lagt til støtte for automatisk backup av data
+- Oppdatert informasjon om tredjepartstjenester
+- Forbedret beskrivelse av brukerrettigheter under GDPR
+- Lagt til informasjon om datasletting
+
+### Version 1.0
+- Initial release
+
+---
+
 ### 14. Kontakt oss
 
 Hvis du har spørsmål om denne personvernerklæringen eller hvordan vi behandler dine data:
@@ -234,6 +247,9 @@ Hvis du har spørsmål om denne personvernerklæringen eller hvordan vi behandle
 - **Responstid:** Vi svarer normalt innen 5 virkedager
   
 ---
+
 **© 2025 AkademiTrack - Developed by Mathias Hansen & Andreas Nilsen**
 
 *This application is not officially affiliated with Akademiet or iSkole.net*
+
+
