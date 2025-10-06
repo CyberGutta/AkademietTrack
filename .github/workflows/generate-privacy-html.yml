@@ -65,9 +65,6 @@ jobs:
               <meta name="description" content="AkademiTrack Privacy Policy - Learn how we protect your data and comply with GDPR">
               <meta name="keywords" content="privacy policy, GDPR, data protection, AkademiTrack">
               <title>Privacy Policy - AkademiTrack v${version}</title>
-              <link rel="icon" type="image/png" href="logo.png">
-              <link rel="shortcut icon" href="logo.png">
-              <link rel="apple-touch-icon" href="logo.png">
               <style>
                   * {
                       margin: 0;
@@ -358,13 +355,40 @@ jobs:
           fs.writeFileSync('privacy-policy.html', html, 'utf8');
           console.log('✅ Generated privacy-policy.html');
           
+          // Extract changelog from markdown (if exists)
+          const changelogMatch = markdown.match(/## Changelog\s+([\s\S]*?)(?=\n## |\n---|\z)/);
+          let changelog = {};
+          
+          if (changelogMatch) {
+            const changelogText = changelogMatch[1];
+            // Parse version-specific changes
+            const versionRegex = /### Version ([\d.]+)[^\n]*\n([\s\S]*?)(?=### Version|\z)/g;
+            let match;
+            
+            while ((match = versionRegex.exec(changelogText)) !== null) {
+              const changeVersion = match[1];
+              const changesText = match[2];
+              
+              // Extract bullet points
+              const changes = changesText
+                .split('\n')
+                .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+                .map(line => line.trim().replace(/^[-*]\s+/, ''));
+              
+              if (changes.length > 0) {
+                changelog[changeVersion] = changes;
+              }
+            }
+          }
+          
           // Generate JSON API file
           const jsonApi = {
             version: version,
             lastUpdated: lastUpdated,
             effectiveDate: effectiveDate,
             url: 'https://cybergutta.github.io/AkademietTrack/privacy-policy.html',
-            markdownUrl: 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.md'
+            markdownUrl: 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.md',
+            changelog: changelog
           };
           
           fs.writeFileSync('privacy-policy.json', JSON.stringify(jsonApi, null, 2), 'utf8');
