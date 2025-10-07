@@ -1,5 +1,5 @@
 **Version:** 1.1     
-**Last Updated:** October 6, 2025      
+**Last Updated:** October 7, 2025      
 **Effective Date:** October 6, 2025
 
 ---
@@ -9,7 +9,7 @@
 AkademiTrack er en applikasjon utviklet av Mathias Hansen og Andreas Nilsen (heretter kalt "vi", "oss" eller "vårt team") for å automatisere registrering av studietid på iSkole.net for elever ved Akademiet.
 
 **Kontaktinformasjon:**
-- **E-post:** contact@akademitrack.no
+- **E-post:** cyberbrothershq@gmail.com
 - **GitHub:** [github.com/CyberGutta/AkademiTrack](https://github.com/CyberGutta/AkademiTrack)
 - **Utviklere:** CyberNilsen (Andreas) & CyberHansen (Mathias)
 
@@ -228,10 +228,7 @@ AkademiTrack er primært designet for elever ved Akademiet, inkludert mindreåri
 ## Changelog
 
 ### Version 1.1
-- Lagt til støtte for automatisk backup av data
-- Oppdatert informasjon om tredjepartstjenester
-- Forbedret beskrivelse av brukerrettigheter under GDPR
-- Lagt til informasjon om datasletting
+- Endret til riktig email
 
 ### Version 1.0
 - Initial release
@@ -242,7 +239,7 @@ AkademiTrack er primært designet for elever ved Akademiet, inkludert mindreåri
 
 Hvis du har spørsmål om denne personvernerklæringen eller hvordan vi behandler dine data:
 
-- **E-post:** contact@akademitrack.no
+- **E-post:** cyberbrothershq@gmail.com
 - **GitHub:** [github.com/CyberGutta/AkademiTrack/issues](https://github.com/CyberGutta/AkademiTrack/issues)
 - **Responstid:** Vi svarer normalt innen 5 virkedager
   
