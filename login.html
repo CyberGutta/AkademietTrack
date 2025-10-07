@@ -744,7 +744,8 @@
             MIN_PASSWORD_LENGTH: 6,
             MAX_PASSWORD_LENGTH: 128,
             MAX_EMAIL_LENGTH: 320,
-            ADMIN_EMAIL: 'cyberbrothershq@gmail.com'
+            ADMIN_EMAIL: 'cyberbrothershq@gmail.com',
+            ALLOWED_DOMAIN: '@stud.akademiet.no'
         };
 
         // Input sanitization functions
@@ -754,7 +755,15 @@
 
         function validateEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email) && email.length <= CONFIG.MAX_EMAIL_LENGTH;
+            const isValidFormat = emailRegex.test(email) && email.length <= CONFIG.MAX_EMAIL_LENGTH;
+            
+            if (!isValidFormat) return false;
+            
+            // Allow admin email
+            if (email === CONFIG.ADMIN_EMAIL) return true;
+            
+            // Only allow @stud.akademiet.no domain
+            return email.endsWith(CONFIG.ALLOWED_DOMAIN);
         }
 
         function validatePassword(password) {
@@ -974,7 +983,7 @@
             
             // Client-side validation
             if (!validateEmail(email)) {
-                showError('Ugyldig e-postadresse');
+                showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
                 return;
             }
             
@@ -1011,7 +1020,7 @@
                 let errorMessage = 'Innlogging feilet. Sjekk e-post og passord.';
                 
                 if (error.message.includes('Invalid login credentials')) {
-                    errorMessage = 'Ugyldig e-post eller passord.';
+                    errorMessage = 'Ugyldig e-post eller passord. Husk at kun @stud.akademiet.no e-poster er tillatt.';
                 } else if (error.message.includes('Email not confirmed')) {
                     errorMessage = 'E-posten din er ikke bekreftet. Sjekk innboksen din.';
                 } else if (error.message.includes('Too many requests')) {
@@ -1039,7 +1048,7 @@
             
             // Client-side validation
             if (!validateEmail(email)) {
-                showError('Ugyldig e-postadresse');
+                showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
                 return;
             }
             
@@ -1095,7 +1104,7 @@
                 } else if (error.message.includes('Password should be at least')) {
                     errorMessage = 'Passordet er for svakt. Velg et sterkere passord.';
                 } else if (error.message.includes('Unable to validate email address')) {
-                    errorMessage = 'Ugyldig e-postadresse.';
+                    errorMessage = 'Ugyldig e-postadresse. Kun @stud.akademiet.no e-poster er tillatt.';
                 }
                 
                 showError(errorMessage);
@@ -1118,7 +1127,7 @@
             }
             
             if (!validateEmail(email)) {
-                showError('Ugyldig e-postadresse');
+                showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
                 return;
             }
             
@@ -1209,7 +1218,7 @@
         });
 
         // Handle unhandled promise rejections
-        window.addEventListener('unhandled rejection', (event) => {
+        window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
             showError('En nettverksfeil oppstod. Sjekk internettforbindelsen din.');
         });
