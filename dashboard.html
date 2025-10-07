@@ -1844,6 +1844,223 @@
             box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
         }
 
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .custom-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-modal-overlay.open .custom-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Modal Header */
+        .custom-modal-header {
+            padding: 2rem 2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .custom-modal-header.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border-bottom-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .custom-modal-header.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+            border-bottom-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .custom-modal-header.warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+            border-bottom-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .custom-modal-header.confirm {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+            border-bottom-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .custom-modal-icon {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .custom-modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        /* Modal Body */
+        .custom-modal-body {
+            padding: 2rem;
+        }
+
+        .custom-modal-body p {
+            margin: 0 0 1rem 0;
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .custom-modal-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .custom-modal-body strong {
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .custom-modal-body small {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* Modal Input */
+        .custom-modal-input-group {
+            margin-top: 1.5rem;
+        }
+
+        .custom-modal-input-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .custom-modal-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .custom-modal-input-group input[type="password"] {
+            letter-spacing: 0.2em;
+        }
+
+        /* Modal Footer */
+        .custom-modal-footer {
+            padding: 1.5rem 2rem 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            background: #f8fafc;
+        }
+
+        /* Modal Buttons */
+        .custom-modal-btn {
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .custom-modal-btn.cancel {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .custom-modal-btn.cancel:hover {
+            background: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-modal-btn.confirm {
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .custom-modal-btn.confirm.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .custom-modal-btn.confirm.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .custom-modal-btn.confirm.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .custom-modal-btn.confirm.confirm,
+        .custom-modal-btn.confirm.info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .custom-modal-btn.confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .custom-modal-btn.confirm:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .custom-modal {
+                max-width: 95%;
+            }
+            
+            .custom-modal-header {
+                padding: 1.5rem 1.5rem 1rem;
+            }
+            
+            .custom-modal-body {
+                padding: 1.5rem;
+            }
+            
+            .custom-modal-footer {
+                padding: 1rem 1.5rem 1.5rem;
+                flex-direction: column-reverse;
+            }
+            
+            .custom-modal-btn {
+                width: 100%;
+            }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .settings-modal,
@@ -2394,7 +2611,7 @@
                     <div class="form-group">
                         <label for="email-input">E-postadresse</label>
                         <input type="email" id="email-input" placeholder="din@epost.no">
-                        <button class="save-btn" onclick="updateEmail()">💾 Oppdater e-post</button>
+                        <button class="save-btn" onclick="updateEmail(event)">💾 Oppdater e-post</button>
                         <small class="form-hint">Du må bekrefte din nye e-postadresse</small>
                     </div>
                     
@@ -3881,9 +4098,106 @@ supabase.auth.onAuthStateChange((event, session) => {
 setInterval(checkAdminStatus, 60000); // Check every minute
 
 
-    // ============================================
+// ============================================
 // GDPR DATA EXPORT FUNCTIONS
 // ============================================
+
+function showModal(config) {
+    const {
+        title,
+        message,
+        type = 'info', // 'info', 'success', 'error', 'warning', 'confirm'
+        icon = '💬',
+        confirmText = 'OK',
+        cancelText = 'Avbryt',
+        onConfirm = null,
+        onCancel = null,
+        input = null // { type: 'text'/'email'/'password', placeholder: '', value: '' }
+    } = config;
+
+    // Remove any existing modal
+    const existingModal = document.getElementById('custom-modal-overlay');
+    if (existingModal) existingModal.remove();
+
+    // Create modal HTML
+    const modalHTML = `
+        <div class="custom-modal-overlay" id="custom-modal-overlay">
+            <div class="custom-modal ${type}">
+                <div class="custom-modal-header ${type}">
+                    <span class="custom-modal-icon">${icon}</span>
+                    <h3>${title}</h3>
+                </div>
+                <div class="custom-modal-body">
+                    <p>${message}</p>
+                    ${input ? `
+                        <div class="custom-modal-input-group">
+                            <input 
+                                type="${input.type || 'text'}" 
+                                id="custom-modal-input" 
+                                placeholder="${input.placeholder || ''}"
+                                value="${input.value || ''}"
+                                maxlength="${input.maxlength || ''}"
+                            >
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="custom-modal-footer">
+                    ${type === 'confirm' || input ? `
+                        <button class="custom-modal-btn cancel" id="modal-cancel">${cancelText}</button>
+                    ` : ''}
+                    <button class="custom-modal-btn confirm ${type}" id="modal-confirm">${confirmText}</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const overlay = document.getElementById('custom-modal-overlay');
+    const confirmBtn = document.getElementById('modal-confirm');
+    const cancelBtn = document.getElementById('modal-cancel');
+    const inputField = document.getElementById('custom-modal-input');
+
+    // Animate in
+    setTimeout(() => overlay.classList.add('open'), 10);
+
+    // Focus input if present
+    if (inputField) {
+        setTimeout(() => inputField.focus(), 100);
+    }
+
+    // Handle confirm
+    confirmBtn.onclick = () => {
+        const value = inputField ? inputField.value : null;
+        overlay.classList.remove('open');
+        setTimeout(() => overlay.remove(), 300);
+        if (onConfirm) onConfirm(value);
+    };
+
+    // Handle cancel
+    if (cancelBtn) {
+        cancelBtn.onclick = () => {
+            overlay.classList.remove('open');
+            setTimeout(() => overlay.remove(), 300);
+            if (onCancel) onCancel();
+        };
+    }
+
+    // Handle Enter key for input
+    if (inputField) {
+        inputField.onkeypress = (e) => {
+            if (e.key === 'Enter') confirmBtn.click();
+        };
+    }
+
+    // Handle Escape key
+    overlay.onkeydown = (e) => {
+        if (e.key === 'Escape' && cancelBtn) cancelBtn.click();
+    };
+}
+
+
+
 
 async function exportUserData(format) {
     if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
@@ -4012,8 +4326,9 @@ function exportAsCSV(data) {
     URL.revokeObjectURL(url);
 }
 
+
 // ============================================
-// ACCOUNT INFORMATION UPDATE FUNCTIONS
+// UPDATED FUNCTIONS WITH BEAUTIFUL MODALS
 // ============================================
 
 async function updateDisplayName() {
@@ -4023,12 +4338,22 @@ async function updateDisplayName() {
     const newName = validateInput(input.value, 50);
     
     if (!newName || newName.length < 2) {
-        alert('Visningsnavnet må være minst 2 tegn langt');
+        showModal({
+            title: 'Ugyldig navn',
+            message: 'Visningsnavnet må være minst 2 tegn langt',
+            type: 'error',
+            icon: '❌'
+        });
         return;
     }
 
     if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        alert('Feil: Ingen gyldig bruker funnet');
+        showModal({
+            title: 'Ingen bruker funnet',
+            message: 'Kunne ikke finne gyldig brukerinformasjon',
+            type: 'error',
+            icon: '❌'
+        });
         return;
     }
 
@@ -4051,202 +4376,333 @@ async function updateDisplayName() {
         if (userEmailElement) userEmailElement.textContent = newName;
         if (userAvatar) userAvatar.textContent = newName.charAt(0).toUpperCase();
 
-        alert('✅ Visningsnavn oppdatert!');
+        showModal({
+            title: 'Vellykket!',
+            message: 'Visningsnavnet ditt er oppdatert',
+            type: 'success',
+            icon: '✅'
+        });
 
     } catch (error) {
         console.error('Error updating display name:', error);
-        alert('Feil ved oppdatering av navn. Prøv igjen.');
+        showModal({
+            title: 'Noe gikk galt',
+            message: 'Kunne ikke oppdatere visningsnavnet. Prøv igjen.',
+            type: 'error',
+            icon: '❌'
+        });
     } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = '💾 Lagre navn';
     }
 }
 
-async function updateEmail() {
-    alert('⚠️ E-postendring er ikke implementert ennå.\n\nDenne funksjonen krever:\n• E-postbekreftelse\n• Oppdatering av alle relaterte tabeller\n• Sikkerhetstiltak\n\nKontakt support for å endre e-post.');
+async function updateEmail(event) {
+    const input = document.getElementById('email-input');
+    if (!input) {
+        console.error('Email input not found');
+        return;
+    }
+
+    const newEmail = input.value.trim().toLowerCase();
+    
+    if (!newEmail || !isValidEmail(newEmail)) {
+        showModal({
+            title: 'Ugyldig e-post',
+            message: 'Vennligst skriv inn en gyldig e-postadresse',
+            type: 'error',
+            icon: '❌'
+        });
+        return;
+    }
+
+    if (newEmail === currentUserEmail) {
+        showModal({
+            title: 'Samme e-post',
+            message: 'Dette er allerede din nåværende e-postadresse',
+            type: 'info',
+            icon: 'ℹ️'
+        });
+        return;
+    }
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+        console.error('Error getting user:', userError);
+        showModal({
+            title: 'Feil',
+            message: 'Kunne ikke hente brukerinformasjon',
+            type: 'error',
+            icon: '❌'
+        });
+        return;
+    }
+
+    showModal({
+        title: 'Bekreft e-postendring',
+        message: `<strong>Nåværende e-post:</strong> ${user.email}<br><br>
+                  <strong>Ny e-post:</strong> ${newEmail}<br><br>
+                  Vi sender en bekreftelseslenke til din NYE e-postadresse.<br>
+                  Du må klikke på lenken for å fullføre endringen.`,
+        type: 'confirm',
+        icon: '📧',
+        confirmText: 'Send bekreftelse',
+        onConfirm: async () => {
+            const saveBtn = event.target;
+            saveBtn.disabled = true;
+            saveBtn.textContent = '⏳ Sender...';
+
+            try {
+                // Store old email in metadata
+                const { error: metadataError } = await supabase.auth.updateUser({
+                    data: { 
+                        old_email_for_update: user.email,
+                        email_update_timestamp: new Date().toISOString()
+                    }
+                });
+
+                if (metadataError) throw new Error('Kunne ikke lagre gammel e-post');
+
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const { data, error } = await supabase.auth.updateUser(
+                    { email: newEmail },
+                    { emailRedirectTo: `${window.location.origin}/confirm-email-change.html` }
+                );
+
+                if (error) throw error;
+
+                showModal({
+                    title: 'Bekreftelseslenke sendt!',
+                    message: `En e-post er sendt til <strong>${newEmail}</strong><br><br>
+                              Klikk på lenken i e-posten for å bekrefte din nye adresse.<br><br>
+                              <small>OBS: Du må bekrefte innen 24 timer.</small>`,
+                    type: 'success',
+                    icon: '✅'
+                });
+
+                input.value = user.email;
+
+            } catch (error) {
+                console.error('Error updating email:', error);
+                
+                let errorMessage = 'Kunne ikke oppdatere e-post.<br><br>';
+                
+                if (error.code === 'email_address_invalid') {
+                    errorMessage += 'E-postadressen er ugyldig eller allerede i bruk.';
+                } else if (error.message.includes('already registered')) {
+                    errorMessage += 'Denne e-postadressen er allerede i bruk.';
+                } else if (error.message.includes('rate limit')) {
+                    errorMessage += 'For mange forsøk. Vent litt før du prøver igjen.';
+                } else {
+                    errorMessage += `Feilmelding: ${error.message || 'ukjent feil'}`;
+                }
+                
+                showModal({
+                    title: 'Feil ved oppdatering',
+                    message: errorMessage,
+                    type: 'error',
+                    icon: '❌'
+                });
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 Oppdater e-post';
+            }
+        }
+    });
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
 
 async function changePassword() {
-    const newPassword = prompt('Skriv inn nytt passord (minimum 8 tegn):');
-    
-    if (!newPassword) return;
-    
-    if (newPassword.length < 8) {
-        alert('Passordet må være minst 8 tegn langt');
-        return;
-    }
-
-    try {
-        const { error } = await supabase.auth.updateUser({
-            password: newPassword
-        });
-
-        if (error) throw error;
-
-        alert('✅ Passord oppdatert!');
-
-    } catch (error) {
-        console.error('Error changing password:', error);
-        alert('Feil ved endring av passord. Prøv igjen.');
-    }
+    showModal({
+        title: 'Endre passord',
+        message: 'Husker du ditt nåværende passord?',
+        type: 'confirm',
+        icon: '🔐',
+        confirmText: 'Ja, jeg husker det',
+        cancelText: 'Nei, glemt passord',
+        onConfirm: () => verifyCurrentPassword(),
+        onCancel: () => resetPasswordFlow()
+    });
 }
 
-// ============================================
-// STU DATA MANAGER
-// ============================================
+async function verifyCurrentPassword() {
+    showModal({
+        title: 'Bekreft identitet',
+        message: 'Skriv inn ditt nåværende passord for å fortsette',
+        type: 'confirm',
+        icon: '🔑',
+        input: { type: 'password', placeholder: 'Nåværende passord' },
+        confirmText: 'Bekreft',
+        onConfirm: async (currentPassword) => {
+            if (!currentPassword) return;
 
-async function openSTUManager() {
+            try {
+                const { error: verifyError } = await supabase.auth.signInWithPassword({
+                    email: currentUserEmail,
+                    password: currentPassword
+                });
+
+                if (verifyError) {
+                    showModal({
+                        title: 'Feil passord',
+                        message: 'Passordet du skrev inn er feil. Prøv igjen eller bruk "Glemt passord".',
+                        type: 'error',
+                        icon: '❌'
+                    });
+                    return;
+                }
+
+                // Password verified, ask for new password
+                promptNewPassword(currentPassword);
+
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                showModal({
+                    title: 'Feil',
+                    message: 'Kunne ikke bekrefte passord. Prøv igjen.',
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
+        }
+    });
+}
+
+function promptNewPassword(currentPassword) {
+    showModal({
+        title: 'Nytt passord',
+        message: 'Skriv inn ditt nye passord (minimum 8 tegn)',
+        type: 'confirm',
+        icon: '🔒',
+        input: { type: 'password', placeholder: 'Nytt passord' },
+        confirmText: 'Fortsett',
+        onConfirm: (newPassword) => {
+            if (!newPassword) return;
+            
+            if (newPassword.length < 8) {
+                showModal({
+                    title: 'For kort passord',
+                    message: 'Passordet må være minst 8 tegn langt',
+                    type: 'error',
+                    icon: '❌'
+                });
+                return;
+            }
+
+            if (newPassword === currentPassword) {
+                showModal({
+                    title: 'Samme passord',
+                    message: 'Nytt passord kan ikke være det samme som gammelt passord',
+                    type: 'error',
+                    icon: '❌'
+                });
+                return;
+            }
+
+            confirmNewPassword(newPassword);
+        }
+    });
+}
+
+function confirmNewPassword(newPassword) {
+    showModal({
+        title: 'Bekreft nytt passord',
+        message: 'Skriv inn ditt nye passord en gang til for å bekrefte',
+        type: 'confirm',
+        icon: '🔒',
+        input: { type: 'password', placeholder: 'Bekreft nytt passord' },
+        confirmText: 'Endre passord',
+        onConfirm: async (confirmPassword) => {
+            if (confirmPassword !== newPassword) {
+                showModal({
+                    title: 'Passordene matcher ikke',
+                    message: 'De to passordene du skrev inn er ikke like. Prøv igjen.',
+                    type: 'error',
+                    icon: '❌'
+                });
+                return;
+            }
+
+            try {
+                const { error } = await supabase.auth.updateUser({
+                    password: newPassword
+                });
+
+                if (error) throw error;
+
+                showModal({
+                    title: 'Passord oppdatert!',
+                    message: 'Ditt nye passord er nå aktivt. Du kan bruke det ved neste innlogging.',
+                    type: 'success',
+                    icon: '✅'
+                });
+
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showModal({
+                    title: 'Feil',
+                    message: 'Kunne ikke endre passord. Prøv igjen.',
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
+        }
+    });
+}
+
+async function resetPasswordFlow() {
     if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        alert('Feil: Ingen gyldig bruker funnet');
+        showModal({
+            title: 'Feil',
+            message: 'Kunne ikke finne gyldig e-postadresse',
+            type: 'error',
+            icon: '❌'
+        });
         return;
     }
 
-    try {
-        const { data: sessions, error } = await supabase
-            .from('stu_registrations')
-            .select('*')
-            .eq('user_email', currentUserEmail)
-            .order('session_date', { ascending: false });
+    showModal({
+        title: 'Glemt passord?',
+        message: `Vi sender en tilbakestillingslenke til:<br><br>
+                  <strong>${currentUserEmail}</strong><br><br>
+                  Klikk på lenken i e-posten for å sette nytt passord.<br>
+                  Lenken er gyldig i 24 timer.`,
+        type: 'confirm',
+        icon: '📧',
+        confirmText: 'Send lenke',
+        onConfirm: async () => {
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(currentUserEmail, {
+                    redirectTo: window.location.origin + '/dashboard.html'
+                });
 
-        if (error) throw error;
+                if (error) throw error;
 
-        if (!sessions || sessions.length === 0) {
-            alert('Ingen STU-registreringer funnet.');
-            return;
+                showModal({
+                    title: 'Tilbakestillingslenke sendt!',
+                    message: `Sjekk din e-post (<strong>${currentUserEmail}</strong>) for lenken.<br><br>
+                              Lenken er gyldig i 24 timer.`,
+                    type: 'success',
+                    icon: '✅'
+                });
+
+            } catch (error) {
+                console.error('Error sending reset email:', error);
+                showModal({
+                    title: 'Feil',
+                    message: 'Kunne ikke sende tilbakestillingslenke. Prøv igjen senere.',
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
         }
-
-        // Create modal HTML
-        const modalHTML = `
-            <div class="stu-manager-overlay" id="stu-manager-overlay">
-                <div class="stu-manager-modal">
-                    <div class="stu-manager-header">
-                        <h2>📚 STU-databehandler</h2>
-                        <button class="settings-close" onclick="closeSTUManager()">✕</button>
-                    </div>
-                    <div class="stu-manager-content">
-                        <p>Totalt ${sessions.length} økter registrert</p>
-                        <div class="stu-sessions-list">
-                            ${sessions.map(session => `
-                                <div class="stu-session-item" data-id="${session.id}">
-                                    <div class="session-info">
-                                        <strong>${session.session_date}</strong>
-                                        <span>${session.session_start} - ${session.session_end}</span>
-                                        <span class="session-subject">${session.subject || 'Ukjent fag'}</span>
-                                    </div>
-                                    <div class="session-actions">
-                                        <button class="delete-session-btn" onclick="deleteSTUSession(${session.id})">🗑️ Slett</button>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Add to body
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        document.body.style.overflow = 'hidden';
-
-    } catch (error) {
-        console.error('Error opening STU manager:', error);
-        alert('Feil ved lasting av STU-data.');
-    }
-}
-
-function closeSTUManager() {
-    const overlay = document.getElementById('stu-manager-overlay');
-    if (overlay) {
-        overlay.remove();
-        document.body.style.overflow = 'auto';
-    }
-}
-
-async function deleteSTUSession(sessionId) {
-    if (!confirm('Er du sikker på at du vil slette denne STU-økten?')) {
-        return;
-    }
-
-    try {
-        const { error } = await supabase
-            .from('stu_registrations')
-            .delete()
-            .eq('id', sessionId);
-
-        if (error) throw error;
-
-        // Remove from UI
-        const sessionElement = document.querySelector(`[data-id="${sessionId}"]`);
-        if (sessionElement) {
-            sessionElement.remove();
-        }
-
-        // Refresh stats
-        const stuData = await fetchSTUData(currentUserEmail);
-        updateSTUStats(stuData.sessions, stuData.totalHours);
-
-        alert('✅ STU-økt slettet');
-
-    } catch (error) {
-        console.error('Error deleting STU session:', error);
-        alert('Feil ved sletting av økt. Prøv igjen.');
-    }
-}
-
-// ============================================
-// PRIVACY SETTINGS
-// ============================================
-
-async function updateDataRetention() {
-    const checkbox = document.getElementById('data-retention-consent');
-    if (!checkbox || !currentUserEmail) return;
-
-    const isChecked = checkbox.checked;
-
-    try {
-        const { error } = await supabase
-            .from('user_profiles')
-            .update({ 
-                data_retention_consent: isChecked,
-                data_retention_consent_date: new Date().toISOString()
-            })
-            .eq('user_email', currentUserEmail);
-
-        if (error) throw error;
-
-        console.log('Data retention preference updated:', isChecked);
-
-    } catch (error) {
-        console.error('Error updating data retention:', error);
-        checkbox.checked = !isChecked; // Revert on error
-        alert('Feil ved oppdatering av preferanse. Prøv igjen.');
-    }
-}
-
-async function updateAnalyticsConsent() {
-    const checkbox = document.getElementById('analytics-consent');
-    if (!checkbox || !currentUserEmail) return;
-
-    const isChecked = checkbox.checked;
-
-    try {
-        const { error } = await supabase
-            .from('user_profiles')
-            .update({ 
-                analytics_consent: isChecked,
-                analytics_consent_date: new Date().toISOString()
-            })
-            .eq('user_email', currentUserEmail);
-
-        if (error) throw error;
-
-        console.log('Analytics consent updated:', isChecked);
-
-    } catch (error) {
-        console.error('Error updating analytics consent:', error);
-        checkbox.checked = !isChecked; // Revert on error
-        alert('Feil ved oppdatering av preferanse. Prøv igjen.');
-    }
+    });
 }
 
 // ============================================
@@ -4271,13 +4727,16 @@ async function loadUserPreferences() {
         }
 
         if (data) {
-            // Update display name input
             const displayNameInput = document.getElementById('display-name-input');
             if (displayNameInput && data.display_name) {
                 displayNameInput.value = data.display_name;
             }
 
-            // Update privacy checkboxes
+            const emailInput = document.getElementById('email-input');
+            if (emailInput) {
+                emailInput.value = currentUserEmail;
+            }
+
             const dataRetentionCheckbox = document.getElementById('data-retention-consent');
             if (dataRetentionCheckbox) {
                 dataRetentionCheckbox.checked = data.data_retention_consent || false;
@@ -4294,18 +4753,11 @@ async function loadUserPreferences() {
     }
 }
 
-// ============================================
-// UPDATE openSettings TO LOAD PREFERENCES
-// ============================================
-
-// Replace the existing openSettings function with this:
 function openSettings() {
     const overlay = document.getElementById('settings-overlay');
     if (overlay) {
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
-        
-        // Load user preferences when opening settings
         loadUserPreferences();
     }
 }

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bekreft E-postendring - AkademiTrack</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.2);
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        h1 {
+            color: #1e40af;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .status-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success {
+            color: #22c55e;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #3b82f6, #60a5fa);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .details {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        .details strong {
+            color: #1e40af;
+        }
+
+        .details ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .debug-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            text-align: left;
+            color: #475569;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="logo.png" alt="AkademiTrack Logo">
+        </div>
+        
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <h1>Behandler e-postendring...</h1>
+                <p class="message">Vennligst vent mens vi bekrefter din nye e-postadresse.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function handleEmailChange() {
+            const contentDiv = document.getElementById('content');
+            let debugInfo = [];
+
+            try {
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token');
+                const type = hashParams.get('type');
+
+                debugInfo.push(`Type: ${type}`);
+                debugInfo.push(`Has access token: ${!!accessToken}`);
+
+                if (!accessToken || type !== 'email_change') {
+                    throw new Error('Ugyldig eller utløpt lenke');
+                }
+
+                // Set the session
+                const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                });
+
+                if (sessionError) {
+                    debugInfo.push(`Session error: ${sessionError.message}`);
+                    throw sessionError;
+                }
+
+                debugInfo.push('Session set successfully');
+
+                // Get the user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError) {
+                    debugInfo.push(`User error: ${userError.message}`);
+                    throw userError;
+                }
+
+                const newEmail = user.email;
+                debugInfo.push(`New email: ${newEmail}`);
+
+                // CRITICAL FIX: Get old email from user metadata
+                const oldEmail = user.user_metadata?.old_email_for_update;
+                
+                debugInfo.push(`Old email from metadata: ${oldEmail}`);
+
+                if (!oldEmail) {
+                    debugInfo.push('ERROR: No old email found in metadata');
+                    throw new Error('Kunne ikke finne gammel e-postadresse i brukerdata. Prøv å endre e-post på nytt.');
+                }
+
+                if (oldEmail === newEmail) {
+                    debugInfo.push('ERROR: Old and new email are the same');
+                    throw new Error('Gammel og ny e-post er identiske. Ingen endringer nødvendig.');
+                }
+
+                debugInfo.push(`Updating from ${oldEmail} to ${newEmail}`);
+
+                // Update ALL tables with the new email
+                const updateResult = await updateUserEmailInAllTables(oldEmail, newEmail);
+                
+                debugInfo.push(`Update result: ${JSON.stringify(updateResult)}`);
+
+                if (!updateResult.success) {
+                    throw new Error('Kunne ikke oppdatere alle tabeller');
+                }
+
+                // Clean up the metadata
+                await supabase.auth.updateUser({
+                    data: { 
+                        old_email_for_update: null,
+                        email_update_timestamp: null,
+                        email_update_completed: new Date().toISOString()
+                    }
+                });
+
+                // Show success message
+                contentDiv.innerHTML = `
+                    <div class="status-icon success">✅</div>
+                    <h1 class="success">E-post oppdatert!</h1>
+                    <p class="message">Din e-postadresse har blitt endret.</p>
+                    <div class="details">
+                        <p><strong>Gammel e-post:</strong> ${oldEmail}</p>
+                        <p><strong>Ny e-post:</strong> ${newEmail}</p>
+                        <p style="margin-top: 1rem;"><strong>Oppdaterte tabeller:</strong></p>
+                        <ul>
+                            <li>user_profiles: ${updateResult.user_profiles} rader</li>
+                            <li>activation_keys: ${updateResult.activation_keys} rader</li>
+                            <li>stu_registrations: ${updateResult.stu_registrations} rader</li>
+                            <li>chat_conversations: ${updateResult.chat_conversations} rader</li>
+                            <li>chat_messages: ${updateResult.chat_messages} rader</li>
+                        </ul>
+                    </div>
+                    <p class="message">Du vil bli omdirigert til innloggingssiden om 5 sekunder...</p>
+                    <a href="index.html" class="btn">Gå til innlogging nå</a>
+                `;
+
+                setTimeout(async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = 'index.html';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error confirming email change:', error);
+                
+                contentDiv.innerHTML = `
+                    <div class="status-icon error">❌</div>
+                    <h1 class="error">Noe gikk galt</h1>
+                    <p class="message">${error.message || 'Kunne ikke bekrefte e-postendring'}</p>
+                    <div class="details">
+                        <p><strong>Mulige årsaker:</strong></p>
+                        <ul>
+                            <li>Lenken har utløpt (gyldig i 24 timer)</li>
+                            <li>Lenken har allerede blitt brukt</li>
+                            <li>E-posten er allerede i bruk</li>
+                            <li>Gammel e-post ikke funnet i brukerdata</li>
+                        </ul>
+                        <p style="margin-top: 1rem;"><strong>Løsning:</strong></p>
+                        <p>Gå tilbake til dashboard og prøv å endre e-post på nytt.</p>
+                    </div>
+                    <div class="debug-info">
+                        <strong>Debug informasjon:</strong><br>
+                        ${debugInfo.map(info => `• ${info}`).join('<br>')}
+                    </div>
+                    <a href="dashboard.html" class="btn">Tilbake til dashboard</a>
+                `;
+            }
+        }
+
+
+        async function updateUserEmailInAllTables(oldEmail, newEmail) {
+            const results = {
+                success: false,
+                user_profiles: 0,
+                activation_keys: 0,
+                stu_registrations: 0,
+                chat_conversations: 0,
+                chat_messages: 0,
+                errors: [],
+                details: []
+            };
+
+            try {
+                console.log('=== CALLING DATABASE FUNCTION TO UPDATE EMAIL ===');
+                console.log('Old email:', oldEmail);
+                console.log('New email:', newEmail);
+
+                // Get current user
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError || !user) {
+                    throw new Error('Could not get current user');
+                }
+
+                console.log('Current user ID:', user.id);
+
+                // Call the database function
+                const { data, error } = await supabase.rpc('update_user_email_everywhere', {
+                    p_old_email: oldEmail,
+                    p_new_email: newEmail,
+                    p_user_id: user.id
+                });
+
+                if (error) {
+                    console.error('Database function error:', error);
+                    results.errors.push(error.message);
+                    results.details.push(`Function error: ${error.message}`);
+                    throw error;
+                }
+
+                console.log('Database function result:', data);
+
+                // Parse the results
+                if (data) {
+                    results.success = data.success || false;
+                    results.user_profiles = data.user_profiles || 0;
+                    results.activation_keys = data.activation_keys || 0;
+                    results.stu_registrations = data.stu_registrations || 0;
+                    results.chat_conversations = data.chat_conversations || 0;
+                    results.chat_messages = data.chat_messages || 0;
+                    
+                    results.details.push(`✅ Total rows updated: ${data.total_updated || 0}`);
+                    results.details.push(`- user_profiles: ${results.user_profiles}`);
+                    results.details.push(`- activation_keys: ${results.activation_keys}`);
+                    results.details.push(`- stu_registrations: ${results.stu_registrations}`);
+                    results.details.push(`- chat_conversations: ${results.chat_conversations}`);
+                    results.details.push(`- chat_messages: ${results.chat_messages}`);
+                }
+
+                console.log('✅ ALL TABLES UPDATED SUCCESSFULLY via database function');
+                console.log('Results:', results);
+
+                return results;
+
+            } catch (error) {
+                console.error('❌ ERROR in updateUserEmailInAllTables:', error);
+                results.success = false;
+                results.errors.push(error.message);
+                results.details.push(`ERROR: ${error.message}`);
+                return results;
+            }
+        }
+
+        // Run on page load
+        window.addEventListener('DOMContentLoaded', handleEmailChange);
+    </script>
+</body>
+</html>
