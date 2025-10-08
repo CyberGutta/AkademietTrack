@@ -4470,7 +4470,7 @@ async function updateEmail(event) {
 
                 const { data, error } = await supabase.auth.updateUser(
                     { email: newEmail },
-                    { emailRedirectTo: `${window.location.origin}/confirm-email-change.html` }
+                    { emailRedirectTo: `${window.location.origin}/AkademietTrack/confirm-email-change.html` }
                 );
 
                 if (error) throw error;
