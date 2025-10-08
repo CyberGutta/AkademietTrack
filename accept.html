@@ -15,11 +15,12 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow: hidden;
         }
 
         .container {
@@ -28,7 +29,10 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             max-width: 800px;
             width: 100%;
+            max-height: 90vh;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
@@ -36,6 +40,7 @@
             color: white;
             padding: 30px;
             text-align: center;
+            flex-shrink: 0;
         }
 
         .header h1 {
@@ -66,13 +71,18 @@
 
         .content-wrapper {
             padding: 30px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .scrollable-content {
-            max-height: 400px;
-            overflow-y: auto;
             margin-bottom: 20px;
             padding-right: 10px;
+            overflow-y: auto;
+            flex-shrink: 1;
+            min-height: 0;
         }
 
         .scrollable-content::-webkit-scrollbar {
@@ -136,6 +146,11 @@
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
+        }
+
+        .actions-section {
+            flex-shrink: 0;
+            margin-top: auto;
         }
 
         .full-policy-links {
@@ -274,47 +289,51 @@
                 <!-- Content will be injected here -->
             </div>
 
-            <div class="full-policy-links">
-                <div class="full-policy-link">
-                    <a href="privacy-policy.html" target="_blank">
-                        📄 Les full personvernerklæring
-                        <span>→</span>
-                    </a>
+            <div class="actions-section">
+                <div class="full-policy-links">
+                    <div class="full-policy-link">
+                        <a href="privacy-policy.html" target="_blank">
+                            📄 Les full personvernerklæring
+                            <span>→</span>
+                        </a>
+                    </div>
+                    <div class="full-policy-link">
+                        <a href="terms-of-use.html" target="_blank">
+                            📋 Les fullstendige vilkår
+                            <span>→</span>
+                        </a>
+                    </div>
                 </div>
-                <div class="full-policy-link">
-                    <a href="terms-of-use.html" target="_blank">
-                        📋 Les fullstendige vilkår
-                        <span>→</span>
-                    </a>
+
+                <div class="checkbox-container" id="privacy-checkbox-wrapper">
+                    <input type="checkbox" id="privacy-checkbox">
+                    <label for="privacy-checkbox" id="privacy-checkbox-label">
+                        Jeg har lest og godtar <a href="privacy-policy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen</a>.
+                    </label>
                 </div>
+
+                <div class="checkbox-container" id="terms-checkbox-wrapper">
+                    <input type="checkbox" id="terms-checkbox">
+                    <label for="terms-checkbox" id="terms-checkbox-label">
+                        Jeg har lest og godtar <a href="terms-of-use.html" target="_blank" style="color: #3b82f6;">vilkårene for bruk</a>.
+                    </label>
+                </div>
+
+                <button class="accept-button" id="accept-button" disabled>
+                    Godta og fortsett
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Lagrer ditt samtykke...</p>
+                </div>
+
+                <div class="error-message" id="error-message"></div>
             </div>
-
-            <div class="checkbox-container" id="privacy-checkbox-wrapper">
-                <input type="checkbox" id="privacy-checkbox">
-                <label for="privacy-checkbox" id="privacy-checkbox-label">
-                    Jeg har lest og godtar <a href="privacy-policy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen</a>.
-                </label>
-            </div>
-
-            <div class="checkbox-container" id="terms-checkbox-wrapper">
-                <input type="checkbox" id="terms-checkbox">
-                <label for="terms-checkbox" id="terms-checkbox-label">
-                    Jeg har lest og godtar <a href="terms-of-use.html" target="_blank" style="color: #3b82f6;">vilkårene for bruk</a>.
-                </label>
-            </div>
-
-            <button class="accept-button" id="accept-button" disabled>
-                Godta og fortsett
-            </button>
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Lagrer ditt samtykke...</p>
-            </div>
-
-            <div class="error-message" id="error-message"></div>
         </div>
     </div>
+</body>
+</html>
 
     <script>
         const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
