@@ -4681,7 +4681,7 @@ async function resetPasswordFlow() {
         onConfirm: async () => {
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(currentUserEmail, {
-                    redirectTo: window.location.origin + '/dashboard.html'
+                    redirectTo: window.location.origin + 'https://cybergutta.github.io/AkademietTrack/reset-password.html'
                 });
 
                 if (error) throw error;
