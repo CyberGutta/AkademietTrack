@@ -510,20 +510,19 @@
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
             transition: all 0.3s ease;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
         }
 
         .stat-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 15px 40px rgba(31, 38, 135, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            background: linear-gradient(135deg, #7c8ef5 0%, #8b5bb8 100%);
         }
 
         .stat-number {
@@ -2036,6 +2035,7 @@
         .custom-modal-btn.confirm:active {
             transform: translateY(0);
         }
+        
 
         /* Responsive */
         @media (max-width: 640px) {
@@ -2086,6 +2086,296 @@
             .confirmation-modal {
                 width: 95%;
             }
+        }
+
+
+        /* ============================================
+        STU MANAGER STYLES - LEGG TIL DENNE
+        ============================================ */
+
+        .stu-manager-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stu-manager-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .stu-manager-modal {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .stu-manager-overlay.open .stu-manager-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .stu-manager-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stu-manager-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .stu-manager-header .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 32px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .stu-manager-header .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .stu-manager-content {
+            padding: 30px;
+            max-height: calc(90vh - 100px);
+            overflow-y: auto;
+        }
+
+        .stu-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stu-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .danger-btn, .refresh-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .danger-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+        }
+
+        .danger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .danger-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #56CCF2, #2F80ED);
+            color: white;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(47, 128, 237, 0.4);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stu-list-container h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .stu-filter {
+            margin-bottom: 20px;
+        }
+
+        .stu-filter input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .stu-filter input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .stu-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .stu-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .stu-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .stu-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .stu-list::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .stu-item {
+            background: white;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .stu-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .stu-item-info {
+            flex: 1;
+        }
+
+        .stu-item-date {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stu-item-details {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stu-item-time {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stu-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .delete-stu-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .delete-stu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .delete-stu-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading, .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .no-data {
+            background: #f8f9fa;
+            border-radius: 12px;
         }
 
         .footer {
@@ -2634,6 +2924,47 @@
                     📋 Åpne STU-databehandler
                 </button>
             </div>
+            <!-- STU Data Manager Modal -->
+<div class="stu-manager-overlay" id="stu-manager-overlay">
+    <div class="stu-manager-modal">
+        <div class="stu-manager-header">
+            <h2>📚 Administrer STU-data</h2>
+            <button class="close-btn" onclick="closeSTUManager()">×</button>
+        </div>
+        
+        <div class="stu-manager-content">
+            <div class="stu-stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="total-sessions">0</span>
+                    <span class="stat-label">Totalt økter</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="total-hours">0</span>
+                    <span class="stat-label">Timer registrert</span>
+                </div>
+            </div>
+
+            <div class="stu-actions">
+                <button class="danger-btn" onclick="deleteAllSTUData()">
+                    🗑️ Slett alle STU-registreringer
+                </button>
+                <button class="refresh-btn" onclick="loadSTUData()">
+                    🔄 Oppdater liste
+                </button>
+            </div>
+
+            <div class="stu-list-container">
+                <h3>Dine STU-registreringer</h3>
+                <div class="stu-filter">
+                    <input type="text" id="stu-search" placeholder="🔍 Søk etter dato, tid eller varighet..." oninput="filterSTUData()">
+                </div>
+                <div class="stu-list" id="stu-list">
+                    <div class="loading">⏳ Laster data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Privacy Settings -->
             <div class="settings-section">
@@ -2731,8 +3062,6 @@
                 </p>
                 <div class="footer-links">
                     <a href="https://github.com/CyberGutta/AkademiTrack" class="footer-link" target="_blank">GitHub</a>
-                    <a href="https://cybergutta.github.io/AkademietTrack/privacy-policy.html" class="footer-link">Privacy policy</a>
-                    <a href="https://cybergutta.github.io/AkademietTrack/terms-of-use.html" class="footer-link">Terms of use</a>
                     <a href="login.html" class="footer-link">Logg Inn</a>
                     <a href="#features" class="footer-link">Funksjoner</a>
                     <a href="mailto:cyberbrothershq@gmail.com" class="footer-link">Støtte</a>
@@ -3020,22 +3349,8 @@ async function fetchSTUData(userEmail) {
             return { sessions: 0, totalHours: 0 };
         }
 
-        // Calculate total hours
-        let totalMinutes = 0;
-
-        data.forEach(session => {
-            if (session.session_start && session.session_end) {
-                const startTime = new Date(`1970-01-01 ${session.session_start}`);
-                const endTime = new Date(`1970-01-01 ${session.session_end}`);
-                const diffMinutes = (endTime - startTime) / (1000 * 60);
-                
-                if (diffMinutes > 0 && diffMinutes < 1440) { // Valid session (less than 24 hours)
-                    totalMinutes += diffMinutes;
-                }
-            }
-        });
-
-        const totalHours = Math.floor((totalMinutes / 60) * 100) / 100;
+        // Each STU session is ALWAYS 45 minutes = 0.75 hours
+        const totalHours = (data.length * 0.75).toFixed(2);
 
         console.log('Calculated stats:', {
             totalHours,
@@ -3044,7 +3359,7 @@ async function fetchSTUData(userEmail) {
 
         return {
             sessions: Math.min(data.length, 99999),
-            totalHours: Math.min(totalHours, 99999)
+            totalHours: parseFloat(totalHours)
         };
     } catch (error) {
         console.error('Error in fetchSTUData:', error);
@@ -3053,26 +3368,51 @@ async function fetchSTUData(userEmail) {
 }
 
 // Security: Function to update STU stats in the UI with validation
-function updateSTUStats(sessions, totalHours) {
-    const sessionsElement = document.getElementById('stu-sessions-count');
-    const hoursElement = document.getElementById('stu-hours-total');
+// ============================================
+// ONE FUNCTION TO RULE THEM ALL
+// ============================================
 
-    if (sessionsElement && hoursElement) {
-        // Security: Validate and sanitize numeric values
-        const safeSessions = isNaN(sessions) ? 0 : Math.max(0, Math.floor(Number(sessions)));
-        const safeHours = isNaN(totalHours) ? 0 : Math.max(0, Number(totalHours));
-        
-        sessionsElement.textContent = safeSessions.toString();
-        hoursElement.textContent = safeHours.toString();
-        
-        // Remove loading state
-        const sessionsCard = sessionsElement.parentElement;
-        const hoursCard = hoursElement.parentElement;
-        if (sessionsCard) sessionsCard.classList.remove('stat-loading');
-        if (hoursCard) hoursCard.classList.remove('stat-loading');
+function updateSTUStats(sessions, totalHours) {
+    // Calculate if not provided
+    if (sessions === undefined && allSTUData) {
+        sessions = allSTUData.length;
+    }
+    if (totalHours === undefined) {
+        totalHours = (sessions * 0.75).toFixed(2);
+    }
+
+    // Update DASHBOARD (forside)
+    const dashboardSessionsElement = document.getElementById('stu-sessions-count');
+    const dashboardHoursElement = document.getElementById('stu-hours-total');
+    
+    if (dashboardSessionsElement) {
+        dashboardSessionsElement.textContent = sessions.toString();
+    }
+    if (dashboardHoursElement) {
+        dashboardHoursElement.textContent = totalHours.toString();
+    }
+
+    // Update STU MANAGER MODAL
+    const managerSessionsElement = document.getElementById('total-sessions');
+    const managerHoursElement = document.getElementById('total-hours');
+    
+    if (managerSessionsElement) {
+        managerSessionsElement.textContent = sessions.toString();
+    }
+    if (managerHoursElement) {
+        managerHoursElement.textContent = totalHours.toString();
+    }
+
+    // Remove loading states
+    if (dashboardSessionsElement) {
+        const card = dashboardSessionsElement.parentElement;
+        if (card) card.classList.remove('stat-loading');
+    }
+    if (dashboardHoursElement) {
+        const card = dashboardHoursElement.parentElement;
+        if (card) card.classList.remove('stat-loading');
     }
 }
-
 // Check admin status immediately on load
 async function checkAdminStatus() {
     try {
@@ -4470,7 +4810,7 @@ async function updateEmail(event) {
 
                 const { data, error } = await supabase.auth.updateUser(
                     { email: newEmail },
-                    { emailRedirectTo: `${window.location.origin}/AkademietTrack/confirm-email-change.html` }
+                    { emailRedirectTo: `${window.location.origin}/confirm-email-change.html` }
                 );
 
                 if (error) throw error;
@@ -4681,7 +5021,7 @@ async function resetPasswordFlow() {
         onConfirm: async () => {
             try {
                 const { error } = await supabase.auth.resetPasswordForEmail(currentUserEmail, {
-                    redirectTo: window.location.origin + 'https://cybergutta.github.io/AkademietTrack/reset-password.html'
+                    redirectTo: window.location.origin + '/dashboard.html'
                 });
 
                 if (error) throw error;
@@ -4763,6 +5103,399 @@ function openSettings() {
         loadUserPreferences();
     }
 }
+
+
+// ============================================
+// STU DATA MANAGER FUNCTIONS (GDPR COMPLIANT)
+// ============================================
+
+let allSTUData = [];
+
+function openSTUManager() {
+    const overlay = document.getElementById('stu-manager-overlay');
+    if (overlay) {
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        loadSTUData();
+    }
+}
+
+function closeSTUManager() {
+    const overlay = document.getElementById('stu-manager-overlay');
+    if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+async function loadSTUData() {
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        showModal({
+            title: 'Feil',
+            message: 'Ingen gyldig bruker funnet',
+            type: 'error',
+            icon: '❌'
+        });
+        return;
+    }
+
+    const listContainer = document.getElementById('stu-list');
+    listContainer.innerHTML = '<div class="loading">⏳ Laster data...</div>';
+
+    try {
+        console.log('Fetching STU data for user:', currentUserEmail);
+
+        const { data, error } = await supabase
+            .from('stu_registrations')
+            .select('*')
+            .eq('user_email', currentUserEmail)
+            .order('session_date', { ascending: false })
+            .order('session_start', { ascending: false });
+
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+
+        console.log('Raw STU data from database:', data);
+        
+        allSTUData = data || [];
+        updateSTUStats();
+        renderSTUList(allSTUData);
+
+    } catch (error) {
+        console.error('Error loading STU data:', error);
+        listContainer.innerHTML = '<div class="no-data">❌ Kunne ikke laste data</div>';
+        showModal({
+            title: 'Feil',
+            message: 'Kunne ikke laste STU-data. Prøv igjen senere.',
+            type: 'error',
+            icon: '❌'
+        });
+    }
+}
+
+function renderSTUList(data) {
+    const listContainer = document.getElementById('stu-list');
+
+    if (!data || data.length === 0) {
+        listContainer.innerHTML = '<div class="no-data">📭 Ingen STU-registreringer funnet</div>';
+        return;
+    }
+
+    listContainer.innerHTML = data.map(session => {
+        // Format session date
+        const sessionDate = new Date(session.session_date);
+        const formattedDate = sessionDate.toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Format session time (session_start)
+        const sessionStart = session.session_start || '00:00:00';
+        const [hours, minutes] = sessionStart.split(':');
+        const formattedTime = `${hours}:${minutes}`;
+        
+        // Calculate duration from session_start and session_end
+        let durationText = 'Ukjent';
+        let durationHoursDecimal = 0;
+        
+        if (session.session_start && session.session_end) {
+            const startTime = new Date(`1970-01-01 ${session.session_start}`);
+            const endTime = new Date(`1970-01-01 ${session.session_end}`);
+            const diffMinutes = (endTime - startTime) / (1000 * 60);
+            
+            if (diffMinutes > 0) {
+                const durationHours = Math.floor(diffMinutes / 60);
+                const durationMins = Math.floor(diffMinutes % 60);
+                
+                // Calculate decimal hours for display
+                durationHoursDecimal = (diffMinutes / 60).toFixed(2);
+                
+                // Show both formats
+                durationText = durationHours > 0 
+                    ? `${durationHours}t ${durationMins}m (${durationHoursDecimal}t)` 
+                    : `${durationMins}m (${durationHoursDecimal}t)`;
+            }
+        }
+
+        return `
+            <div class="stu-item" data-id="${session.id}">
+                <div class="stu-item-info">
+                    <div class="stu-item-date">📅 ${formattedDate}</div>
+                    <div class="stu-item-details">
+                        🕐 Starttid: <span class="stu-item-time">${formattedTime}</span> • 
+                        ⏱️ Varighet: <span class="stu-item-time">${durationText}</span>
+                        ${session.course_name ? ` • 📚 Fag: ${session.course_name}` : ''}
+                    </div>
+                </div>
+                <div class="stu-item-actions">
+                    <button class="delete-stu-btn" onclick="deleteSingleSTU('${session.id}')">
+                        🗑️ Slett
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterSTUData() {
+    const searchTerm = document.getElementById('stu-search').value.toLowerCase();
+    
+    if (!searchTerm) {
+        renderSTUList(allSTUData);
+        return;
+    }
+
+    const filtered = allSTUData.filter(session => {
+        const sessionDate = new Date(session.session_date).toLocaleDateString('nb-NO');
+        const sessionStart = session.session_start || '';
+        const courseName = session.course_name || '';
+
+        return sessionDate.toLowerCase().includes(searchTerm) ||
+               sessionStart.includes(searchTerm) ||
+               courseName.toLowerCase().includes(searchTerm);
+    });
+
+    renderSTUList(filtered);
+}
+
+async function deleteSingleSTU(sessionId) {
+    showModal({
+        title: 'Bekreft sletting',
+        message: 'Er du sikker på at du vil slette denne STU-registreringen?<br><br><strong>Dette kan ikke angres!</strong>',
+        type: 'confirm',
+        icon: '⚠️',
+        confirmText: 'Ja, slett',
+        cancelText: 'Avbryt',
+        onConfirm: async () => {
+            try {
+                console.log('Attempting to delete session:', sessionId);
+                console.log('For user:', currentUserEmail);
+
+                // Delete from database with both id and user_email conditions
+                const { data, error } = await supabase
+                    .from('stu_registrations')
+                    .delete()
+                    .eq('id', sessionId)
+                    .eq('user_email', currentUserEmail)
+                    .select(); // Add select to see what was deleted
+
+                if (error) {
+                    console.error('Supabase delete error:', error);
+                    throw error;
+                }
+
+                console.log('Delete successful. Deleted rows:', data);
+
+                // Remove from local array
+                allSTUData = allSTUData.filter(session => session.id !== sessionId);
+
+                // Update UI
+                updateSTUStats();
+                renderSTUList(allSTUData);
+
+                showModal({
+                    title: 'Slettet!',
+                    message: 'STU-registreringen er permanent slettet',
+                    type: 'success',
+                    icon: '✅'
+                });
+
+            } catch (error) {
+                console.error('Error deleting STU session:', error);
+
+                showModal({
+                    title: 'Feil ved sletting',
+                    message: `Kunne ikke slette registreringen.<br><br>Feil: ${error.message}`,
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
+        }
+    });
+}
+
+async function deleteAllSTUData() {
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        showModal({
+            title: 'Feil',
+            message: 'Ingen gyldig bruker funnet',
+            type: 'error',
+            icon: '❌'
+        });
+        return;
+    }
+
+    if (allSTUData.length === 0) {
+        showModal({
+            title: 'Ingen data',
+            message: 'Du har ingen STU-registreringer å slette',
+            type: 'info',
+            icon: 'ℹ️'
+        });
+        return;
+    }
+
+    // Each STU session is ALWAYS 45 minutes = 0.75 hours
+    const totalHours = (allSTUData.length * 0.75).toFixed(2);
+
+    showModal({
+        title: '⚠️ ADVARSEL: Slett alle STU-data',
+        message: `Du er i ferd med å slette <strong>${allSTUData.length} STU-registreringer</strong> (totalt ${totalHours} timer).<br><br>
+                  <strong style="color: #ff6b6b;">DETTE KAN IKKE ANGRES!</strong><br><br>
+                  Skriv <strong>"SLETT ALLE"</strong> for å bekrefte:`,
+        type: 'confirm',
+        icon: '🗑️',
+        input: { 
+            type: 'text', 
+            placeholder: 'Skriv: SLETT ALLE',
+            maxlength: '11'
+        },
+        confirmText: 'Slett alle permanent',
+        cancelText: 'Avbryt',
+        onConfirm: async (confirmText) => {
+            if (confirmText !== 'SLETT ALLE') {
+                showModal({
+                    title: 'Feil bekreftelse',
+                    message: 'Du må skrive "SLETT ALLE" nøyaktig for å bekrefte',
+                    type: 'error',
+                    icon: '❌'
+                });
+                return;
+            }
+
+            try {
+                console.log('Deleting all STU data for user:', currentUserEmail);
+
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    console.error('Auth error:', authError);
+                    throw new Error('Ikke autentisert');
+                }
+
+                console.log('Auth user email:', user.email);
+
+                const { data, error, count } = await supabase
+                    .from('stu_registrations')
+                    .delete({ count: 'exact' })
+                    .eq('user_email', user.email)
+                    .select();
+
+                if (error) {
+                    console.error('Error deleting all:', error);
+                    throw error;
+                }
+
+                console.log('Deleted rows:', data, 'Count:', count);
+
+                if (!data || data.length === 0) {
+                    throw new Error('Ingen rader ble slettet. Sjekk RLS policies.');
+                }
+
+                showModal({
+                    title: 'Alle data slettet',
+                    message: `${data.length} STU-registreringer (${totalHours} timer) er permanent slettet i henhold til GDPR`,
+                    type: 'success',
+                    icon: '✅'
+                });
+
+                await loadSTUData();
+
+            } catch (error) {
+                console.error('Error deleting all STU data:', error);
+                showModal({
+                    title: 'Feil',
+                    message: `Kunne ikke slette alle registreringer.<br><br>Feil: ${error.message}<br><br>Dette kan være et RLS policy problem.`,
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
+        }
+    });
+}
+
+// Close STU manager with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const stuOverlay = document.getElementById('stu-manager-overlay');
+        if (stuOverlay && stuOverlay.classList.contains('open')) {
+            closeSTUManager();
+        }
+    }
+});
+
+// Close STU manager when clicking outside
+document.addEventListener('click', (e) => {
+    const stuOverlay = document.getElementById('stu-manager-overlay');
+    if (stuOverlay && e.target === stuOverlay) {
+        closeSTUManager();
+    }
+});
+
+
+async function updateDataRetention() {
+    const checkbox = document.getElementById('data-retention-consent');
+    if (!checkbox || !currentUserEmail) return;
+
+    try {
+        const { error } = await supabase
+            .from('user_profiles')
+            .update({ data_retention_consent: checkbox.checked })
+            .eq('user_email', currentUserEmail);
+
+        if (error) throw error;
+
+        showModal({
+            title: checkbox.checked ? 'Aktivert' : 'Deaktivert',
+            message: checkbox.checked 
+                ? 'Langtidslagring av studiedata er aktivert' 
+                : 'Langtidslagring av studiedata er deaktivert',
+            type: 'success',
+            icon: '✅'
+        });
+
+    } catch (error) {
+        console.error('Error updating data retention:', error);
+        checkbox.checked = !checkbox.checked; // Revert on error
+    }
+}
+
+async function updateAnalyticsConsent() {
+    const checkbox = document.getElementById('analytics-consent');
+    if (!checkbox || !currentUserEmail) return;
+
+    try {
+        const { error } = await supabase
+            .from('user_profiles')
+            .update({ analytics_consent: checkbox.checked })
+            .eq('user_email', currentUserEmail);
+
+        if (error) throw error;
+
+        showModal({
+            title: checkbox.checked ? 'Aktivert' : 'Deaktivert',
+            message: checkbox.checked 
+                ? 'Anonymiserte bruksdata er aktivert' 
+                : 'Anonymiserte bruksdata er deaktivert',
+            type: 'success',
+            icon: '✅'
+        });
+
+    } catch (error) {
+        console.error('Error updating analytics consent:', error);
+        checkbox.checked = !checkbox.checked; // Revert on error
+    }
+}
+
+function validateInput(input, maxLength) {
+    if (!input) return '';
+    return input.trim().substring(0, maxLength);
+}
+
+
     </script>
 </body>
 </html>
