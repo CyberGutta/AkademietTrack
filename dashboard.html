@@ -558,10 +558,14 @@
 
         /* Tutorial and Download Section - Side by Side */
         .tutorial-download-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
             gap: 2rem;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
+            margin-top: -3rem;
+            padding: 5rem;
         }
 
         .tutorial-access-card {
@@ -2719,63 +2723,7 @@
                 </div>
             </section>
 
-            <section class="activation-section fade-in" id="activation-section">
-                <div class="activation-header">
-                    <div class="activation-icon">🔑</div>
-                    <div>
-                        <h2 class="activation-title">Din aktiverings nøkkel</h2>
-                        <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Bruk denne nøkkelen for å aktivere AkademiTrack programmet</p>
-                    </div>
-                </div>
-                
-                <div class="activation-status" id="activation-status">
-                    <div class="status-indicator" id="status-indicator"></div>
-                    <div>
-                        <div style="font-weight: 600; margin-bottom: 0.25rem;" id="status-text">Sjekker aktiverings status...</div>
-                        <div style="font-size: 0.85rem; color: #64748b;" id="status-description">Laster...</div>
-                    </div>
-                </div>
-                
-                <div class="activation-key-container" id="activation-key-container" style="display: none;">
-                    <div class="activation-key-label">Din aktiverings nøkkel:</div>
-                    <div class="activation-key-value" id="activation-key-display">-</div>
-                    <button class="copy-key-btn" onclick="copyActivationKey()" title="Kopier nøkkel">📋</button>
-                </div>
-
-                <div style="margin-top: 1rem; padding: 1rem; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
-    <p style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #92400e; line-height: 1.4;">
-        <strong>Mistet nøkkelen din?</strong> Du kan generere en ny aktiverings nøkkel. 
-        Den gamle nøkkelen vil bli ugyldig.
-    </p>
-    <button class="regenerate-key-btn" onclick="regenerateActivationKey()" id="regen-btn">
-        🔄 Generer ny nøkkel
-    </button>
-    <div id="regen-cooldown-msg" style="display: none; margin-top: 0.5rem; color: #dc2626; font-size: 0.85rem; font-weight: 600;">
-    </div>
-</div>
-                
-                <div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    <p style="margin: 0; font-size: 0.9rem; color: #1e40af; line-height: 1.4;">
-                        <strong>Viktig:</strong> Din aktiverings nøkkel genereres automatisk og kan kun brukes én gang. 
-                        Oppbevar den trygt og bruk den i AkademiTrack programmet for å aktivere kontoen din.
-                    </p>
-                </div>
-            </section>
-
-            <!-- Tutorial and Download Section -->
             <section class="tutorial-download-section">
-                <div class="tutorial-access-card">
-                    <div class="card-icon">
-                        <span>📖</span>
-                    </div>
-                    <h2>Oppsett tutorial</h2>
-                    <p>Trenger du å se installasjonsguiden igjen? Klikk på knappen under for å gå gjennom oppsettsprosessen på nytt.</p>
-                    
-                    <button onclick="viewTutorial()" class="tutorial-btn">
-                        <span>🎯</span>
-                        Se Tutorial
-                    </button>
-                </div>
                 
                 <div class="download-card fade-in">
                     <div class="download-card-icon">📱</div>
@@ -2914,57 +2862,8 @@
                 </div>
             </div>
 
-            <!-- STU Data Management Section -->
-            <div class="settings-section">
-                <h3>📚 Administrer STU-data</h3>
-                <p class="settings-description">
-                    Se og administrer dine studietidsregistreringer. Du kan skjule eller slette enkelt-økter.
-                </p>
-                <button class="manage-btn" onclick="openSTUManager()">
-                    📋 Åpne STU-databehandler
-                </button>
-            </div>
-            <!-- STU Data Manager Modal -->
-<div class="stu-manager-overlay" id="stu-manager-overlay">
-    <div class="stu-manager-modal">
-        <div class="stu-manager-header">
-            <h2>📚 Administrer STU-data</h2>
-            <button class="close-btn" onclick="closeSTUManager()">×</button>
-        </div>
-        
-        <div class="stu-manager-content">
-            <div class="stu-stats">
-                <div class="stat-card">
-                    <span class="stat-number" id="total-sessions">0</span>
-                    <span class="stat-label">Totalt økter</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="total-hours">0</span>
-                    <span class="stat-label">Timer registrert</span>
-                </div>
-            </div>
+            
 
-            <div class="stu-actions">
-                <button class="danger-btn" onclick="deleteAllSTUData()">
-                    🗑️ Slett alle STU-registreringer
-                </button>
-                <button class="refresh-btn" onclick="loadSTUData()">
-                    🔄 Oppdater liste
-                </button>
-            </div>
-
-            <div class="stu-list-container">
-                <h3>Dine STU-registreringer</h3>
-                <div class="stu-filter">
-                    <input type="text" id="stu-search" placeholder="🔍 Søk etter dato, tid eller varighet..." oninput="filterSTUData()">
-                </div>
-                <div class="stu-list" id="stu-list">
-                    <div class="loading">⏳ Laster data...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
             <!-- Privacy Settings -->
             <div class="settings-section">
