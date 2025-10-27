@@ -738,517 +738,548 @@
 
 <script>
         // Configuration
-        const CONFIG = {
-            SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k',
-            MIN_PASSWORD_LENGTH: 6,
-            MAX_PASSWORD_LENGTH: 128,
-            MAX_EMAIL_LENGTH: 320,
-            ADMIN_EMAIL: 'cyberbrothershq@gmail.com',
-            ALLOWED_DOMAIN: '@stud.akademiet.no'
-        };
+const CONFIG = {
+    SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k',
+    MIN_PASSWORD_LENGTH: 6,
+    MAX_PASSWORD_LENGTH: 128,
+    MAX_EMAIL_LENGTH: 320,
+    ADMIN_EMAIL: 'cyberbrothershq@gmail.com',
+    ALLOWED_DOMAIN: '@stud.akademiet.no'
+};
 
-        // Input sanitization functions
-        function sanitizeEmail(email) {
-            return email.trim().toLowerCase();
+// Input sanitization functions
+function sanitizeEmail(email) {
+    return email.trim().toLowerCase();
+}
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidFormat = emailRegex.test(email) && email.length <= CONFIG.MAX_EMAIL_LENGTH;
+    
+    if (!isValidFormat) return false;
+    
+    // Allow admin email
+    if (email === CONFIG.ADMIN_EMAIL) return true;
+    
+    // Only allow @stud.akademiet.no domain
+    return email.endsWith(CONFIG.ALLOWED_DOMAIN);
+}
+
+function validatePassword(password) {
+    return password.length >= CONFIG.MIN_PASSWORD_LENGTH && 
+           password.length <= CONFIG.MAX_PASSWORD_LENGTH;
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Rate limiting
+const rateLimiter = {
+    attempts: new Map(),
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    
+    isAllowed(key) {
+        const now = Date.now();
+        const attempts = this.attempts.get(key) || [];
+        const validAttempts = attempts.filter(time => now - time < this.windowMs);
+        this.attempts.set(key, validAttempts);
+        return validAttempts.length < this.maxAttempts;
+    },
+    
+    recordAttempt(key) {
+        const attempts = this.attempts.get(key) || [];
+        attempts.push(Date.now());
+        this.attempts.set(key, attempts);
+    }
+};
+
+// Initialize Supabase client
+let supabase;
+try {
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+} catch (error) {
+    console.error('Failed to initialize Supabase:', error);
+    showError('Systemfeil. Prøv igjen senere.');
+}
+
+// DOM elements
+const elements = {
+    errorMessage: document.getElementById('error-message'),
+    successMessage: document.getElementById('success-message'),
+    signinForm: document.getElementById('signin-form'),
+    signupForm: document.getElementById('signup-form'),
+    tabButtons: document.querySelectorAll('.form-tab'),
+    forgotPasswordLink: document.getElementById('forgot-password-link')
+};
+
+// Tab switching functionality
+function switchTab(tab) {
+    const activeTab = document.querySelector('.form-tab.active');
+    const activeForm = document.querySelector('.auth-form.active');
+    const newTab = document.querySelector(`[data-tab="${tab}"]`);
+    const newForm = document.getElementById(`${tab}-form`);
+    
+    if (activeTab) activeTab.classList.remove('active');
+    if (activeForm) activeForm.classList.remove('active');
+    if (newTab) newTab.classList.add('active');
+    if (newForm) newForm.classList.add('active');
+    
+    hideMessages();
+}
+
+// Event listeners for tabs
+elements.tabButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tab = button.getAttribute('data-tab');
+        if (tab) {
+            switchTab(tab);
         }
+    });
+});
 
-        function validateEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const isValidFormat = emailRegex.test(email) && email.length <= CONFIG.MAX_EMAIL_LENGTH;
-            
-            if (!isValidFormat) return false;
-            
-            // Allow admin email
-            if (email === CONFIG.ADMIN_EMAIL) return true;
-            
-            // Only allow @stud.akademiet.no domain
-            return email.endsWith(CONFIG.ALLOWED_DOMAIN);
+// Message handling
+function showError(message) {
+    if (!message || typeof message !== 'string') return;
+    
+    const sanitizedMessage = escapeHtml(message);
+    elements.errorMessage.innerHTML = sanitizedMessage;
+    elements.errorMessage.style.display = 'block';
+    elements.successMessage.style.display = 'none';
+    
+    setTimeout(() => {
+        hideMessages();
+    }, 10000);
+}
+
+function showSuccess(message) {
+    if (!message || typeof message !== 'string') return;
+    
+    const sanitizedMessage = escapeHtml(message);
+    elements.successMessage.innerHTML = sanitizedMessage;
+    elements.successMessage.style.display = 'block';
+    elements.errorMessage.style.display = 'none';
+    
+    setTimeout(() => {
+        hideMessages();
+    }, 5000);
+}
+
+function hideMessages() {
+    elements.errorMessage.style.display = 'none';
+    elements.successMessage.style.display = 'none';
+}
+
+// Loading state management
+function setLoadingState(button, isLoading, originalText) {
+    if (isLoading) {
+        button.disabled = true;
+        button.innerHTML = `<span class="loading-spinner"></span>${originalText}...`;
+    } else {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+// Check if user should be redirected based on email and tutorial status
+async function getRedirectUrl(userEmail) {
+    const sanitizedEmail = sanitizeEmail(userEmail);
+    
+    if (sanitizedEmail === CONFIG.ADMIN_EMAIL) {
+        return 'admin.html';
+    }
+    
+    // For new registrations, always go to tutorial first
+    // We'll check tutorial status in dashboard.html instead
+    console.log('Redirecting user to tutorial for onboarding...');
+    return 'tutorial.html';
+}
+
+// Secure redirect function
+function secureRedirect(url) {
+    const allowedUrls = ['admin.html', 'dashboard.html', 'tutorial.html'];
+    if (allowedUrls.includes(url)) {
+        window.location.href = url;
+    } else {
+        console.error('Invalid redirect URL:', url);
+        window.location.href = 'tutorial.html'; // Default to tutorial
+    }
+}
+
+// Handle successful authentication
+async function handleSuccessfulAuth(session) {
+    if (session && session.user && session.user.email) {
+        const userEmail = session.user.email.toLowerCase().trim();
+        
+        if (userEmail === CONFIG.ADMIN_EMAIL) {
+            showSuccess('Vellykket innlogging! Omdirigerer...');
+            setTimeout(() => {
+                secureRedirect('admin.html');
+            }, 1500);
+            return;
         }
-
-        function validatePassword(password) {
-            return password.length >= CONFIG.MIN_PASSWORD_LENGTH && 
-                   password.length <= CONFIG.MAX_PASSWORD_LENGTH;
-        }
-
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
-
-        // Rate limiting
-        const rateLimiter = {
-            attempts: new Map(),
-            maxAttempts: 5,
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            
-            isAllowed(key) {
-                const now = Date.now();
-                const attempts = this.attempts.get(key) || [];
-                const validAttempts = attempts.filter(time => now - time < this.windowMs);
-                this.attempts.set(key, validAttempts);
-                return validAttempts.length < this.maxAttempts;
-            },
-            
-            recordAttempt(key) {
-                const attempts = this.attempts.get(key) || [];
-                attempts.push(Date.now());
-                this.attempts.set(key, attempts);
-            }
-        };
-
-        // Initialize Supabase client
-        let supabase;
+        
+        // For fresh logins/registrations, check tutorial status
         try {
-            supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        } catch (error) {
-            console.error('Failed to initialize Supabase:', error);
-            showError('Systemfeil. Prøv igjen senere.');
-        }
+            const { data, error } = await supabase
+                .from('user_profiles')
+                .select('tutorial_completed')
+                .eq('user_email', userEmail)
+                .maybeSingle(); // Use maybeSingle instead of single
 
-        // DOM elements
-        const elements = {
-            errorMessage: document.getElementById('error-message'),
-            successMessage: document.getElementById('success-message'),
-            signinForm: document.getElementById('signin-form'),
-            signupForm: document.getElementById('signup-form'),
-            tabButtons: document.querySelectorAll('.form-tab'),
-            forgotPasswordLink: document.getElementById('forgot-password-link')
-        };
+            if (error) {
+                console.error('Error checking tutorial status:', error);
+                // Default to tutorial for new users
+                showSuccess('Vellykket innlogging! Omdirigerer...');
+                setTimeout(() => {
+                    secureRedirect('tutorial.html');
+                }, 1500);
+                return;
+            }
 
-        // Tab switching functionality
-        function switchTab(tab) {
-            const activeTab = document.querySelector('.form-tab.active');
-            const activeForm = document.querySelector('.auth-form.active');
-            const newTab = document.querySelector(`[data-tab="${tab}"]`);
-            const newForm = document.getElementById(`${tab}-form`);
+            const hasCompletedTutorial = data?.tutorial_completed || false;
+            const redirectUrl = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
             
-            if (activeTab) activeTab.classList.remove('active');
-            if (activeForm) activeForm.classList.remove('active');
-            if (newTab) newTab.classList.add('active');
-            if (newForm) newForm.classList.add('active');
+            showSuccess('Vellykket innlogging! Omdirigerer...');
+            setTimeout(() => {
+                secureRedirect(redirectUrl);
+            }, 1500);
             
-            hideMessages();
+        } catch (dbError) {
+            console.error('Database error in handleSuccessfulAuth:', dbError);
+            // Default to tutorial if database error
+            showSuccess('Vellykket innlogging! Omdirigerer...');
+            setTimeout(() => {
+                secureRedirect('tutorial.html');
+            }, 1500);
         }
+        
+    } else {
+        console.error('Invalid session data:', session);
+        showError('Innlogging feilet. Prøv igjen.');
+    }
+}
 
-        // Event listeners for tabs
-        elements.tabButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const tab = button.getAttribute('data-tab');
-                if (tab) {
-                    switchTab(tab);
-                }
-            });
+// Check if email is whitelisted
+async function isEmailWhitelisted(email) {
+    try {
+        const { data, error } = await supabase
+            .from('whitelisted_emails')
+            .select('email')
+            .eq('email', email)
+            .eq('is_active', true)
+            .maybeSingle();
+        
+        if (error) {
+            console.error('Error checking whitelist:', error);
+            return false;
+        }
+        
+        return data !== null;
+    } catch (error) {
+        console.error('Whitelist check error:', error);
+        return false;
+    }
+}
+
+// Sign In functionality
+elements.signinForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('signin-email');
+    const passwordInput = document.getElementById('signin-password');
+    const btn = document.getElementById('signin-btn');
+    
+    const email = sanitizeEmail(emailInput.value);
+    const password = passwordInput.value;
+    
+    // Client-side validation
+    if (!validateEmail(email)) {
+        showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
+        return;
+    }
+    
+    if (!validatePassword(password)) {
+        showError(`Passordet må være mellom ${CONFIG.MIN_PASSWORD_LENGTH} og ${CONFIG.MAX_PASSWORD_LENGTH} tegn`);
+        return;
+    }
+    
+    // Rate limiting
+    const clientIP = 'signin_' + (navigator.userAgent || 'unknown');
+    if (!rateLimiter.isAllowed(clientIP)) {
+        showError('For mange påloggingsforsøk. Prøv igjen om 15 minutter.');
+        return;
+    }
+    
+    setLoadingState(btn, true, 'Logger inn');
+    hideMessages();
+    
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
         });
-
-        // Message handling
-        function showError(message) {
-            if (!message || typeof message !== 'string') return;
-            
-            const sanitizedMessage = escapeHtml(message);
-            elements.errorMessage.innerHTML = sanitizedMessage;
-            elements.errorMessage.style.display = 'block';
-            elements.successMessage.style.display = 'none';
-            
-            setTimeout(() => {
-                hideMessages();
-            }, 10000);
+        
+        if (error) {
+            rateLimiter.recordAttempt(clientIP);
+            throw error;
         }
-
-        function showSuccess(message) {
-            if (!message || typeof message !== 'string') return;
-            
-            const sanitizedMessage = escapeHtml(message);
-            elements.successMessage.innerHTML = sanitizedMessage;
-            elements.successMessage.style.display = 'block';
-            elements.errorMessage.style.display = 'none';
-            
-            setTimeout(() => {
-                hideMessages();
-            }, 5000);
+        
+        await handleSuccessfulAuth(data.session);
+        
+    } catch (error) {
+        console.error('Sign in error:', error);
+        let errorMessage = 'Innlogging feilet. Sjekk e-post og passord.';
+        
+        if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Ugyldig e-post eller passord. Husk at kun @stud.akademiet.no e-poster er tillatt.';
+        } else if (error.message.includes('Email not confirmed')) {
+            errorMessage = 'E-posten din er ikke bekreftet. Sjekk innboksen din.';
+        } else if (error.message.includes('Too many requests')) {
+            errorMessage = 'For mange forespørsler. Prøv igjen senere.';
         }
+        
+        showError(errorMessage);
+    } finally {
+        setLoadingState(btn, false, 'Logg Inn');
+    }
+});
 
-        function hideMessages() {
-            elements.errorMessage.style.display = 'none';
-            elements.successMessage.style.display = 'none';
+// Sign Up functionality
+elements.signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('signup-email');
+    const passwordInput = document.getElementById('signup-password');
+    const confirmPasswordInput = document.getElementById('signup-confirm');
+    const btn = document.getElementById('signup-btn');
+    
+    const email = sanitizeEmail(emailInput.value);
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    
+    // Client-side validation
+    if (!validateEmail(email)) {
+        showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
+        return;
+    }
+    
+    if (!validatePassword(password)) {
+        showError(`Passordet må være mellom ${CONFIG.MIN_PASSWORD_LENGTH} og ${CONFIG.MAX_PASSWORD_LENGTH} tegn`);
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showError('Passordene stemmer ikke overens');
+        return;
+    }
+    
+    // Rate limiting
+    const clientIP = 'signup_' + (navigator.userAgent || 'unknown');
+    if (!rateLimiter.isAllowed(clientIP)) {
+        showError('For mange registreringsforsøk. Prøv igjen om 15 minutter.');
+        return;
+    }
+    
+    setLoadingState(btn, true, 'Sjekker tilgang');
+    hideMessages();
+    
+    // Check if email is whitelisted (skip check for admin email)
+    if (email !== CONFIG.ADMIN_EMAIL) {
+        const isWhitelisted = await isEmailWhitelisted(email);
+        if (!isWhitelisted) {
+            setLoadingState(btn, false, 'Opprett Konto');
+            showError('Denne e-postadressen har ikke tilgang til å registrere seg. Kontakt administratoren.');
+            return;
         }
-
-        // Loading state management
-        function setLoadingState(button, isLoading, originalText) {
-            if (isLoading) {
-                button.disabled = true;
-                button.innerHTML = `<span class="loading-spinner"></span>${originalText}...`;
-            } else {
-                button.disabled = false;
-                button.innerHTML = originalText;
+    }
+    
+    setLoadingState(btn, true, 'Oppretter konto');
+    
+    try {
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                emailRedirectTo: undefined,
+                data: {
+                    email: email
+                }
             }
+        });
+        
+        if (error) {
+            rateLimiter.recordAttempt(clientIP);
+            throw error;
         }
-
-        // Check if user should be redirected based on email and tutorial status
-        async function getRedirectUrl(userEmail) {
-            const sanitizedEmail = sanitizeEmail(userEmail);
-            
-            if (sanitizedEmail === CONFIG.ADMIN_EMAIL) {
-                return 'admin.html';
-            }
-            
-            // For new registrations, always go to tutorial first
-            // We'll check tutorial status in dashboard.html instead
-            console.log('Redirecting user to tutorial for onboarding...');
-            return 'tutorial.html';
+        
+        if (data.user && !data.user.email_confirmed_at) {
+            showSuccess('Registrering vellykket! Sjekk e-posten din for å bekrefte kontoen.');
+        } else if (data.session) {
+            await handleSuccessfulAuth(data.session);
         }
-
-        // Secure redirect function
-        function secureRedirect(url) {
-            const allowedUrls = ['admin.html', 'dashboard.html', 'tutorial.html'];
-            if (allowedUrls.includes(url)) {
-                window.location.href = url;
-            } else {
-                console.error('Invalid redirect URL:', url);
-                window.location.href = 'tutorial.html'; // Default to tutorial
-            }
+        
+    } catch (error) {
+        console.error('Sign up error:', error);
+        let errorMessage = 'Registrering feilet. Prøv igjen.';
+        
+        if (error.message.includes('User already registered')) {
+            errorMessage = 'En konto med denne e-posten eksisterer allerede.';
+        } else if (error.message.includes('Password should be at least')) {
+            errorMessage = 'Passordet er for svakt. Velg et sterkere passord.';
+        } else if (error.message.includes('Unable to validate email address')) {
+            errorMessage = 'Ugyldig e-postadresse. Kun @stud.akademiet.no e-poster er tillatt.';
         }
+        
+        showError(errorMessage);
+    } finally {
+        setLoadingState(btn, false, 'Opprett Konto');
+    }
+});
 
-        // Handle successful authentication
-        async function handleSuccessfulAuth(session) {
-            if (session && session.user && session.user.email) {
-                const userEmail = session.user.email.toLowerCase().trim();
-                
+// Reset password functionality
+elements.forgotPasswordLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('signin-email');
+    const email = sanitizeEmail(emailInput.value);
+    
+    if (!email) {
+        showError('Vennligst skriv inn e-postadressen din først');
+        emailInput.focus();
+        return;
+    }
+    
+    if (!validateEmail(email)) {
+        showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
+        return;
+    }
+    
+    const originalText = e.target.textContent;
+    e.target.textContent = 'Sender...';
+    e.target.style.pointerEvents = 'none';
+    
+    try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `https://cybergutta.github.io/AkademietTrack/reset-password.html`
+        });
+        
+        if (error) throw error;
+        
+        showSuccess('Hvis eposten/brukeren eksisterer så har det blitt sendt tilbakestilling av passord! Sjekk innboksen din.');
+        
+    } catch (error) {
+        console.error('Password reset error:', error);
+        showError('Kunne ikke sende tilbakestillings-e-post. Prøv igjen.');
+    } finally {
+        e.target.textContent = originalText;
+        e.target.style.pointerEvents = 'auto';
+    }
+});
+
+// Check for existing session on page load
+async function checkExistingSession() {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+            const userEmail = session.user.email?.toLowerCase().trim();
+            if (userEmail) {
+                // User is already logged in, redirect appropriately
                 if (userEmail === CONFIG.ADMIN_EMAIL) {
-                    showSuccess('Vellykket innlogging! Omdirigerer...');
-                    setTimeout(() => {
-                        secureRedirect('admin.html');
-                    }, 1500);
+                    window.location.href = 'admin.html';
                     return;
                 }
                 
-                // For fresh logins/registrations, check tutorial status
+                // Check tutorial status for existing sessions
                 try {
                     const { data, error } = await supabase
                         .from('user_profiles')
                         .select('tutorial_completed')
                         .eq('user_email', userEmail)
-                        .maybeSingle(); // Use maybeSingle instead of single
+                        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
                     if (error) {
                         console.error('Error checking tutorial status:', error);
-                        // Default to tutorial for new users
-                        showSuccess('Vellykket innlogging! Omdirigerer...');
-                        setTimeout(() => {
-                            secureRedirect('tutorial.html');
-                        }, 1500);
+                        // Default to tutorial for any database errors
+                        window.location.href = 'tutorial.html';
                         return;
                     }
 
                     const hasCompletedTutorial = data?.tutorial_completed || false;
-                    const redirectUrl = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
-                    
-                    showSuccess('Vellykket innlogging! Omdirigerer...');
-                    setTimeout(() => {
-                        secureRedirect(redirectUrl);
-                    }, 1500);
+                    window.location.href = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
                     
                 } catch (dbError) {
-                    console.error('Database error in handleSuccessfulAuth:', dbError);
-                    // Default to tutorial if database error
-                    showSuccess('Vellykket innlogging! Omdirigerer...');
-                    setTimeout(() => {
-                        secureRedirect('tutorial.html');
-                    }, 1500);
+                    console.error('Database error:', dbError);
+                    // Default to tutorial if any error occurs
+                    window.location.href = 'tutorial.html';
                 }
-                
-            } else {
-                console.error('Invalid session data:', session);
-                showError('Innlogging feilet. Prøv igjen.');
             }
         }
+    } catch (error) {
+        console.error('Error checking existing session:', error);
+        // Continue with normal login flow if session check fails
+    }
+}
 
-        // Sign In functionality
-        elements.signinForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const emailInput = document.getElementById('signin-email');
-            const passwordInput = document.getElementById('signin-password');
-            const btn = document.getElementById('signin-btn');
-            
-            const email = sanitizeEmail(emailInput.value);
-            const password = passwordInput.value;
-            
-            // Client-side validation
-            if (!validateEmail(email)) {
-                showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
-                return;
-            }
-            
-            if (!validatePassword(password)) {
-                showError(`Passordet må være mellom ${CONFIG.MIN_PASSWORD_LENGTH} og ${CONFIG.MAX_PASSWORD_LENGTH} tegn`);
-                return;
-            }
-            
-            // Rate limiting
-            const clientIP = 'signin_' + (navigator.userAgent || 'unknown');
-            if (!rateLimiter.isAllowed(clientIP)) {
-                showError('For mange påloggingsforsøk. Prøv igjen om 15 minutter.');
-                return;
-            }
-            
-            setLoadingState(btn, true, 'Logger inn');
-            hideMessages();
-            
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                
-                if (error) {
-                    rateLimiter.recordAttempt(clientIP);
-                    throw error;
-                }
-                
-                await handleSuccessfulAuth(data.session);
-                
-            } catch (error) {
-                console.error('Sign in error:', error);
-                let errorMessage = 'Innlogging feilet. Sjekk e-post og passord.';
-                
-                if (error.message.includes('Invalid login credentials')) {
-                    errorMessage = 'Ugyldig e-post eller passord. Husk at kun @stud.akademiet.no e-poster er tillatt.';
-                } else if (error.message.includes('Email not confirmed')) {
-                    errorMessage = 'E-posten din er ikke bekreftet. Sjekk innboksen din.';
-                } else if (error.message.includes('Too many requests')) {
-                    errorMessage = 'For mange forespørsler. Prøv igjen senere.';
-                }
-                
-                showError(errorMessage);
-            } finally {
-                setLoadingState(btn, false, 'Logg Inn');
-            }
+// Security: Clear form data on page unload
+window.addEventListener('beforeunload', () => {
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        const inputs = form.querySelectorAll('input[type="password"]');
+        inputs.forEach(input => {
+            input.value = '';
         });
+    });
+});
 
-        // Sign Up functionality
-        elements.signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const emailInput = document.getElementById('signup-email');
-            const passwordInput = document.getElementById('signup-password');
-            const confirmPasswordInput = document.getElementById('signup-confirm');
-            const btn = document.getElementById('signup-btn');
-            
-            const email = sanitizeEmail(emailInput.value);
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            
-            // Client-side validation
-            if (!validateEmail(email)) {
-                showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
-                return;
-            }
-            
-            if (!validatePassword(password)) {
-                showError(`Passordet må være mellom ${CONFIG.MIN_PASSWORD_LENGTH} og ${CONFIG.MAX_PASSWORD_LENGTH} tegn`);
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                showError('Passordene stemmer ikke overens');
-                return;
-            }
-            
-            // Rate limiting
-            const clientIP = 'signup_' + (navigator.userAgent || 'unknown');
-            if (!rateLimiter.isAllowed(clientIP)) {
-                showError('For mange registreringsforsøk. Prøv igjen om 15 minutter.');
-                return;
-            }
-            
-            setLoadingState(btn, true, 'Oppretter konto');
-            hideMessages();
-            
-            try {
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        emailRedirectTo: undefined,
-                        data: {
-                            email: email
-                        }
-                    }
-                });
-                
-                if (error) {
-                    rateLimiter.recordAttempt(clientIP);
-                    throw error;
-                }
-                
-                if (data.user && !data.user.email_confirmed_at) {
-                    showSuccess('Registrering vellykket! Sjekk e-posten din for å bekrefte kontoen.');
-                } else if (data.session) {
-                    await handleSuccessfulAuth(data.session);
-                }
-                
-            } catch (error) {
-                console.error('Sign up error:', error);
-                let errorMessage = 'Registrering feilet. Prøv igjen.';
-                
-                if (error.message.includes('User already registered')) {
-                    errorMessage = 'En konto med denne e-posten eksisterer allerede.';
-                } else if (error.message.includes('Password should be at least')) {
-                    errorMessage = 'Passordet er for svakt. Velg et sterkere passord.';
-                } else if (error.message.includes('Unable to validate email address')) {
-                    errorMessage = 'Ugyldig e-postadresse. Kun @stud.akademiet.no e-poster er tillatt.';
-                }
-                
-                showError(errorMessage);
-            } finally {
-                setLoadingState(btn, false, 'Opprett Konto');
-            }
-        });
+// Error boundary for uncaught errors
+window.addEventListener('error', (event) => {
+    console.error('Uncaught error:', event.error);
+    showError('En uventet feil oppstod. Prøv å laste siden på nytt.');
+});
 
-        // Reset password functionality
-        elements.forgotPasswordLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            
-            const emailInput = document.getElementById('signin-email');
-            const email = sanitizeEmail(emailInput.value);
-            
-            if (!email) {
-                showError('Vennligst skriv inn e-postadressen din først');
-                emailInput.focus();
-                return;
-            }
-            
-            if (!validateEmail(email)) {
-                showError('Kun e-postadresser med @stud.akademiet.no er tillatt');
-                return;
-            }
-            
-            const originalText = e.target.textContent;
-            e.target.textContent = 'Sender...';
-            e.target.style.pointerEvents = 'none';
-            
-            try {
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `https://cybergutta.github.io/AkademietTrack/reset-password.html`
-                });
-                
-                if (error) throw error;
-                
-                showSuccess('Hvis eposten/brukeren eksisterer så har det blitt sendt tilbakestilling av passord! Sjekk innboksen din.');
-                
-            } catch (error) {
-                console.error('Password reset error:', error);
-                showError('Kunne ikke sende tilbakestillings-e-post. Prøv igjen.');
-            } finally {
-                e.target.textContent = originalText;
-                e.target.style.pointerEvents = 'auto';
-            }
-        });
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    showError('En nettverksfeil oppstod. Sjekk internettforbindelsen din.');
+});
 
-        // Check for existing session on page load
-        async function checkExistingSession() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session && session.user) {
-                    const userEmail = session.user.email?.toLowerCase().trim();
-                    if (userEmail) {
-                        // User is already logged in, redirect appropriately
-                        if (userEmail === CONFIG.ADMIN_EMAIL) {
-                            window.location.href = 'admin.html';
-                            return;
-                        }
-                        
-                        // Check tutorial status for existing sessions
-                        try {
-                            const { data, error } = await supabase
-                                .from('user_profiles')
-                                .select('tutorial_completed')
-                                .eq('user_email', userEmail)
-                                .maybeSingle(); // Changed from .single() to .maybeSingle()
-
-                            if (error) {
-                                console.error('Error checking tutorial status:', error);
-                                // Default to tutorial for any database errors
-                                window.location.href = 'tutorial.html';
-                                return;
-                            }
-
-                            const hasCompletedTutorial = data?.tutorial_completed || false;
-                            window.location.href = hasCompletedTutorial ? 'dashboard.html' : 'tutorial.html';
-                            
-                        } catch (dbError) {
-                            console.error('Database error:', dbError);
-                            // Default to tutorial if any error occurs
-                            window.location.href = 'tutorial.html';
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking existing session:', error);
-                // Continue with normal login flow if session check fails
-            }
-        }
-
-        // Listen for auth state changes
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Check for existing session first
+        await checkExistingSession();
         
-
-        // Security: Clear form data on page unload
-        window.addEventListener('beforeunload', () => {
-            const forms = document.querySelectorAll('form');
-            forms.forEach(form => {
-                const inputs = form.querySelectorAll('input[type="password"]');
-                inputs.forEach(input => {
-                    input.value = '';
-                });
-            });
-        });
-
-        // Error boundary for uncaught errors
-        window.addEventListener('error', (event) => {
-            console.error('Uncaught error:', event.error);
-            showError('En uventet feil oppstod. Prøv å laste siden på nytt.');
-        });
-
-        // Handle unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            showError('En nettverksfeil oppstod. Sjekk internettforbindelsen din.');
-        });
-
-        // Initialize on DOM load
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // Check for existing session first
-                await checkExistingSession();
-                
-                // Only set up auth listener for fresh auth events, not existing sessions
-                supabase.auth.onAuthStateChange(async (event, session) => {
-                    console.log('Auth event:', event);
-                    
-                    // Only handle fresh sign-ins, not existing sessions
-                    if (event === 'SIGNED_IN' && session?.user?.email) {
-                        // Small delay to avoid race conditions with form submission
-                        setTimeout(async () => {
-                            await handleSuccessfulAuth(session);
-                        }, 100);
-                    } else if (event === 'SIGNED_OUT') {
-                        // Handle sign out if needed
-                        hideMessages();
-                    }
-                });
-                
-            } catch (error) {
-                console.error('Initialization error:', error);
+        // Only set up auth listener for fresh auth events, not existing sessions
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth event:', event);
+            
+            // Only handle fresh sign-ins, not existing sessions
+            if (event === 'SIGNED_IN' && session?.user?.email) {
+                // Small delay to avoid race conditions with form submission
+                setTimeout(async () => {
+                    await handleSuccessfulAuth(session);
+                }, 100);
+            } else if (event === 'SIGNED_OUT') {
+                // Handle sign out if needed
+                hideMessages();
             }
         });
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
+});
     </script>
 </body>
 </html>
