@@ -1664,29 +1664,31 @@ let userActivationData = null;
 let currentConversationId = null;
 let isAdminOnline = false;
 let messagesSubscription = null;
-let conversationsByType = {}; // Store conversation IDs by message type
-let currentUserEmail = null; // Store the actual user email globally
+let conversationsByType = {};
+let currentUserEmail = null;
+let allSTUData = [];
+let activationKeySubscription = null;
 
-// Security: HTML Sanitization function
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
 function sanitizeHTML(str) {
     const temp = document.createElement('div');
     temp.textContent = str;
     return temp.innerHTML;
 }
 
-// Security: Input validation function
 function validateInput(input, maxLength = 1000) {
     if (typeof input !== 'string') return '';
     return input.trim().slice(0, maxLength);
 }
 
-// Security: Email validation function
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-// Generate a secure activation key
 function generateSecureKey() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const segments = 4;
@@ -1703,693 +1705,6 @@ function generateSecureKey() {
     return key;
 }
 
-
-
-// Fetch or create activation key for user
-async function fetchActivationKey(userEmail) {
-    try {
-        if (!userEmail || !isValidEmail(userEmail)) {
-            console.error('Invalid email provided to fetchActivationKey');
-            return null;
-        }
-
-        console.log('Fetching activation key for:', userEmail);
-
-        // First, try to get existing key
-        let { data: existingKey, error: fetchError } = await supabase
-            .from('activation_keys')
-            .select('*')
-            .eq('user_email', userEmail)
-            .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-            console.error('Error fetching activation key:', fetchError);
-            return null;
-        }
-
-        if (existingKey) {
-            console.log('Found existing activation key:', existingKey);
-            return existingKey;
-        }
-
-        console.log('No existing key found, creating new one...');
-
-        // If no existing key, create one
-        const newActivationKey = generateSecureKey();
-        
-        const { data: newKey, error: createError } = await supabase
-            .from('activation_keys')
-            .insert([{
-                user_email: userEmail,
-                activation_key: newActivationKey,
-                is_activated: false
-            }])
-            .select()
-            .single();
-
-        if (createError) {
-            console.error('Error creating activation key:', createError);
-            return null;
-        }
-
-        console.log('Created new activation key:', newKey);
-        return newKey;
-    } catch (error) {
-        console.error('Error in fetchActivationKey:', error);
-        return null;
-    }
-}
-
-// Update activation status UI
-function updateActivationStatusUI(activationData) {
-    const statusElement = document.getElementById('activation-status');
-    const statusIndicator = document.getElementById('status-indicator');
-    const statusText = document.getElementById('status-text');
-    const statusDescription = document.getElementById('status-description');
-    const keyContainer = document.getElementById('activation-key-container');
-    const keyDisplay = document.getElementById('activation-key-display');
-
-    if (!statusElement || !statusIndicator || !statusText || !statusDescription || 
-        !keyContainer || !keyDisplay) {
-        console.error('Missing UI elements for activation status');
-        return;
-    }
-
-    console.log('Updating activation UI with data:', activationData);
-
-    if (activationData) {
-        // Show activation key
-        keyContainer.style.display = 'block';
-        keyDisplay.textContent = activationData.activation_key;
-        
-        if (activationData.is_activated) {
-            // Activated
-            statusElement.className = 'activation-status activated';
-            statusIndicator.className = 'status-indicator active';
-            statusText.textContent = 'Konto Aktivert';
-            statusDescription.textContent = activationData.activated_at ? 
-                `Aktivert ${new Date(activationData.activated_at).toLocaleDateString('no-NO')}` :
-                'Konto er aktivert';
-        } else {
-            // Not activated
-            statusElement.className = 'activation-status not-activated';
-            statusIndicator.className = 'status-indicator inactive';
-            statusText.textContent = 'Venter på aktivering';
-            statusDescription.textContent = 'Bruk aktiverings nøkkelen din i AkademiTrack programmet';
-        }
-    } else {
-        // Error state
-        statusElement.className = 'activation-status not-activated';
-        statusIndicator.className = 'status-indicator inactive';
-        statusText.textContent = 'Feil ved lasting av aktiverings data';
-        statusDescription.textContent = 'Kunne ikke laste aktiverings informasjon';
-        keyContainer.style.display = 'none';
-    }
-}
-
-// Load activation data
-async function loadActivationData(userEmail) {
-    console.log('Loading activation data for:', userEmail);
-    
-    try {
-        if (!userEmail || !isValidEmail(userEmail)) {
-            console.error('Invalid email provided to loadActivationData');
-            updateActivationStatusUI(null);
-            return;
-        }
-        
-        const activationData = await fetchActivationKey(userEmail);
-        userActivationData = activationData;
-        updateActivationStatusUI(activationData);
-        
-    } catch (error) {
-        console.error('Error loading activation data:', error);
-        updateActivationStatusUI(null);
-    }
-}
-
-// Subscribe to admin status changes
-function subscribeToAdminStatus() {
-    supabase
-        .channel('admin-status')
-        .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'admin_status',
-            filter: 'admin_email=eq.cyberbrothershq@gmail.com'
-        }, (payload) => {
-            isAdminOnline = payload.new.is_online;
-            updateAdminStatusUI(isAdminOnline);
-        })
-        .subscribe();
-}
-
-// Subscribe to activation key changes for the current user
-let activationKeySubscription = null;
-
-function subscribeToActivationKeyChanges(userEmail) {
-    if (!userEmail || !isValidEmail(userEmail)) {
-        console.error('Invalid email for activation key subscription');
-        return;
-    }
-
-    // Remove existing subscription if any
-    if (activationKeySubscription) {
-        supabase.removeChannel(activationKeySubscription);
-    }
-
-    console.log('Setting up real-time subscription for:', userEmail);
-
-    activationKeySubscription = supabase
-        .channel(`activation-key-${userEmail}`) // Unique channel name per user
-        .on('postgres_changes', {
-            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-            schema: 'public',
-            table: 'activation_keys',
-            filter: `user_email=eq.${userEmail}`
-        }, (payload) => {
-            console.log('🔴 Real-time event received:', payload);
-            console.log('Event type:', payload.eventType);
-            console.log('New data:', payload.new);
-            
-            if (payload.new) {
-                const wasActivated = userActivationData?.is_activated;
-                userActivationData = payload.new;
-                updateActivationStatusUI(payload.new);
-                
-                // If status changed to activated, refresh STU data
-                if (payload.new.is_activated && !wasActivated) {
-                    console.log('Status changed to activated, refreshing STU data...');
-                    fetchSTUData(userEmail).then(stuData => {
-                        updateSTUStats(stuData.sessions, stuData.totalHours);
-                    });
-                }
-            }
-        })
-        .subscribe((status, err) => {
-            console.log('Subscription status:', status);
-            if (err) {
-                console.error('Subscription error:', err);
-            }
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ Successfully subscribed to activation key changes');
-            }
-        });
-}
-
-function viewTutorial() {
-    // Navigate to tutorial in the current tab only
-    window.location.href = 'tutorial.html?readonly=true';
-}
-
-// Simplified function to fetch STU registration data without charts
-async function fetchSTUData(userEmail) {
-    try {
-        if (!userEmail || !isValidEmail(userEmail)) {
-            console.error('Invalid email provided to fetchSTUData');
-            return { sessions: 0, totalHours: 0 };
-        }
-
-        console.log('Fetching STU data for user:', userEmail);
-
-        const { data, error } = await supabase
-            .from('stu_registrations')
-            .select('*')
-            .eq('user_email', userEmail)
-            .order('session_date', { ascending: true });
-
-        if (error) {
-            console.error('Error fetching STU data:', error);
-            return { sessions: 0, totalHours: 0 };
-        }
-
-        console.log('Raw STU data from database:', data);
-
-        if (!data || data.length === 0) {
-            console.log('No STU sessions found for user:', userEmail);
-            return { sessions: 0, totalHours: 0 };
-        }
-
-        // Each STU session is ALWAYS 45 minutes = 0.75 hours
-        const totalHours = (data.length * 0.75).toFixed(2);
-
-        console.log('Calculated stats:', {
-            totalHours,
-            sessions: data.length
-        });
-
-        return {
-            sessions: Math.min(data.length, 99999),
-            totalHours: parseFloat(totalHours)
-        };
-    } catch (error) {
-        console.error('Error in fetchSTUData:', error);
-        return { sessions: 0, totalHours: 0 };
-    }
-}
-
-// Security: Function to update STU stats in the UI with validation
-// ============================================
-// ONE FUNCTION TO RULE THEM ALL
-// ============================================
-
-function updateSTUStats(sessions, totalHours) {
-    // Calculate if not provided
-    if (sessions === undefined && allSTUData) {
-        sessions = allSTUData.length;
-    }
-    if (totalHours === undefined) {
-        totalHours = (sessions * 0.75).toFixed(2);
-    }
-
-    // Update DASHBOARD (forside)
-    const dashboardSessionsElement = document.getElementById('stu-sessions-count');
-    const dashboardHoursElement = document.getElementById('stu-hours-total');
-    
-    if (dashboardSessionsElement) {
-        dashboardSessionsElement.textContent = sessions.toString();
-    }
-    if (dashboardHoursElement) {
-        dashboardHoursElement.textContent = totalHours.toString();
-    }
-
-    // Update STU MANAGER MODAL
-    const managerSessionsElement = document.getElementById('total-sessions');
-    const managerHoursElement = document.getElementById('total-hours');
-    
-    if (managerSessionsElement) {
-        managerSessionsElement.textContent = sessions.toString();
-    }
-    if (managerHoursElement) {
-        managerHoursElement.textContent = totalHours.toString();
-    }
-
-    // Remove loading states
-    if (dashboardSessionsElement) {
-        const card = dashboardSessionsElement.parentElement;
-        if (card) card.classList.remove('stat-loading');
-    }
-    if (dashboardHoursElement) {
-        const card = dashboardHoursElement.parentElement;
-        if (card) card.classList.remove('stat-loading');
-    }
-}
-// Check admin status immediately on load
-async function checkAdminStatus() {
-    try {
-        const { data: adminStatus, error } = await supabase
-            .from('admin_status')
-            .select('is_online')
-            .eq('admin_email', 'cyberbrothershq@gmail.com')
-            .single();
-
-        if (error) {
-            console.log('Admin status not found or error:', error);
-            isAdminOnline = false;
-        } else {
-            isAdminOnline = adminStatus?.is_online || false;
-        }
-        
-        updateAdminStatusUI(isAdminOnline);
-        
-    } catch (error) {
-        console.error('Error checking admin status:', error);
-        isAdminOnline = false;
-        updateAdminStatusUI(false);
-    }
-}
-
-// Update admin status UI
-function updateAdminStatusUI(isOnline) {
-    const statusIndicator = document.getElementById('admin-status');
-    const statusDot = document.getElementById('status-dot');
-    const statusText = document.getElementById('chat-status-text');
-
-    if (statusIndicator) {
-        if (isOnline) {
-            statusIndicator.classList.add('online');
-            statusIndicator.classList.remove('offline');
-        } else {
-            statusIndicator.classList.add('offline');
-            statusIndicator.classList.remove('online');
-        }
-    }
-
-    if (statusDot) {
-        if (isOnline) {
-            statusDot.classList.remove('offline');
-        } else {
-            statusDot.classList.add('offline');
-        }
-    }
-
-    if (statusText) {
-        statusText.textContent = isOnline ? 'Admin er online' : 'Admin er offline';
-    }
-}
-
-// Subscribe to admin status changes
-function subscribeToAdminStatus() {
-    supabase
-        .channel('admin-status')
-        .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'admin_status',
-            filter: 'admin_email=eq.cyberbrothershq@gmail.com'
-        }, (payload) => {
-            isAdminOnline = payload.new.is_online;
-            updateAdminStatusUI(isAdminOnline);
-        })
-        .subscribe();
-}
-
-function openSettings() {
-    const overlay = document.getElementById('settings-overlay');
-    if (overlay) {
-        overlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeSettings() {
-    const overlay = document.getElementById('settings-overlay');
-    if (overlay) {
-        overlay.classList.remove('open');
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Account Deletion Functions
-function initiateAccountDeletion() {
-    closeSettings();
-    const confirmationOverlay = document.getElementById('confirmation-overlay');
-    if (confirmationOverlay) {
-        confirmationOverlay.classList.add('open');
-        
-        // Reset confirmation input
-        const confirmInput = document.getElementById('delete-confirmation');
-        if (confirmInput) {
-            confirmInput.value = '';
-            confirmInput.addEventListener('input', handleConfirmationInput);
-        }
-    }
-}
-
-function handleConfirmationInput() {
-    const input = document.getElementById('delete-confirmation');
-    const confirmBtn = document.querySelector('.confirm-delete-btn');
-    
-    if (input && confirmBtn) {
-        if (input.value.toUpperCase() === 'SLETT') {
-            confirmBtn.disabled = false;
-        } else {
-            confirmBtn.disabled = true;
-        }
-    }
-}
-
-function closeConfirmation() {
-    const overlay = document.getElementById('confirmation-overlay');
-    if (overlay) {
-        overlay.classList.remove('open');
-        document.body.style.overflow = 'auto';
-    }
-}
-
-async function confirmAccountDeletion() {
-    const confirmInput = document.getElementById('delete-confirmation');
-    
-    if (!confirmInput || confirmInput.value.toUpperCase() !== 'SLETT') {
-        alert('Vennligst skriv "SLETT" for å bekrefte slettingen.');
-        return;
-    }
-    
-    const confirmBtn = document.querySelector('.confirm-delete-btn');
-    if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Sletter konto...';
-    }
-    
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-            throw new Error('Ingen aktiv sesjon');
-        }
-        
-        console.log('Calling edge function to delete user account...');
-        
-        // Call Edge Function to delete everything including auth user
-        const { data, error } = await supabase.functions.invoke('delete-user-account', {
-            headers: {
-                Authorization: `Bearer ${session.access_token}`,
-            },
-        });
-        
-        if (error) {
-            console.error('Edge function error:', error);
-            throw error;
-        }
-        
-        if (!data || !data.success) {
-            throw new Error('Failed to delete account');
-        }
-        
-        console.log('Account deleted successfully');
-        
-        // Clear session and redirect
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        alert('Din konto og alle data har blitt permanent slettet. Du kan ikke lenger logge inn med denne e-postadressen.');
-        
-        window.location.href = 'index.html';
-        
-    } catch (error) {
-        console.error('Error during account deletion:', error);
-        alert('Det oppstod en feil under sletting av kontoen. Kontakt support for hjelp.');
-        
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Slett kontoen min permanent';
-        }
-    }
-}
-
-// Close modals when clicking outside
-document.addEventListener('click', function(event) {
-    const settingsOverlay = document.getElementById('settings-overlay');
-    const confirmationOverlay = document.getElementById('confirmation-overlay');
-    
-    if (event.target === settingsOverlay) {
-        closeSettings();
-    }
-    
-    if (event.target === confirmationOverlay) {
-        closeConfirmation();
-    }
-});
-
-// Check if user has completed tutorial
-async function checkTutorialStatus(userEmail) {
-    try {
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('tutorial_completed, display_name')
-            .eq('user_email', userEmail)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error checking tutorial status:', error);
-            return { completed: false, displayName: null };
-        }
-
-        return {
-            completed: data?.tutorial_completed || false,
-            displayName: data?.display_name || null
-        };
-    } catch (error) {
-        console.error('Error in checkTutorialStatus:', error);
-        return { completed: false, displayName: null };
-    }
-}
-
-// Get user display name
-async function getUserDisplayName(userEmail) {
-    try {
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('display_name')
-            .eq('user_email', userEmail)
-            .single();
-
-        if (error) {
-            console.error('Error fetching display name:', error);
-            return userEmail; // Fallback to email if error
-        }
-
-        return data?.display_name || userEmail; // Return display name or fallback to email
-    } catch (dbError) {
-        console.error('Database error fetching display name:', dbError);
-        return userEmail; // Fallback to email
-    }
-}
-
-// Replace the existing checkAuth function with this updated version
-async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    const userEmail = session.user.email;
-    
-    // Security: Validate email from session
-    if (!userEmail || !isValidEmail(userEmail)) {
-        console.error('Invalid email from session');
-        await supabase.auth.signOut();
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    // Store the actual user email globally
-    currentUserEmail = userEmail;
-    
-    // Check if user is admin
-    if (userEmail === 'cyberbrothershq@gmail.com') {
-        window.location.href = 'admin.html';
-        return;
-    }
-
-    // Check BOTH privacy policy AND terms of use FIRST
-    const hasAcceptedBoth = await checkPrivacyAndTermsAccepted(userEmail);
-    if (!hasAcceptedBoth) {
-        window.location.href = 'accept.html';
-        return;
-    }
-
-    // Check tutorial status AFTER privacy & terms check
-    const tutorialStatus = await checkTutorialStatus(userEmail);
-    
-    if (!tutorialStatus.completed) {
-        console.log('User has not completed tutorial, redirecting...');
-        window.location.href = 'tutorial.html';
-        return;
-    }
-
-    console.log('Tutorial completed, loading dashboard...');
-    
-    // Update UI with user info
-    const userAvatar = document.getElementById('user-avatar');
-    const userEmailElement = document.getElementById('user-email');
-    
-    const displayName = await getUserDisplayName(userEmail);
-
-    if (userEmailElement) {
-        userEmailElement.textContent = displayName;
-    }
-    if (userAvatar) {
-        userAvatar.textContent = displayName.charAt(0).toUpperCase();
-    }
-
-    // Add loading state to STU stats
-    const stuSessionsElement = document.getElementById('stu-sessions-count');
-    const stuHoursElement = document.getElementById('stu-hours-total');
-
-    if (stuSessionsElement && stuHoursElement) {
-        const stuSessionsCard = stuSessionsElement.parentElement;
-        const stuHoursCard = stuHoursElement.parentElement;
-        if (stuSessionsCard) stuSessionsCard.classList.add('stat-loading');
-        if (stuHoursCard) stuHoursCard.classList.add('stat-loading');
-    }
-
-    // Fetch and display STU data
-    try {
-        const stuData = await fetchSTUData(userEmail);
-        updateSTUStats(stuData.sessions, stuData.totalHours);
-    } catch (error) {
-        console.error('Error loading STU data:', error);
-        updateSTUStats(0, 0);
-    }
-
-    // Load activation data
-    try {
-        await loadActivationData(userEmail);
-        
-        subscribeToActivationKeyChanges(userEmail);
-    } catch (error) {
-        console.error('Error loading activation data:', error);
-        updateActivationStatusUI(null);
-    }
-
-    // Check admin status immediately on page load
-    await checkAdminStatus();
-    
-    // Subscribe to admin status changes
-    subscribeToAdminStatus();
-}
-
-
-// Add this function after checkAuth() and before checkTutorialStatus()
-async function checkPrivacyAndTermsAccepted(userEmail) {
-    try {
-        const PRIVACY_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json';
-        const TERMS_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/terms-of-use.json';
-        
-        // Fetch both current versions
-        const [privacyResponse, termsResponse] = await Promise.all([
-            fetch(PRIVACY_JSON_URL),
-            fetch(TERMS_JSON_URL)
-        ]);
-        
-        if (!privacyResponse.ok || !termsResponse.ok) {
-            console.error('Could not fetch policy/terms versions');
-            return false;
-        }
-        
-        const currentPolicy = await privacyResponse.json();
-        const currentTerms = await termsResponse.json();
-        const currentPrivacyVersion = currentPolicy.version;
-        const currentTermsVersion = currentTerms.version;
-        
-        // Get user's accepted versions
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('privacy_policy_accepted, privacy_policy_version, terms_of_use_accepted, terms_of_use_version')
-            .eq('user_email', userEmail)
-            .maybeSingle();
-
-        if (error) {
-            console.error('Error checking privacy policy and terms:', error);
-            return false;
-        }
-        
-        // Check if user hasn't accepted either document
-        if (!data?.privacy_policy_accepted || !data?.terms_of_use_accepted) {
-            return false;
-        }
-        
-        // Compare versions for privacy policy
-        const userPrivacyVersion = data.privacy_policy_version || '1.0';
-        const privacyVersionComparison = compareVersions(currentPrivacyVersion, userPrivacyVersion);
-        
-        // Compare versions for terms of use
-        const userTermsVersion = data.terms_of_use_version || '1.0';
-        const termsVersionComparison = compareVersions(currentTermsVersion, userTermsVersion);
-        
-        // Both must be up to date
-        return privacyVersionComparison <= 0 && termsVersionComparison <= 0;
-        
-    } catch (error) {
-        console.error('Error in checkPrivacyAndTermsAccepted:', error);
-        return false;
-    }
-}
-
-// NEW FUNCTION 2: compareVersions (might already exist, but keep it)
 function compareVersions(v1, v2) {
     const parts1 = v1.split('.').map(Number);
     const parts2 = v2.split('.').map(Number);
@@ -2404,645 +1719,26 @@ function compareVersions(v1, v2) {
     return 0;
 }
 
-
-// Copy activation key to clipboard
-async function copyActivationKey() {
-    const keyElement = document.getElementById('activation-key-display');
-    if (!keyElement) return;
-    
-    try {
-        await navigator.clipboard.writeText(keyElement.textContent);
-        
-        // Show feedback
-        const copyBtn = document.querySelector('.copy-key-btn');
-        if (copyBtn) {
-            const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = '✅';
-            copyBtn.style.background = '#22c55e';
-            
-            setTimeout(() => {
-                copyBtn.innerHTML = originalText;
-                copyBtn.style.background = '#3b82f6';
-            }, 2000);
-        }
-    } catch (error) {
-        console.error('Failed to copy activation key:', error);
-        // Fallback for older browsers
-        try {
-            const textArea = document.createElement('textarea');
-            textArea.value = keyElement.textContent;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            
-            const copyBtn = document.querySelector('.copy-key-btn');
-            if (copyBtn) {
-                const originalText = copyBtn.innerHTML;
-                copyBtn.innerHTML = '✅';
-                copyBtn.style.background = '#22c55e';
-                
-                setTimeout(() => {
-                    copyBtn.innerHTML = originalText;
-                    copyBtn.style.background = '#3b82f6';
-                }, 2000);
-            }
-        } catch (fallbackError) {
-            alert('Kunne ikke kopiere nøkkel. Prøv å velge og kopiere manuelt.');
-        }
-    }
-}
-
-async function regenerateActivationKey() {
-    const regenBtn = document.getElementById('regen-btn');
-    const cooldownMsg = document.getElementById('regen-cooldown-msg');
-    
-    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        alert('Feil: Ingen gyldig bruker funnet');
-        return;
-    }
-    
-    // Confirm action
-    const confirmed = confirm(
-        '⚠️ Er du sikker?\n\n' +
-        'Dette vil:\n' +
-        '• Generere en ny aktiverings nøkkel\n' +
-        '• Gjøre din gamle nøkkel ugyldig\n' +
-        '• Deaktivere programmet ditt (må aktiveres på nytt)\n\n' +
-        'Fortsett?'
-    );
-    
-    if (!confirmed) return;
-    
-    regenBtn.disabled = true;
-    regenBtn.textContent = '⏳ Genererer...';
-    cooldownMsg.style.display = 'none';
-    
-    try {
-        // Call the database function
-        const { data, error } = await supabase.rpc('regenerate_activation_key', {
-            p_user_email: currentUserEmail
-        });
-        
-        if (error) throw error;
-        
-        // Handle response
-        if (data && data.length > 0) {
-            const result = data[0];
-            
-            if (result.success) {
-                // Success - update UI with new key
-                userActivationData = {
-                    activation_key: result.new_key,
-                    is_activated: false,
-                    activated_at: null
-                };
-                
-                updateActivationStatusUI(userActivationData);
-                
-                alert(
-                    '✅ Ny aktiverings nøkkel generert!\n\n' +
-                    'Din nye nøkkel: ' + result.new_key + '\n\n' +
-                    'Bruk denne i AkademiTrack programmet for å aktivere kontoen din på nytt. Nøkkelen her vises også på nettsiden, altså du kan kopiere den derfra.'
-                );
-                
-                // Flash the key container to draw attention
-                const keyContainer = document.getElementById('activation-key-container');
-                if (keyContainer) {
-                    keyContainer.style.animation = 'none';
-                    setTimeout(() => {
-                        keyContainer.style.animation = 'flash 0.5s ease-in-out 3';
-                    }, 10);
-                }
-                
-            } else {
-                // Rate limited or error
-                if (result.cooldown_remaining > 0) {
-                    cooldownMsg.textContent = `⏱️ ${result.message}. Prøv igjen om ${result.cooldown_remaining} minutter.`;
-                    cooldownMsg.style.display = 'block';
-                } else {
-                    cooldownMsg.textContent = `⚠️ ${result.message}`;
-                    cooldownMsg.style.display = 'block';
-                }
-            }
-        }
-        
-    } catch (error) {
-        console.error('Error regenerating activation key:', error);
-        alert('Feil ved generering av ny nøkkel. Prøv igjen senere eller kontakt support.');
-    } finally {
-        regenBtn.disabled = false;
-        regenBtn.textContent = '🔄 Generer ny nøkkel';
-    }
-}
-
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes flash {
-        0%, 100% { background: #f8fafc; }
-        50% { background: #fef3c7; }
-    }
-`;
-document.head.appendChild(style);
-
-// Chat functionality
-function toggleChat() {
-    const chatWidget = document.getElementById('chat-widget');
-    const isOpen = chatWidget.classList.contains('open');
-    
-    if (isOpen) {
-        chatWidget.classList.remove('open');
-        if (messagesSubscription) {
-            supabase.removeChannel(messagesSubscription);
-            messagesSubscription = null;
-        }
-    } else {
-        chatWidget.classList.add('open');
-        initializeChat();
-    }
-}
-
-// Initialize chat when opened
-async function initializeChat() {
-    const messageTypeSelect = document.getElementById('message-type');
-    const currentMessageType = messageTypeSelect ? messageTypeSelect.value : 'support';
-    
-    // Use the globally stored email instead of getting from DOM
-    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        console.error('No valid user email available');
-        return;
-    }
-    
-    try {
-        // Get or create conversation for current message type
-        await getOrCreateConversation(currentUserEmail, currentMessageType);
-        
-        // Load existing messages for this conversation
-        await loadMessages();
-        
-        // Subscribe to new messages
-        subscribeToMessages();
-        
-    } catch (error) {
-        console.error('Error initializing chat:', error);
-    }
-}
-
-// Get or create conversation based on message type
-async function getOrCreateConversation(userEmail, messageType = 'support') {
-    try {
-        // Security: Validate email parameter
-        if (!userEmail || !isValidEmail(userEmail)) {
-            throw new Error('Invalid email provided');
-        }
-
-        // Security: Validate message type
-        const validMessageTypes = ['support', 'feedback', 'feature', 'bug', 'other'];
-        const validatedMessageType = validMessageTypes.includes(messageType) ? messageType : 'support';
-
-        // Check if we already have a conversation ID for this message type
-        if (conversationsByType[validatedMessageType]) {
-            currentConversationId = conversationsByType[validatedMessageType];
-            return;
-        }
-
-        // Check if conversation exists for this user and message type
-        let { data: conversations, error } = await supabase
-            .from('chat_conversations')
-            .select('*')
-            .eq('user_email', userEmail)
-            .eq('message_type', validatedMessageType)
-            .eq('status', 'open')
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        if (error) throw error;
-
-        if (conversations && conversations.length > 0) {
-            currentConversationId = conversations[0].id;
-            conversationsByType[validatedMessageType] = currentConversationId;
-        } else {
-            // Create new conversation for this message type
-            const { data: newConversation, error: createError } = await supabase
-                .from('chat_conversations')
-                .insert([{
-                    user_email: userEmail,
-                    message_type: validatedMessageType,
-                    status: 'open'
-                }])
-                .select()
-                .single();
-
-            if (createError) throw createError;
-            currentConversationId = newConversation.id;
-            conversationsByType[validatedMessageType] = currentConversationId;
-        }
-    } catch (error) {
-        console.error('Error managing conversation:', error);
-    }
-}
-
-// Load existing messages
-async function loadMessages() {
-    if (!currentConversationId) return;
-
-    try {
-        const { data: messages, error } = await supabase
-            .from('chat_messages')
-            .select('*')
-            .eq('conversation_id', currentConversationId)
-            .order('created_at', { ascending: true });
-
-        if (error) throw error;
-
-        const messagesContainer = document.getElementById('chat-messages');
-        if (!messagesContainer) return;
-        
-        messagesContainer.innerHTML = '';
-
-        if (messages && messages.length > 0) {
-            messages.forEach(message => {
-                displayMessage(message);
-            });
-        } else {
-            messagesContainer.innerHTML = `
-                <div class="welcome-message">
-                    <p><strong>Velkommen til AkademiTrack Support!</strong></p>
-                    <p>Har du spørsmål eller trenger hjelp? Send oss en melding så hjelper vi deg så snart som mulig.</p>
-                </div>
-            `;
-        }
-
-        scrollToBottom();
-    } catch (error) {
-        console.error('Error loading messages:', error);
-    }
-}
-
-// Subscribe to new messages
-function subscribeToMessages() {
-    if (!currentConversationId) return;
-
-    messagesSubscription = supabase
-        .channel('messages')
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-            filter: `conversation_id=eq.${currentConversationId}`
-        }, (payload) => {
-            displayMessage(payload.new);
-            scrollToBottom();
-        })
-        .subscribe();
-}
-
-// Security: Display message in chat with proper sanitization
-function displayMessage(message) {
-    if (!message || !message.message_text) return;
-    
-    const messagesContainer = document.getElementById('chat-messages');
-    if (!messagesContainer) return;
-    
-    const messageElement = document.createElement('div');
-    
-    // Security: Validate sender_type
-    const validSenderTypes = ['user', 'admin'];
-    const senderType = validSenderTypes.includes(message.sender_type) ? message.sender_type : 'user';
-    
-    messageElement.className = `message ${senderType}`;
-    
-    const time = new Date(message.created_at).toLocaleTimeString('no-NO', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    // Create elements safely
-    const messageBubble = document.createElement('div');
-    messageBubble.className = 'message-bubble';
-    messageBubble.textContent = message.message_text; // Use textContent instead of innerHTML
-    
-    const messageTime = document.createElement('div');
-    messageTime.className = 'message-time';
-    messageTime.textContent = time;
-    
-    messageElement.appendChild(messageBubble);
-    messageElement.appendChild(messageTime);
-
-    // Remove welcome message if it exists
-    const welcomeMessage = messagesContainer.querySelector('.welcome-message');
-    if (welcomeMessage) {
-        welcomeMessage.remove();
-    }
-
-    messagesContainer.appendChild(messageElement);
-}
-
-// Scroll chat to bottom
-function scrollToBottom() {
-    const messagesContainer = document.getElementById('chat-messages');
-    if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-}
-
-// Parallax effect
-function handleParallax() {
-    const scrolled = window.pageYOffset;
-    const rate = scrolled * -0.3;
-    
-    const sun = document.querySelector('.sun');
-    const clouds = document.querySelectorAll('.cloud');
-    
-    if (sun) {
-        sun.style.transform = `translateY(${rate * 0.5}px)`;
-    }
-    
-    clouds.forEach((cloud, index) => {
-        const speed = (index + 1) * 0.15;
-        cloud.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-}
-
-// Scroll animations
-function handleScrollAnimations() {
-    const elements = document.querySelectorAll('.fade-in');
-    elements.forEach(element => {
-        const elementTop = element.getBoundingClientRect().top;
-        const windowHeight = window.innerHeight;
-        
-        if (elementTop < windowHeight - 100) {
-            element.classList.add('visible');
-        }
-    });
-}
-
-// Handle navbar shrinking on scroll
-function handleNavbarShrink() {
-    const navbar = document.querySelector('.navbar');
-    const scrolled = window.pageYOffset;
-    
-    if (navbar) {
-        if (scrolled > 100) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    }
-}
-
-// Sign out functionality
-async function signOut() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        window.location.href = 'index.html';
-    } catch (error) {
-        console.error('Feil ved utlogging:', error);
-    }
-}
-
-// Download functionality
-
-// OS Detection and Download URLs (same as tutorial)
-const GITHUB_RELEASES = {
-    baseURL: 'https://github.com/CyberGutta/AkademiTrack/releases/latest/download/',
-    files: {
-        windows: 'AkademiTrack-win-Setup.exe',
-        mac: 'AkademiTrack-osx-Setup.pkg',
-        linux: 'AkademiTrack.AppImage'
-    }
-};
-
-let userOS = '';
-let downloadURL = '';
-
-// Detect user's operating system
-function detectOS() {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const platform = window.navigator.platform.toLowerCase();
-    
-    if (platform.includes('mac') || userAgent.includes('mac')) {
-        return 'mac';
-    } else if (platform.includes('win') || userAgent.includes('win')) {
-        return 'windows';
-    } else if (platform.includes('linux') || userAgent.includes('linux')) {
-        return 'linux';
-    } else {
-        if (userAgent.includes('mac os x') || userAgent.includes('macintosh')) {
-            return 'mac';
-        } else if (userAgent.includes('windows nt')) {
-            return 'windows';
-        } else {
-            return 'linux';
-        }
-    }
-}
-
-// Download functionality
-function downloadApp() {
-    userOS = detectOS();
-    const filename = GITHUB_RELEASES.files[userOS];
-    downloadURL = GITHUB_RELEASES.baseURL + filename;
-    
-    if (!downloadURL) {
-        alert('Kunne ikke bestemme nedlastingslenke. Prøv å laste siden på nytt.');
-        return;
-    }
-    
-    try {
-        const link = document.createElement('a');
-        link.href = downloadURL;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } catch (error) {
-        console.error('Download error:', error);
-        alert('Nedlasting feilet. Prøv igjen eller last ned manuelt fra GitHub.');
-    }
-}
-
-// Event listeners for chat functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Chat form submission
-    const chatForm = document.getElementById('chat-form');
-    if (chatForm) {
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const input = document.getElementById('chat-input');
-            const sendBtn = document.getElementById('chat-send-btn');
-            const messageType = document.getElementById('message-type');
-            
-            if (!input || !sendBtn || !messageType) return;
-            
-            // Security: Validate and sanitize input
-            const messageText = validateInput(input.value, 1000); // Max 1000 characters
-            const selectedMessageType = messageType.value;
-            
-            console.log('Attempting to send message:', {
-                messageText,
-                selectedMessageType,
-                conversationId: currentConversationId
-            });
-            
-            if (!messageText) {
-                console.log('Empty message text, aborting');
-                return;
-            }
-            
-            // Use the globally stored email instead of getting from DOM
-            if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-                console.error('No valid user email available for chat');
-                alert('Feil: Ingen gyldig e-post tilgjengelig. Prøv å laste siden på nytt.');
-                return;
-            }
-            
-            // Security: Validate message type
-            const validMessageTypes = ['support', 'feedback', 'feature', 'bug', 'other'];
-            const validatedMessageType = validMessageTypes.includes(selectedMessageType) ? selectedMessageType : 'other';
-            
-            // Ensure we have the right conversation for this message type
-            await getOrCreateConversation(currentUserEmail, validatedMessageType);
-            
-            if (!currentConversationId) {
-                console.error('No conversation ID available after creation attempt');
-                alert('Feil: Ingen samtale ID tilgjengelig. Prøv å lukke og åpne chatten igjen.');
-                return;
-            }
-            
-            sendBtn.disabled = true;
-            
-            try {
-                const { error } = await supabase
-                    .from('chat_messages')
-                    .insert([{
-                        conversation_id: currentConversationId,
-                        sender_email: currentUserEmail,
-                        sender_type: 'user',
-                        message_text: messageText
-                        // Don't include message_type here - it's stored in the conversation
-                    }]);
-
-                if (error) throw error;
-                
-                input.value = '';
-                input.style.height = 'auto';
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Feil ved sending av melding. Prøv igjen.');
-            } finally {
-                sendBtn.disabled = false;
-            }
-        });
-    }
-
-    // Message type selector change handler
-    const messageTypeSelect = document.getElementById('message-type');
-    if (messageTypeSelect) {
-        messageTypeSelect.addEventListener('change', async function() {
-            // Use the globally stored email instead of getting from DOM
-            if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-                console.error('No valid user email available for message type change');
-                return;
-            }
-
-            const selectedMessageType = this.value;
-            
-            try {
-                // Unsubscribe from current messages
-                if (messagesSubscription) {
-                    supabase.removeChannel(messagesSubscription);
-                    messagesSubscription = null;
-                }
-                
-                // Get or create conversation for new message type
-                await getOrCreateConversation(currentUserEmail, selectedMessageType);
-                
-                // Load messages for this conversation
-                await loadMessages();
-                
-                // Subscribe to messages for this conversation
-                subscribeToMessages();
-                
-            } catch (error) {
-                console.error('Error switching message type:', error);
-            }
-        });
-    }
-
-    // Auto-resize textarea with security limits
-    const chatInput = document.getElementById('chat-input');
-    if (chatInput) {
-        chatInput.addEventListener('input', function() {
-            // Security: Limit input length
-            if (this.value.length > 1000) {
-                this.value = this.value.slice(0, 1000);
-            }
-            
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 80) + 'px';
-        });
-    }
-
-    // Initialize everything
-    checkAuth();
-    handleScrollAnimations();
-    handleParallax();
-});
-
-// Scroll event listeners with throttling for better performance
-let ticking = false;
-function requestTick() {
-    if (!ticking) {
-        requestAnimationFrame(() => {
-            handleScrollAnimations();
-            handleParallax();
-            handleNavbarShrink();
-            ticking = false;
-        });
-        ticking = true;
-    }
-}
-
-window.addEventListener('scroll', requestTick);
-
-// Listen for auth state changes
-supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-        window.location.href = '/';
-    }
-});
-
-// Check admin status periodically as backup
-setInterval(checkAdminStatus, 60000); // Check every minute
-
-
 // ============================================
-// GDPR DATA EXPORT FUNCTIONS
+// MODAL SYSTEM
 // ============================================
 
 function showModal(config) {
     const {
         title,
         message,
-        type = 'info', // 'info', 'success', 'error', 'warning', 'confirm'
+        type = 'info',
         icon = '💬',
         confirmText = 'OK',
         cancelText = 'Avbryt',
         onConfirm = null,
         onCancel = null,
-        input = null // { type: 'text'/'email'/'password', placeholder: '', value: '' }
+        input = null
     } = config;
 
-    // Remove any existing modal
     const existingModal = document.getElementById('custom-modal-overlay');
     if (existingModal) existingModal.remove();
 
-    // Create modal HTML
     const modalHTML = `
         <div class="custom-modal-overlay" id="custom-modal-overlay">
             <div class="custom-modal ${type}">
@@ -3081,15 +1777,15 @@ function showModal(config) {
     const cancelBtn = document.getElementById('modal-cancel');
     const inputField = document.getElementById('custom-modal-input');
 
-    // Animate in
     setTimeout(() => overlay.classList.add('open'), 10);
 
-    // Focus input if present
     if (inputField) {
         setTimeout(() => inputField.focus(), 100);
+        inputField.onkeypress = (e) => {
+            if (e.key === 'Enter') confirmBtn.click();
+        };
     }
 
-    // Handle confirm
     confirmBtn.onclick = () => {
         const value = inputField ? inputField.value : null;
         overlay.classList.remove('open');
@@ -3097,7 +1793,6 @@ function showModal(config) {
         if (onConfirm) onConfirm(value);
     };
 
-    // Handle cancel
     if (cancelBtn) {
         cancelBtn.onclick = () => {
             overlay.classList.remove('open');
@@ -3106,153 +1801,1161 @@ function showModal(config) {
         };
     }
 
-    // Handle Enter key for input
-    if (inputField) {
-        inputField.onkeypress = (e) => {
-            if (e.key === 'Enter') confirmBtn.click();
-        };
-    }
-
-    // Handle Escape key
     overlay.onkeydown = (e) => {
         if (e.key === 'Escape' && cancelBtn) cancelBtn.click();
     };
 }
 
+// ============================================
+// AUTHENTICATION & USER MANAGEMENT
+// ============================================
 
+async function checkPrivacyAndTermsAccepted(userEmail) {
+    try {
+        const PRIVACY_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json';
+        const TERMS_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/terms-of-use.json';
+        
+        const [privacyResponse, termsResponse] = await Promise.all([
+            fetch(PRIVACY_JSON_URL),
+            fetch(TERMS_JSON_URL)
+        ]);
+        
+        if (!privacyResponse.ok || !termsResponse.ok) {
+            console.error('Could not fetch policy/terms versions');
+            return false;
+        }
+        
+        const currentPolicy = await privacyResponse.json();
+        const currentTerms = await termsResponse.json();
+        const currentPrivacyVersion = currentPolicy.version;
+        const currentTermsVersion = currentTerms.version;
+        
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('privacy_policy_accepted, privacy_policy_version, terms_of_use_accepted, terms_of_use_version')
+            .eq('user_email', userEmail)
+            .maybeSingle();
 
+        if (error) {
+            console.error('Error checking privacy policy and terms:', error);
+            return false;
+        }
+        
+        if (!data?.privacy_policy_accepted || !data?.terms_of_use_accepted) {
+            return false;
+        }
+        
+        const userPrivacyVersion = data.privacy_policy_version || '1.0';
+        const privacyVersionComparison = compareVersions(currentPrivacyVersion, userPrivacyVersion);
+        
+        const userTermsVersion = data.terms_of_use_version || '1.0';
+        const termsVersionComparison = compareVersions(currentTermsVersion, userTermsVersion);
+        
+        return privacyVersionComparison <= 0 && termsVersionComparison <= 0;
+        
+    } catch (error) {
+        console.error('Error in checkPrivacyAndTermsAccepted:', error);
+        return false;
+    }
+}
 
-async function exportUserData(format) {
+async function getUserDisplayName(userEmail) {
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('display_name')
+            .eq('user_email', userEmail)
+            .single();
+
+        if (error) {
+            console.error('Error fetching display name:', error);
+            return userEmail;
+        }
+
+        return data?.display_name || userEmail;
+    } catch (dbError) {
+        console.error('Database error fetching display name:', dbError);
+        return userEmail;
+    }
+}
+
+async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    const userEmail = session.user.email;
+    
+    if (!userEmail || !isValidEmail(userEmail)) {
+        console.error('Invalid email from session');
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    currentUserEmail = userEmail;
+    
+    if (userEmail === 'cyberbrothershq@gmail.com') {
+        window.location.href = 'admin.html';
+        return;
+    }
+
+    // Check privacy policy and terms acceptance
+    const hasAcceptedBoth = await checkPrivacyAndTermsAccepted(userEmail);
+    if (!hasAcceptedBoth) {
+        window.location.href = 'accept.html';
+        return;
+    }
+
+    // REMOVED TUTORIAL CHECK - Users can access dashboard directly
+    console.log('Loading dashboard...');
+    
+    // Update UI with user info
+    const userAvatar = document.getElementById('user-avatar');
+    const userEmailElement = document.getElementById('user-email');
+    
+    const displayName = await getUserDisplayName(userEmail);
+
+    if (userEmailElement) {
+        userEmailElement.textContent = displayName;
+    }
+    if (userAvatar) {
+        userAvatar.textContent = displayName.charAt(0).toUpperCase();
+    }
+
+    // Add loading state to STU stats
+    const stuSessionsElement = document.getElementById('stu-sessions-count');
+    const stuHoursElement = document.getElementById('stu-hours-total');
+
+    if (stuSessionsElement && stuHoursElement) {
+        const stuSessionsCard = stuSessionsElement.parentElement;
+        const stuHoursCard = stuHoursElement.parentElement;
+        if (stuSessionsCard) stuSessionsCard.classList.add('stat-loading');
+        if (stuHoursCard) stuHoursCard.classList.add('stat-loading');
+    }
+
+    // Fetch and display STU data
+    try {
+        const stuData = await fetchSTUData(userEmail);
+        updateSTUStats(stuData.sessions, stuData.totalHours);
+    } catch (error) {
+        console.error('Error loading STU data:', error);
+        updateSTUStats(0, 0);
+    }
+
+    // Load activation data
+    try {
+        await loadActivationData(userEmail);
+        subscribeToActivationKeyChanges(userEmail);
+    } catch (error) {
+        console.error('Error loading activation data:', error);
+        updateActivationStatusUI(null);
+    }
+
+    await checkAdminStatus();
+    subscribeToAdminStatus();
+}
+
+async function signOut() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Feil ved utlogging:', error);
+    }
+}
+
+// ============================================
+// ACTIVATION KEY MANAGEMENT
+// ============================================
+
+async function fetchActivationKey(userEmail) {
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to fetchActivationKey');
+            return null;
+        }
+
+        console.log('Fetching activation key for:', userEmail);
+
+        let { data: existingKey, error: fetchError } = await supabase
+            .from('activation_keys')
+            .select('*')
+            .eq('user_email', userEmail)
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error('Error fetching activation key:', fetchError);
+            return null;
+        }
+
+        if (existingKey) {
+            console.log('Found existing activation key:', existingKey);
+            return existingKey;
+        }
+
+        console.log('No existing key found, creating new one...');
+
+        const newActivationKey = generateSecureKey();
+        
+        const { data: newKey, error: createError } = await supabase
+            .from('activation_keys')
+            .insert([{
+                user_email: userEmail,
+                activation_key: newActivationKey,
+                is_activated: false
+            }])
+            .select()
+            .single();
+
+        if (createError) {
+            console.error('Error creating activation key:', createError);
+            return null;
+        }
+
+        console.log('Created new activation key:', newKey);
+        return newKey;
+    } catch (error) {
+        console.error('Error in fetchActivationKey:', error);
+        return null;
+    }
+}
+
+function updateActivationStatusUI(activationData) {
+    const statusElement = document.getElementById('activation-status');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const statusDescription = document.getElementById('status-description');
+    const keyContainer = document.getElementById('activation-key-container');
+    const keyDisplay = document.getElementById('activation-key-display');
+
+    if (!statusElement || !statusIndicator || !statusText || !statusDescription || 
+        !keyContainer || !keyDisplay) {
+        console.error('Missing UI elements for activation status');
+        return;
+    }
+
+    console.log('Updating activation UI with data:', activationData);
+
+    if (activationData) {
+        keyContainer.style.display = 'block';
+        keyDisplay.textContent = activationData.activation_key;
+        
+        if (activationData.is_activated) {
+            statusElement.className = 'activation-status activated';
+            statusIndicator.className = 'status-indicator active';
+            statusText.textContent = 'Konto Aktivert';
+            statusDescription.textContent = activationData.activated_at ? 
+                `Aktivert ${new Date(activationData.activated_at).toLocaleDateString('no-NO')}` :
+                'Konto er aktivert';
+        } else {
+            statusElement.className = 'activation-status not-activated';
+            statusIndicator.className = 'status-indicator inactive';
+            statusText.textContent = 'Venter på aktivering';
+            statusDescription.textContent = 'Bruk aktiverings nøkkelen din i AkademiTrack programmet';
+        }
+    } else {
+        statusElement.className = 'activation-status not-activated';
+        statusIndicator.className = 'status-indicator inactive';
+        statusText.textContent = 'Feil ved lasting av aktiverings data';
+        statusDescription.textContent = 'Kunne ikke laste aktiverings informasjon';
+        keyContainer.style.display = 'none';
+    }
+}
+
+async function loadActivationData(userEmail) {
+    console.log('Loading activation data for:', userEmail);
+    
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to loadActivationData');
+            updateActivationStatusUI(null);
+            return;
+        }
+        
+        const activationData = await fetchActivationKey(userEmail);
+        userActivationData = activationData;
+        updateActivationStatusUI(activationData);
+        
+    } catch (error) {
+        console.error('Error loading activation data:', error);
+        updateActivationStatusUI(null);
+    }
+}
+
+function subscribeToActivationKeyChanges(userEmail) {
+    if (!userEmail || !isValidEmail(userEmail)) {
+        console.error('Invalid email for activation key subscription');
+        return;
+    }
+
+    if (activationKeySubscription) {
+        supabase.removeChannel(activationKeySubscription);
+    }
+
+    console.log('Setting up real-time subscription for:', userEmail);
+
+    activationKeySubscription = supabase
+        .channel(`activation-key-${userEmail}`)
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'activation_keys',
+            filter: `user_email=eq.${userEmail}`
+        }, (payload) => {
+            console.log('🔴 Real-time event received:', payload);
+            console.log('Event type:', payload.eventType);
+            console.log('New data:', payload.new);
+            
+            if (payload.new) {
+                const wasActivated = userActivationData?.is_activated;
+                userActivationData = payload.new;
+                updateActivationStatusUI(payload.new);
+                
+                if (payload.new.is_activated && !wasActivated) {
+                    console.log('Status changed to activated, refreshing STU data...');
+                    fetchSTUData(userEmail).then(stuData => {
+                        updateSTUStats(stuData.sessions, stuData.totalHours);
+                    });
+                }
+            }
+        })
+        .subscribe((status, err) => {
+            console.log('Subscription status:', status);
+            if (err) {
+                console.error('Subscription error:', err);
+            }
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ Successfully subscribed to activation key changes');
+            }
+        });
+}
+
+async function copyActivationKey() {
+    const keyElement = document.getElementById('activation-key-display');
+    if (!keyElement) return;
+    
+    try {
+        await navigator.clipboard.writeText(keyElement.textContent);
+        
+        const copyBtn = document.querySelector('.copy-key-btn');
+        if (copyBtn) {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '✅';
+            copyBtn.style.background = '#22c55e';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = '#3b82f6';
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Failed to copy activation key:', error);
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = keyElement.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            const copyBtn = document.querySelector('.copy-key-btn');
+            if (copyBtn) {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '✅';
+                copyBtn.style.background = '#22c55e';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '#3b82f6';
+                }, 2000);
+            }
+        } catch (fallbackError) {
+            alert('Kunne ikke kopiere nøkkel. Prøv å velge og kopiere manuelt.');
+        }
+    }
+}
+
+async function regenerateActivationKey() {
+    const regenBtn = document.getElementById('regen-btn');
+    const cooldownMsg = document.getElementById('regen-cooldown-msg');
+    
     if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
         alert('Feil: Ingen gyldig bruker funnet');
         return;
     }
+    
+    const confirmed = confirm(
+        '⚠️ Er du sikker?\n\n' +
+        'Dette vil:\n' +
+        '• Generere en ny aktiverings nøkkel\n' +
+        '• Gjøre din gamle nøkkel ugyldig\n' +
+        '• Deaktivere programmet ditt (må aktiveres på nytt)\n\n' +
+        'Fortsett?'
+    );
+    
+    if (!confirmed) return;
+    
+    regenBtn.disabled = true;
+    regenBtn.textContent = '⏳ Genererer...';
+    cooldownMsg.style.display = 'none';
+    
+    try {
+        const { data, error } = await supabase.rpc('regenerate_activation_key', {
+            p_user_email: currentUserEmail
+        });
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+            const result = data[0];
+            
+            if (result.success) {
+                userActivationData = {
+                    activation_key: result.new_key,
+                    is_activated: false,
+                    activated_at: null
+                };
+                
+                updateActivationStatusUI(userActivationData);
+                
+                alert(
+                    '✅ Ny aktiverings nøkkel generert!\n\n' +
+                    'Din nye nøkkel: ' + result.new_key + '\n\n' +
+                    'Bruk denne i AkademiTrack programmet for å aktivere kontoen din på nytt. Nøkkelen her vises også på nettsiden, altså du kan kopiere den derfra.'
+                );
+                
+                const keyContainer = document.getElementById('activation-key-container');
+                if (keyContainer) {
+                    keyContainer.style.animation = 'none';
+                    setTimeout(() => {
+                        keyContainer.style.animation = 'flash 0.5s ease-in-out 3';
+                    }, 10);
+                }
+                
+            } else {
+                if (result.cooldown_remaining > 0) {
+                    cooldownMsg.textContent = `⏱️ ${result.message}. Prøv igjen om ${result.cooldown_remaining} minutter.`;
+                    cooldownMsg.style.display = 'block';
+                } else {
+                    cooldownMsg.textContent = `⚠️ ${result.message}`;
+                    cooldownMsg.style.display = 'block';
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error regenerating activation key:', error);
+        alert('Feil ved generering av ny nøkkel. Prøv igjen senere eller kontakt support.');
+    } finally {
+        regenBtn.disabled = false;
+        regenBtn.textContent = '🔄 Generer ny nøkkel';
+    }
+}
 
-    const exportBtn = event.target;
-    exportBtn.disabled = true;
-    exportBtn.textContent = format === 'json' ? '⏳ Eksporterer JSON...' : '⏳ Eksporterer CSV...';
+// ============================================
+// STU DATA MANAGEMENT
+// ============================================
+
+async function fetchSTUData(userEmail) {
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            console.error('Invalid email provided to fetchSTUData');
+            return { sessions: 0, totalHours: 0 };
+        }
+
+        console.log('Fetching STU data for user:', userEmail);
+
+        const { data, error } = await supabase
+            .from('stu_registrations')
+            .select('*')
+            .eq('user_email', userEmail)
+            .order('session_date', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching STU data:', error);
+            return { sessions: 0, totalHours: 0 };
+        }
+
+        console.log('Raw STU data from database:', data);
+
+        if (!data || data.length === 0) {
+            console.log('No STU sessions found for user:', userEmail);
+            return { sessions: 0, totalHours: 0 };
+        }
+
+        const totalHours = (data.length * 0.75).toFixed(2);
+
+        console.log('Calculated stats:', {
+            totalHours,
+            sessions: data.length
+        });
+
+        return {
+            sessions: Math.min(data.length, 99999),
+            totalHours: parseFloat(totalHours)
+        };
+    } catch (error) {
+        console.error('Error in fetchSTUData:', error);
+        return { sessions: 0, totalHours: 0 };
+    }
+}
+
+function updateSTUStats(sessions, totalHours) {
+    if (sessions === undefined && allSTUData) {
+        sessions = allSTUData.length;
+    }
+    if (totalHours === undefined) {
+        totalHours = (sessions * 0.75).toFixed(2);
+    }
+
+    const dashboardSessionsElement = document.getElementById('stu-sessions-count');
+    const dashboardHoursElement = document.getElementById('stu-hours-total');
+    
+    if (dashboardSessionsElement) {
+        dashboardSessionsElement.textContent = sessions.toString();
+    }
+    if (dashboardHoursElement) {
+        dashboardHoursElement.textContent = totalHours.toString();
+    }
+
+    const managerSessionsElement = document.getElementById('total-sessions');
+    const managerHoursElement = document.getElementById('total-hours');
+    
+    if (managerSessionsElement) {
+        managerSessionsElement.textContent = sessions.toString();
+    }
+    if (managerHoursElement) {
+        managerHoursElement.textContent = totalHours.toString();
+    }
+
+    if (dashboardSessionsElement) {
+        const card = dashboardSessionsElement.parentElement;
+        if (card) card.classList.remove('stat-loading');
+    }
+    if (dashboardHoursElement) {
+        const card = dashboardHoursElement.parentElement;
+        if (card) card.classList.remove('stat-loading');
+    }
+}
+
+function openSTUManager() {
+    const overlay = document.getElementById('stu-manager-overlay');
+    if (overlay) {
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        loadSTUData();
+    }
+}
+
+function closeSTUManager() {
+    const overlay = document.getElementById('stu-manager-overlay');
+    if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+async function loadSTUData() {
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        showModal({
+            title: 'Feil',
+            message: 'Ingen gyldig bruker funnet',
+            type: 'error',
+            icon: '❌'
+        });
+        return;
+    }
+
+    const listContainer = document.getElementById('stu-list');
+    listContainer.innerHTML = '<div class="loading">⏳ Laster data...</div>';
 
     try {
-        // Fetch all user data from different tables
-        const [profileData, activationData, stuData, chatData, privacyData] = await Promise.all([
-            // User profile
-            supabase.from('user_profiles').select('*').eq('user_email', currentUserEmail),
-            // Activation keys
-            supabase.from('activation_keys').select('*').eq('user_email', currentUserEmail),
-            // STU registrations
-            supabase.from('stu_registrations').select('*').eq('user_email', currentUserEmail),
-            // Chat conversations and messages
-            supabase.from('chat_conversations').select(`
-                *,
-                messages:chat_messages(*)
-            `).eq('user_email', currentUserEmail),
-            // Privacy preferences (if exists)
-            supabase.from('user_profiles').select('privacy_policy_accepted, terms_of_use_accepted, privacy_policy_version, terms_of_use_version').eq('user_email', currentUserEmail).single()
-        ]);
+        console.log('Fetching STU data for user:', currentUserEmail);
 
-        // Combine all data
-        const userData = {
-            export_date: new Date().toISOString(),
-            user_email: currentUserEmail,
-            profile: profileData.data || [],
-            activation_keys: activationData.data || [],
-            stu_registrations: stuData.data || [],
-            chat_data: chatData.data || [],
-            privacy_preferences: privacyData.data || null
-        };
+        const { data, error } = await supabase
+            .from('stu_registrations')
+            .select('*')
+            .eq('user_email', currentUserEmail)
+            .order('session_date', { ascending: false })
+            .order('session_start', { ascending: false });
 
-        if (format === 'json') {
-            exportAsJSON(userData);
+        if (error) {
+            console.error('Supabase error:', error);
+            throw error;
+        }
+
+        console.log('Raw STU data from database:', data);
+        
+        allSTUData = data || [];
+        updateSTUStats();
+        renderSTUList(allSTUData);
+
+    } catch (error) {
+        console.error('Error loading STU data:', error);
+        listContainer.innerHTML = '<div class="no-data">❌ Kunne ikke laste data</div>';
+        showModal({
+            title: 'Feil',
+            message: 'Kunne ikke laste STU-data. Prøv igjen senere.',
+            type: 'error',
+            icon: '❌'
+        });
+    }
+}
+
+function renderSTUList(data) {
+    const listContainer = document.getElementById('stu-list');
+
+    if (!data || data.length === 0) {
+        listContainer.innerHTML = '<div class="no-data">📭 Ingen STU-registreringer funnet</div>';
+        return;
+    }
+
+    listContainer.innerHTML = data.map(session => {
+        const sessionDate = new Date(session.session_date);
+        const formattedDate = sessionDate.toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        const sessionStart = session.session_start || '00:00:00';
+        const [hours, minutes] = sessionStart.split(':');
+        const formattedTime = `${hours}:${minutes}`;
+        
+        let durationText = 'Ukjent';
+        let durationHoursDecimal = 0;
+        
+        if (session.session_start && session.session_end) {
+            const startTime = new Date(`1970-01-01 ${session.session_start}`);
+            const endTime = new Date(`1970-01-01 ${session.session_end}`);
+            const diffMinutes = (endTime - startTime) / (1000 * 60);
+            
+            if (diffMinutes > 0) {
+                const durationHours = Math.floor(diffMinutes / 60);
+                const durationMins = Math.floor(diffMinutes % 60);
+                
+                durationHoursDecimal = (diffMinutes / 60).toFixed(2);
+                
+                durationText = durationHours > 0 
+                    ? `${durationHours}t ${durationMins}m (${durationHoursDecimal}t)` 
+                    : `${durationMins}m (${durationHoursDecimal}t)`;
+            }
+        }
+
+        return `
+            <div class="stu-item" data-id="${session.id}">
+                <div class="stu-item-info">
+                    <div class="stu-item-date">📅 ${formattedDate}</div>
+                    <div class="stu-item-details">
+                        🕐 Starttid: <span class="stu-item-time">${formattedTime}</span> • 
+                        ⏱️ Varighet: <span class="stu-item-time">${durationText}</span>
+                        ${session.course_name ? ` • 📚 Fag: ${session.course_name}` : ''}
+                    </div>
+                </div>
+                <div class="stu-item-actions">
+                    <button class="delete-stu-btn" onclick="deleteSingleSTU('${session.id}')">
+                        🗑️ Slett
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterSTUData() {
+    const searchTerm = document.getElementById('stu-search').value.toLowerCase();
+    
+    if (!searchTerm) {
+        renderSTUList(allSTUData);
+        return;
+    }
+
+    const filtered = allSTUData.filter(session => {
+        const sessionDate = new Date(session.session_date).toLocaleDateString('nb-NO');
+        const sessionStart = session.session_start || '';
+        const courseName = session.course_name || '';
+
+        return sessionDate.toLowerCase().includes(searchTerm) ||
+               sessionStart.includes(searchTerm) ||
+               courseName.toLowerCase().includes(searchTerm);
+    });
+
+    renderSTUList(filtered);
+}
+
+async function deleteSingleSTU(sessionId) {
+    showModal({
+        title: 'Bekreft sletting',
+        message: 'Er du sikker på at du vil slette denne STU-registreringen?<br><br><strong>Dette kan ikke angres!</strong>',
+        type: 'confirm',
+        icon: '⚠️',
+        confirmText: 'Ja, slett',
+        cancelText: 'Avbryt',
+        onConfirm: async () => {
+            try {
+                console.log('Attempting to delete session:', sessionId);
+                console.log('For user:', currentUserEmail);
+
+                const { data, error } = await supabase
+                    .from('stu_registrations')
+                    .delete()
+                    .eq('id', sessionId)
+                    .eq('user_email', currentUserEmail)
+                    .select();
+
+                if (error) {
+                    console.error('Supabase delete error:', error);
+                    throw error;
+                }
+
+                console.log('Delete successful. Deleted rows:', data);
+
+                allSTUData = allSTUData.filter(session => session.id !== sessionId);
+
+                updateSTUStats();
+                renderSTUList(allSTUData);
+
+                showModal({
+                    title: 'Slettet!',
+                    message: 'STU-registreringen er permanent slettet',
+                    type: 'success',
+                    icon: '✅'
+                });
+
+            } catch (error) {
+                console.error('Error deleting STU session:', error);
+
+                showModal({
+                    title: 'Feil ved sletting',
+                    message: `Kunne ikke slette registreringen.<br><br>Feil: ${error.message}`,
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
+        }
+    });
+}
+
+async function deleteAllSTUData() {
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        showModal({
+            title: 'Feil',
+            message: 'Ingen gyldig bruker funnet',
+            type: 'error',
+            icon: '❌'
+        });
+        return;
+    }
+
+    if (allSTUData.length === 0) {
+        showModal({
+            title: 'Ingen data',
+            message: 'Du har ingen STU-registreringer å slette',
+            type: 'info',
+            icon: 'ℹ️'
+        });
+        return;
+    }
+
+    const totalHours = (allSTUData.length * 0.75).toFixed(2);
+
+    showModal({
+        title: '⚠️ ADVARSEL: Slett alle STU-data',
+        message: `Du er i ferd med å slette <strong>${allSTUData.length} STU-registreringer</strong> (totalt ${totalHours} timer).<br><br>
+                  <strong style="color: #ff6b6b;">DETTE KAN IKKE ANGRES!</strong><br><br>
+                  Skriv <strong>"SLETT ALLE"</strong> for å bekrefte:`,
+        type: 'confirm',
+        icon: '🗑️',
+        input: { 
+            type: 'text', 
+            placeholder: 'Skriv: SLETT ALLE',
+            maxlength: '11'
+        },
+        confirmText: 'Slett alle permanent',
+        cancelText: 'Avbryt',
+        onConfirm: async (confirmText) => {
+            if (confirmText !== 'SLETT ALLE') {
+                showModal({
+                    title: 'Feil bekreftelse',
+                    message: 'Du må skrive "SLETT ALLE" nøyaktig for å bekrefte',
+                    type: 'error',
+                    icon: '❌'
+                });
+                return;
+            }
+
+            try {
+                console.log('Deleting all STU data for user:', currentUserEmail);
+
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError || !user) {
+                    console.error('Auth error:', authError);
+                    throw new Error('Ikke autentisert');
+                }
+
+                console.log('Auth user email:', user.email);
+
+                const { data, error, count } = await supabase
+                    .from('stu_registrations')
+                    .delete({ count: 'exact' })
+                    .eq('user_email', user.email)
+                    .select();
+
+                if (error) {
+                    console.error('Error deleting all:', error);
+                    throw error;
+                }
+
+                console.log('Deleted rows:', data, 'Count:', count);
+
+                if (!data || data.length === 0) {
+                    throw new Error('Ingen rader ble slettet. Sjekk RLS policies.');
+                }
+
+                showModal({
+                    title: 'Alle data slettet',
+                    message: `${data.length} STU-registreringer (${totalHours} timer) er permanent slettet i henhold til GDPR`,
+                    type: 'success',
+                    icon: '✅'
+                });
+
+                await loadSTUData();
+
+            } catch (error) {
+                console.error('Error deleting all STU data:', error);
+                showModal({
+                    title: 'Feil',
+                    message: `Kunne ikke slette alle registreringer.<br><br>Feil: ${error.message}<br><br>Dette kan være et RLS policy problem.`,
+                    type: 'error',
+                    icon: '❌'
+                });
+            }
+        }
+    });
+}
+
+// ============================================
+// CHAT SYSTEM
+// ============================================
+
+async function checkAdminStatus() {
+    try {
+        const { data: adminStatus, error } = await supabase
+            .from('admin_status')
+            .select('is_online')
+            .eq('admin_email', 'cyberbrothershq@gmail.com')
+            .single();
+
+        if (error) {
+            console.log('Admin status not found or error:', error);
+            isAdminOnline = false;
         } else {
-            exportAsCSV(userData);
+            isAdminOnline = adminStatus?.is_online || false;
+        }
+        
+        updateAdminStatusUI(isAdminOnline);
+        
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        isAdminOnline = false;
+        updateAdminStatusUI(false);
+    }
+}
+
+function updateAdminStatusUI(isOnline) {
+    const statusIndicator = document.getElementById('admin-status');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('chat-status-text');
+
+    if (statusIndicator) {
+        if (isOnline) {
+            statusIndicator.classList.add('online');
+            statusIndicator.classList.remove('offline');
+        } else {
+            statusIndicator.classList.add('offline');
+            statusIndicator.classList.remove('online');
+        }
+    }
+
+    if (statusDot) {
+        if (isOnline) {
+            statusDot.classList.remove('offline');
+        } else {
+            statusDot.classList.add('offline');
+        }
+    }
+
+    if (statusText) {
+        statusText.textContent = isOnline ? 'Admin er online' : 'Admin er offline';
+    }
+}
+
+function subscribeToAdminStatus() {
+    supabase
+        .channel('admin-status')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'admin_status',
+            filter: 'admin_email=eq.cyberbrothershq@gmail.com'
+        }, (payload) => {
+            isAdminOnline = payload.new.is_online;
+            updateAdminStatusUI(isAdminOnline);
+        })
+        .subscribe();
+}
+
+function toggleChat() {
+    const chatWidget = document.getElementById('chat-widget');
+    const isOpen = chatWidget.classList.contains('open');
+    
+    if (isOpen) {
+        chatWidget.classList.remove('open');
+        if (messagesSubscription) {
+            supabase.removeChannel(messagesSubscription);
+            messagesSubscription = null;
+        }
+    } else {
+        chatWidget.classList.add('open');
+        initializeChat();
+    }
+}
+
+async function initializeChat() {
+    const messageTypeSelect = document.getElementById('message-type');
+    const currentMessageType = messageTypeSelect ? messageTypeSelect.value : 'support';
+    
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        console.error('No valid user email available');
+        return;
+    }
+    
+    try {
+        await getOrCreateConversation(currentUserEmail, currentMessageType);
+        await loadMessages();
+        subscribeToMessages();
+        
+    } catch (error) {
+        console.error('Error initializing chat:', error);
+    }
+}
+
+async function getOrCreateConversation(userEmail, messageType = 'support') {
+    try {
+        if (!userEmail || !isValidEmail(userEmail)) {
+            throw new Error('Invalid email provided');
+        }
+
+        const validMessageTypes = ['support', 'feedback', 'feature', 'bug', 'other'];
+        const validatedMessageType = validMessageTypes.includes(messageType) ? messageType : 'support';
+
+        if (conversationsByType[validatedMessageType]) {
+            currentConversationId = conversationsByType[validatedMessageType];
+            return;
+        }
+
+        let { data: conversations, error } = await supabase
+            .from('chat_conversations')
+            .select('*')
+            .eq('user_email', userEmail)
+            .eq('message_type', validatedMessageType)
+            .eq('status', 'open')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        if (error) throw error;
+
+        if (conversations && conversations.length > 0) {
+            currentConversationId = conversations[0].id;
+            conversationsByType[validatedMessageType] = currentConversationId;
+        } else {
+            const { data: newConversation, error: createError } = await supabase
+                .from('chat_conversations')
+                .insert([{
+                    user_email: userEmail,
+                    message_type: validatedMessageType,
+                    status: 'open'
+                }])
+                .select()
+                .single();
+
+            if (createError) throw createError;
+            currentConversationId = newConversation.id;
+            conversationsByType[validatedMessageType] = currentConversationId;
+        }
+    } catch (error) {
+        console.error('Error managing conversation:', error);
+    }
+}
+
+async function loadMessages() {
+    if (!currentConversationId) return;
+
+    try {
+        const { data: messages, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('conversation_id', currentConversationId)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        const messagesContainer = document.getElementById('chat-messages');
+        if (!messagesContainer) return;
+        
+        messagesContainer.innerHTML = '';
+
+        if (messages && messages.length > 0) {
+            messages.forEach(message => {
+                displayMessage(message);
+            });
+        } else {
+            messagesContainer.innerHTML = `
+                <div class="welcome-message">
+                    <p><strong>Velkommen til AkademiTrack Support!</strong></p>
+                    <p>Har du spørsmål eller trenger hjelp? Send oss en melding så hjelper vi deg så snart som mulig.</p>
+                </div>
+            `;
+        }
+
+        scrollToBottom();
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+function subscribeToMessages() {
+    if (!currentConversationId) return;
+
+    messagesSubscription = supabase
+        .channel('messages')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `conversation_id=eq.${currentConversationId}`
+        }, (payload) => {
+            displayMessage(payload.new);
+            scrollToBottom();
+        })
+        .subscribe();
+}
+
+function displayMessage(message) {
+    if (!message || !message.message_text) return;
+    
+    const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
+    
+    const messageElement = document.createElement('div');
+    
+    const validSenderTypes = ['user', 'admin'];
+    const senderType = validSenderTypes.includes(message.sender_type) ? message.sender_type : 'user';
+    
+    messageElement.className = `message ${senderType}`;
+    
+    const time = new Date(message.created_at).toLocaleTimeString('no-NO', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const messageBubble = document.createElement('div');
+    messageBubble.className = 'message-bubble';
+    messageBubble.textContent = message.message_text;
+    
+    const messageTime = document.createElement('div');
+    messageTime.className = 'message-time';
+    messageTime.textContent = time;
+    
+    messageElement.appendChild(messageBubble);
+    messageElement.appendChild(messageTime);
+
+    const welcomeMessage = messagesContainer.querySelector('.welcome-message');
+    if (welcomeMessage) {
+        welcomeMessage.remove();
+    }
+
+    messagesContainer.appendChild(messageElement);
+}
+
+function scrollToBottom() {
+    const messagesContainer = document.getElementById('chat-messages');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+}
+
+// ============================================
+// SETTINGS & ACCOUNT MANAGEMENT
+// ============================================
+
+function openSettings() {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) {
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        loadUserPreferences();
+    }
+}
+
+function closeSettings() {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function loadUserPreferences() {
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        return;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('display_name, data_retention_consent, analytics_consent')
+            .eq('user_email', currentUserEmail)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Error loading preferences:', error);
+            return;
+        }
+
+        if (data) {
+            const displayNameInput = document.getElementById('display-name-input');
+            if (displayNameInput && data.display_name) {
+                displayNameInput.value = data.display_name;
+            }
+
+            const emailInput = document.getElementById('email-input');
+            if (emailInput) {
+                emailInput.value = currentUserEmail;
+            }
+
+            const dataRetentionCheckbox = document.getElementById('data-retention-consent');
+            if (dataRetentionCheckbox) {
+                dataRetentionCheckbox.checked = data.data_retention_consent || false;
+            }
+
+            const analyticsCheckbox = document.getElementById('analytics-consent');
+            if (analyticsCheckbox) {
+                analyticsCheckbox.checked = data.analytics_consent || false;
+            }
         }
 
     } catch (error) {
-        console.error('Error exporting user data:', error);
-        alert('Feil ved eksport av data. Prøv igjen senere.');
-    } finally {
-        exportBtn.disabled = false;
-        exportBtn.textContent = format === 'json' ? '📄 Last ned som JSON' : '📊 Last ned som CSV';
+        console.error('Error in loadUserPreferences:', error);
     }
 }
-
-function exportAsJSON(data) {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `akademitrack-data-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
-
-function exportAsCSV(data) {
-    let csvContent = '';
-
-    // Profile section
-    csvContent += 'PROFIL INFORMASJON\n';
-    if (data.profile && data.profile.length > 0) {
-        const profile = data.profile[0];
-        csvContent += 'Felt,Verdi\n';
-        Object.entries(profile).forEach(([key, value]) => {
-            csvContent += `${key},"${value}"\n`;
-        });
-    }
-    csvContent += '\n';
-
-    // Activation keys
-    csvContent += 'AKTIVERINGSNØKLER\n';
-    if (data.activation_keys && data.activation_keys.length > 0) {
-        const keys = Object.keys(data.activation_keys[0]);
-        csvContent += keys.join(',') + '\n';
-        data.activation_keys.forEach(row => {
-            csvContent += keys.map(key => `"${row[key]}"`).join(',') + '\n';
-        });
-    }
-    csvContent += '\n';
-
-    // STU Registrations
-    csvContent += 'STU REGISTRERINGER\n';
-    if (data.stu_registrations && data.stu_registrations.length > 0) {
-        const keys = Object.keys(data.stu_registrations[0]);
-        csvContent += keys.join(',') + '\n';
-        data.stu_registrations.forEach(row => {
-            csvContent += keys.map(key => `"${row[key]}"`).join(',') + '\n';
-        });
-    }
-    csvContent += '\n';
-
-    // Chat data summary
-    csvContent += 'CHAT SAMTALER\n';
-    csvContent += `Antall samtaler,${data.chat_data.length}\n`;
-    data.chat_data.forEach((conv, idx) => {
-        csvContent += `\nSamtale ${idx + 1}\n`;
-        csvContent += `Type,${conv.message_type}\n`;
-        csvContent += `Status,${conv.status}\n`;
-        csvContent += `Opprettet,${conv.created_at}\n`;
-        if (conv.messages && conv.messages.length > 0) {
-            csvContent += `Antall meldinger,${conv.messages.length}\n`;
-        }
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `akademitrack-data-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
-
-
-// ============================================
-// UPDATED FUNCTIONS WITH BEAUTIFUL MODALS
-// ============================================
 
 async function updateDisplayName() {
     const input = document.getElementById('display-name-input');
@@ -3292,7 +2995,6 @@ async function updateDisplayName() {
 
         if (error) throw error;
 
-        // Update UI
         const userEmailElement = document.getElementById('user-email');
         const userAvatar = document.getElementById('user-avatar');
         
@@ -3377,7 +3079,6 @@ async function updateEmail(event) {
             saveBtn.textContent = '⏳ Sender...';
 
             try {
-                // Store old email in metadata
                 const { error: metadataError } = await supabase.auth.updateUser({
                     data: { 
                         old_email_for_update: user.email,
@@ -3436,11 +3137,6 @@ async function updateEmail(event) {
     });
 }
 
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
 async function changePassword() {
     showModal({
         title: 'Endre passord',
@@ -3481,7 +3177,6 @@ async function verifyCurrentPassword() {
                     return;
                 }
 
-                // Password verified, ask for new password
                 promptNewPassword(currentPassword);
 
             } catch (error) {
@@ -3628,395 +3323,6 @@ async function resetPasswordFlow() {
     });
 }
 
-// ============================================
-// LOAD USER PREFERENCES ON SETTINGS OPEN
-// ============================================
-
-async function loadUserPreferences() {
-    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('user_profiles')
-            .select('display_name, data_retention_consent, analytics_consent')
-            .eq('user_email', currentUserEmail)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error loading preferences:', error);
-            return;
-        }
-
-        if (data) {
-            const displayNameInput = document.getElementById('display-name-input');
-            if (displayNameInput && data.display_name) {
-                displayNameInput.value = data.display_name;
-            }
-
-            const emailInput = document.getElementById('email-input');
-            if (emailInput) {
-                emailInput.value = currentUserEmail;
-            }
-
-            const dataRetentionCheckbox = document.getElementById('data-retention-consent');
-            if (dataRetentionCheckbox) {
-                dataRetentionCheckbox.checked = data.data_retention_consent || false;
-            }
-
-            const analyticsCheckbox = document.getElementById('analytics-consent');
-            if (analyticsCheckbox) {
-                analyticsCheckbox.checked = data.analytics_consent || false;
-            }
-        }
-
-    } catch (error) {
-        console.error('Error in loadUserPreferences:', error);
-    }
-}
-
-function openSettings() {
-    const overlay = document.getElementById('settings-overlay');
-    if (overlay) {
-        overlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        loadUserPreferences();
-    }
-}
-
-
-// ============================================
-// STU DATA MANAGER FUNCTIONS (GDPR COMPLIANT)
-// ============================================
-
-let allSTUData = [];
-
-function openSTUManager() {
-    const overlay = document.getElementById('stu-manager-overlay');
-    if (overlay) {
-        overlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        loadSTUData();
-    }
-}
-
-function closeSTUManager() {
-    const overlay = document.getElementById('stu-manager-overlay');
-    if (overlay) {
-        overlay.classList.remove('open');
-        document.body.style.overflow = '';
-    }
-}
-
-async function loadSTUData() {
-    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        showModal({
-            title: 'Feil',
-            message: 'Ingen gyldig bruker funnet',
-            type: 'error',
-            icon: '❌'
-        });
-        return;
-    }
-
-    const listContainer = document.getElementById('stu-list');
-    listContainer.innerHTML = '<div class="loading">⏳ Laster data...</div>';
-
-    try {
-        console.log('Fetching STU data for user:', currentUserEmail);
-
-        const { data, error } = await supabase
-            .from('stu_registrations')
-            .select('*')
-            .eq('user_email', currentUserEmail)
-            .order('session_date', { ascending: false })
-            .order('session_start', { ascending: false });
-
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
-        }
-
-        console.log('Raw STU data from database:', data);
-        
-        allSTUData = data || [];
-        updateSTUStats();
-        renderSTUList(allSTUData);
-
-    } catch (error) {
-        console.error('Error loading STU data:', error);
-        listContainer.innerHTML = '<div class="no-data">❌ Kunne ikke laste data</div>';
-        showModal({
-            title: 'Feil',
-            message: 'Kunne ikke laste STU-data. Prøv igjen senere.',
-            type: 'error',
-            icon: '❌'
-        });
-    }
-}
-
-function renderSTUList(data) {
-    const listContainer = document.getElementById('stu-list');
-
-    if (!data || data.length === 0) {
-        listContainer.innerHTML = '<div class="no-data">📭 Ingen STU-registreringer funnet</div>';
-        return;
-    }
-
-    listContainer.innerHTML = data.map(session => {
-        // Format session date
-        const sessionDate = new Date(session.session_date);
-        const formattedDate = sessionDate.toLocaleDateString('nb-NO', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        // Format session time (session_start)
-        const sessionStart = session.session_start || '00:00:00';
-        const [hours, minutes] = sessionStart.split(':');
-        const formattedTime = `${hours}:${minutes}`;
-        
-        // Calculate duration from session_start and session_end
-        let durationText = 'Ukjent';
-        let durationHoursDecimal = 0;
-        
-        if (session.session_start && session.session_end) {
-            const startTime = new Date(`1970-01-01 ${session.session_start}`);
-            const endTime = new Date(`1970-01-01 ${session.session_end}`);
-            const diffMinutes = (endTime - startTime) / (1000 * 60);
-            
-            if (diffMinutes > 0) {
-                const durationHours = Math.floor(diffMinutes / 60);
-                const durationMins = Math.floor(diffMinutes % 60);
-                
-                // Calculate decimal hours for display
-                durationHoursDecimal = (diffMinutes / 60).toFixed(2);
-                
-                // Show both formats
-                durationText = durationHours > 0 
-                    ? `${durationHours}t ${durationMins}m (${durationHoursDecimal}t)` 
-                    : `${durationMins}m (${durationHoursDecimal}t)`;
-            }
-        }
-
-        return `
-            <div class="stu-item" data-id="${session.id}">
-                <div class="stu-item-info">
-                    <div class="stu-item-date">📅 ${formattedDate}</div>
-                    <div class="stu-item-details">
-                        🕐 Starttid: <span class="stu-item-time">${formattedTime}</span> • 
-                        ⏱️ Varighet: <span class="stu-item-time">${durationText}</span>
-                        ${session.course_name ? ` • 📚 Fag: ${session.course_name}` : ''}
-                    </div>
-                </div>
-                <div class="stu-item-actions">
-                    <button class="delete-stu-btn" onclick="deleteSingleSTU('${session.id}')">
-                        🗑️ Slett
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function filterSTUData() {
-    const searchTerm = document.getElementById('stu-search').value.toLowerCase();
-    
-    if (!searchTerm) {
-        renderSTUList(allSTUData);
-        return;
-    }
-
-    const filtered = allSTUData.filter(session => {
-        const sessionDate = new Date(session.session_date).toLocaleDateString('nb-NO');
-        const sessionStart = session.session_start || '';
-        const courseName = session.course_name || '';
-
-        return sessionDate.toLowerCase().includes(searchTerm) ||
-               sessionStart.includes(searchTerm) ||
-               courseName.toLowerCase().includes(searchTerm);
-    });
-
-    renderSTUList(filtered);
-}
-
-async function deleteSingleSTU(sessionId) {
-    showModal({
-        title: 'Bekreft sletting',
-        message: 'Er du sikker på at du vil slette denne STU-registreringen?<br><br><strong>Dette kan ikke angres!</strong>',
-        type: 'confirm',
-        icon: '⚠️',
-        confirmText: 'Ja, slett',
-        cancelText: 'Avbryt',
-        onConfirm: async () => {
-            try {
-                console.log('Attempting to delete session:', sessionId);
-                console.log('For user:', currentUserEmail);
-
-                // Delete from database with both id and user_email conditions
-                const { data, error } = await supabase
-                    .from('stu_registrations')
-                    .delete()
-                    .eq('id', sessionId)
-                    .eq('user_email', currentUserEmail)
-                    .select(); // Add select to see what was deleted
-
-                if (error) {
-                    console.error('Supabase delete error:', error);
-                    throw error;
-                }
-
-                console.log('Delete successful. Deleted rows:', data);
-
-                // Remove from local array
-                allSTUData = allSTUData.filter(session => session.id !== sessionId);
-
-                // Update UI
-                updateSTUStats();
-                renderSTUList(allSTUData);
-
-                showModal({
-                    title: 'Slettet!',
-                    message: 'STU-registreringen er permanent slettet',
-                    type: 'success',
-                    icon: '✅'
-                });
-
-            } catch (error) {
-                console.error('Error deleting STU session:', error);
-
-                showModal({
-                    title: 'Feil ved sletting',
-                    message: `Kunne ikke slette registreringen.<br><br>Feil: ${error.message}`,
-                    type: 'error',
-                    icon: '❌'
-                });
-            }
-        }
-    });
-}
-
-async function deleteAllSTUData() {
-    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
-        showModal({
-            title: 'Feil',
-            message: 'Ingen gyldig bruker funnet',
-            type: 'error',
-            icon: '❌'
-        });
-        return;
-    }
-
-    if (allSTUData.length === 0) {
-        showModal({
-            title: 'Ingen data',
-            message: 'Du har ingen STU-registreringer å slette',
-            type: 'info',
-            icon: 'ℹ️'
-        });
-        return;
-    }
-
-    // Each STU session is ALWAYS 45 minutes = 0.75 hours
-    const totalHours = (allSTUData.length * 0.75).toFixed(2);
-
-    showModal({
-        title: '⚠️ ADVARSEL: Slett alle STU-data',
-        message: `Du er i ferd med å slette <strong>${allSTUData.length} STU-registreringer</strong> (totalt ${totalHours} timer).<br><br>
-                  <strong style="color: #ff6b6b;">DETTE KAN IKKE ANGRES!</strong><br><br>
-                  Skriv <strong>"SLETT ALLE"</strong> for å bekrefte:`,
-        type: 'confirm',
-        icon: '🗑️',
-        input: { 
-            type: 'text', 
-            placeholder: 'Skriv: SLETT ALLE',
-            maxlength: '11'
-        },
-        confirmText: 'Slett alle permanent',
-        cancelText: 'Avbryt',
-        onConfirm: async (confirmText) => {
-            if (confirmText !== 'SLETT ALLE') {
-                showModal({
-                    title: 'Feil bekreftelse',
-                    message: 'Du må skrive "SLETT ALLE" nøyaktig for å bekrefte',
-                    type: 'error',
-                    icon: '❌'
-                });
-                return;
-            }
-
-            try {
-                console.log('Deleting all STU data for user:', currentUserEmail);
-
-                const { data: { user }, error: authError } = await supabase.auth.getUser();
-                
-                if (authError || !user) {
-                    console.error('Auth error:', authError);
-                    throw new Error('Ikke autentisert');
-                }
-
-                console.log('Auth user email:', user.email);
-
-                const { data, error, count } = await supabase
-                    .from('stu_registrations')
-                    .delete({ count: 'exact' })
-                    .eq('user_email', user.email)
-                    .select();
-
-                if (error) {
-                    console.error('Error deleting all:', error);
-                    throw error;
-                }
-
-                console.log('Deleted rows:', data, 'Count:', count);
-
-                if (!data || data.length === 0) {
-                    throw new Error('Ingen rader ble slettet. Sjekk RLS policies.');
-                }
-
-                showModal({
-                    title: 'Alle data slettet',
-                    message: `${data.length} STU-registreringer (${totalHours} timer) er permanent slettet i henhold til GDPR`,
-                    type: 'success',
-                    icon: '✅'
-                });
-
-                await loadSTUData();
-
-            } catch (error) {
-                console.error('Error deleting all STU data:', error);
-                showModal({
-                    title: 'Feil',
-                    message: `Kunne ikke slette alle registreringer.<br><br>Feil: ${error.message}<br><br>Dette kan være et RLS policy problem.`,
-                    type: 'error',
-                    icon: '❌'
-                });
-            }
-        }
-    });
-}
-
-// Close STU manager with Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        const stuOverlay = document.getElementById('stu-manager-overlay');
-        if (stuOverlay && stuOverlay.classList.contains('open')) {
-            closeSTUManager();
-        }
-    }
-});
-
-// Close STU manager when clicking outside
-document.addEventListener('click', (e) => {
-    const stuOverlay = document.getElementById('stu-manager-overlay');
-    if (stuOverlay && e.target === stuOverlay) {
-        closeSTUManager();
-    }
-});
-
-
 async function updateDataRetention() {
     const checkbox = document.getElementById('data-retention-consent');
     if (!checkbox || !currentUserEmail) return;
@@ -4040,7 +3346,7 @@ async function updateDataRetention() {
 
     } catch (error) {
         console.error('Error updating data retention:', error);
-        checkbox.checked = !checkbox.checked; // Revert on error
+        checkbox.checked = !checkbox.checked;
     }
 }
 
@@ -4067,16 +3373,504 @@ async function updateAnalyticsConsent() {
 
     } catch (error) {
         console.error('Error updating analytics consent:', error);
-        checkbox.checked = !checkbox.checked; // Revert on error
+        checkbox.checked = !checkbox.checked;
     }
 }
 
-function validateInput(input, maxLength) {
-    if (!input) return '';
-    return input.trim().substring(0, maxLength);
+// ============================================
+// GDPR DATA EXPORT
+// ============================================
+
+async function exportUserData(format) {
+    if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+        alert('Feil: Ingen gyldig bruker funnet');
+        return;
+    }
+
+    const exportBtn = event.target;
+    exportBtn.disabled = true;
+    exportBtn.textContent = format === 'json' ? '⏳ Eksporterer JSON...' : '⏳ Eksporterer CSV...';
+
+    try {
+        const [profileData, activationData, stuData, chatData, privacyData] = await Promise.all([
+            supabase.from('user_profiles').select('*').eq('user_email', currentUserEmail),
+            supabase.from('activation_keys').select('*').eq('user_email', currentUserEmail),
+            supabase.from('stu_registrations').select('*').eq('user_email', currentUserEmail),
+            supabase.from('chat_conversations').select(`
+                *,
+                messages:chat_messages(*)
+            `).eq('user_email', currentUserEmail),
+            supabase.from('user_profiles').select('privacy_policy_accepted, terms_of_use_accepted, privacy_policy_version, terms_of_use_version').eq('user_email', currentUserEmail).single()
+        ]);
+
+        const userData = {
+            export_date: new Date().toISOString(),
+            user_email: currentUserEmail,
+            profile: profileData.data || [],
+            activation_keys: activationData.data || [],
+            stu_registrations: stuData.data || [],
+            chat_data: chatData.data || [],
+            privacy_preferences: privacyData.data || null
+        };
+
+        if (format === 'json') {
+            exportAsJSON(userData);
+        } else {
+            exportAsCSV(userData);
+        }
+
+    } catch (error) {
+        console.error('Error exporting user data:', error);
+        alert('Feil ved eksport av data. Prøv igjen senere.');
+    } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = format === 'json' ? '📄 Last ned som JSON' : '📊 Last ned som CSV';
+    }
 }
 
+function exportAsJSON(data) {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `akademitrack-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
 
+function exportAsCSV(data) {
+    let csvContent = '';
+
+    csvContent += 'PROFIL INFORMASJON\n';
+    if (data.profile && data.profile.length > 0) {
+        const profile = data.profile[0];
+        csvContent += 'Felt,Verdi\n';
+        Object.entries(profile).forEach(([key, value]) => {
+            csvContent += `${key},"${value}"\n`;
+        });
+    }
+    csvContent += '\n';
+
+    csvContent += 'AKTIVERINGSNØKLER\n';
+    if (data.activation_keys && data.activation_keys.length > 0) {
+        const keys = Object.keys(data.activation_keys[0]);
+        csvContent += keys.join(',') + '\n';
+        data.activation_keys.forEach(row => {
+            csvContent += keys.map(key => `"${row[key]}"`).join(',') + '\n';
+        });
+    }
+    csvContent += '\n';
+
+    csvContent += 'STU REGISTRERINGER\n';
+    if (data.stu_registrations && data.stu_registrations.length > 0) {
+        const keys = Object.keys(data.stu_registrations[0]);
+        csvContent += keys.join(',') + '\n';
+        data.stu_registrations.forEach(row => {
+            csvContent += keys.map(key => `"${row[key]}"`).join(',') + '\n';
+        });
+    }
+    csvContent += '\n';
+
+    csvContent += 'CHAT SAMTALER\n';
+    csvContent += `Antall samtaler,${data.chat_data.length}\n`;
+    data.chat_data.forEach((conv, idx) => {
+        csvContent += `\nSamtale ${idx + 1}\n`;
+        csvContent += `Type,${conv.message_type}\n`;
+        csvContent += `Status,${conv.status}\n`;
+        csvContent += `Opprettet,${conv.created_at}\n`;
+        if (conv.messages && conv.messages.length > 0) {
+            csvContent += `Antall meldinger,${conv.messages.length}\n`;
+        }
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `akademitrack-data-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// ============================================
+// ACCOUNT DELETION
+// ============================================
+
+function initiateAccountDeletion() {
+    closeSettings();
+    const confirmationOverlay = document.getElementById('confirmation-overlay');
+    if (confirmationOverlay) {
+        confirmationOverlay.classList.add('open');
+        
+        const confirmInput = document.getElementById('delete-confirmation');
+        if (confirmInput) {
+            confirmInput.value = '';
+            confirmInput.addEventListener('input', handleConfirmationInput);
+        }
+    }
+}
+
+function handleConfirmationInput() {
+    const input = document.getElementById('delete-confirmation');
+    const confirmBtn = document.querySelector('.confirm-delete-btn');
+    
+    if (input && confirmBtn) {
+        if (input.value.toUpperCase() === 'SLETT') {
+            confirmBtn.disabled = false;
+        } else {
+            confirmBtn.disabled = true;
+        }
+    }
+}
+
+function closeConfirmation() {
+    const overlay = document.getElementById('confirmation-overlay');
+    if (overlay) {
+        overlay.classList.remove('open');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+async function confirmAccountDeletion() {
+    const confirmInput = document.getElementById('delete-confirmation');
+    
+    if (!confirmInput || confirmInput.value.toUpperCase() !== 'SLETT') {
+        alert('Vennligst skriv "SLETT" for å bekrefte slettingen.');
+        return;
+    }
+    
+    const confirmBtn = document.querySelector('.confirm-delete-btn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Sletter konto...';
+    }
+    
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            throw new Error('Ingen aktiv sesjon');
+        }
+        
+        console.log('Calling edge function to delete user account...');
+        
+        const { data, error } = await supabase.functions.invoke('delete-user-account', {
+            headers: {
+                Authorization: `Bearer ${session.access_token}`,
+            },
+        });
+        
+        if (error) {
+            console.error('Edge function error:', error);
+            throw error;
+        }
+        
+        if (!data || !data.success) {
+            throw new Error('Failed to delete account');
+        }
+        
+        console.log('Account deleted successfully');
+        
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        alert('Din konto og alle data har blitt permanent slettet. Du kan ikke lenger logge inn med denne e-postadressen.');
+        
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('Error during account deletion:', error);
+        alert('Det oppstod en feil under sletting av kontoen. Kontakt support for hjelp.');
+        
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Slett kontoen min permanent';
+        }
+    }
+}
+
+// ============================================
+// UI EFFECTS
+// ============================================
+
+function handleParallax() {
+    const scrolled = window.pageYOffset;
+    const rate = scrolled * -0.3;
+    
+    const sun = document.querySelector('.sun');
+    const clouds = document.querySelectorAll('.cloud');
+    
+    if (sun) {
+        sun.style.transform = `translateY(${rate * 0.5}px)`;
+    }
+    
+    clouds.forEach((cloud, index) => {
+        const speed = (index + 1) * 0.15;
+        cloud.style.transform = `translateY(${scrolled * speed}px)`;
+    });
+}
+
+function handleScrollAnimations() {
+    const elements = document.querySelectorAll('.fade-in');
+    elements.forEach(element => {
+        const elementTop = element.getBoundingClientRect().top;
+        const windowHeight = window.innerHeight;
+        
+        if (elementTop < windowHeight - 100) {
+            element.classList.add('visible');
+        }
+    });
+}
+
+function handleNavbarShrink() {
+    const navbar = document.querySelector('.navbar');
+    const scrolled = window.pageYOffset;
+    
+    if (navbar) {
+        if (scrolled > 100) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    }
+}
+
+// ============================================
+// APP DOWNLOAD
+// ============================================
+
+const GITHUB_RELEASES = {
+    baseURL: 'https://github.com/CyberGutta/AkademiTrack/releases/latest/download/',
+    files: {
+        windows: 'AkademiTrack-win-Setup.exe',
+        mac: 'AkademiTrack-osx-Setup.pkg',
+        linux: 'AkademiTrack.AppImage'
+    }
+};
+
+function detectOS() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const platform = window.navigator.platform.toLowerCase();
+    
+    if (platform.includes('mac') || userAgent.includes('mac')) {
+        return 'mac';
+    } else if (platform.includes('win') || userAgent.includes('win')) {
+        return 'windows';
+    } else if (platform.includes('linux') || userAgent.includes('linux')) {
+        return 'linux';
+    } else {
+        if (userAgent.includes('mac os x') || userAgent.includes('macintosh')) {
+            return 'mac';
+        } else if (userAgent.includes('windows nt')) {
+            return 'windows';
+        } else {
+            return 'linux';
+        }
+    }
+}
+
+function downloadApp() {
+    const userOS = detectOS();
+    const filename = GITHUB_RELEASES.files[userOS];
+    const downloadURL = GITHUB_RELEASES.baseURL + filename;
+    
+    if (!downloadURL) {
+        alert('Kunne ikke bestemme nedlastingslenke. Prøv å laste siden på nytt.');
+        return;
+    }
+    
+    try {
+        const link = document.createElement('a');
+        link.href = downloadURL;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Download error:', error);
+        alert('Nedlasting feilet. Prøv igjen eller last ned manuelt fra GitHub.');
+    }
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Chat form submission
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('chat-send-btn');
+            const messageType = document.getElementById('message-type');
+            
+            if (!input || !sendBtn || !messageType) return;
+            
+            const messageText = validateInput(input.value, 1000);
+            const selectedMessageType = messageType.value;
+            
+            if (!messageText) {
+                return;
+            }
+            
+            if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+                alert('Feil: Ingen gyldig e-post tilgjengelig. Prøv å laste siden på nytt.');
+                return;
+            }
+            
+            const validMessageTypes = ['support', 'feedback', 'feature', 'bug', 'other'];
+            const validatedMessageType = validMessageTypes.includes(selectedMessageType) ? selectedMessageType : 'other';
+            
+            await getOrCreateConversation(currentUserEmail, validatedMessageType);
+            
+            if (!currentConversationId) {
+                alert('Feil: Ingen samtale ID tilgjengelig. Prøv å lukke og åpne chatten igjen.');
+                return;
+            }
+            
+            sendBtn.disabled = true;
+            
+            try {
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .insert([{
+                        conversation_id: currentConversationId,
+                        sender_email: currentUserEmail,
+                        sender_type: 'user',
+                        message_text: messageText
+                    }]);
+
+                if (error) throw error;
+                
+                input.value = '';
+                input.style.height = 'auto';
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Feil ved sending av melding. Prøv igjen.');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        });
+    }
+
+    // Message type selector change
+    const messageTypeSelect = document.getElementById('message-type');
+    if (messageTypeSelect) {
+        messageTypeSelect.addEventListener('change', async function() {
+            if (!currentUserEmail || !isValidEmail(currentUserEmail)) {
+                return;
+            }
+
+            const selectedMessageType = this.value;
+            
+            try {
+                if (messagesSubscription) {
+                    supabase.removeChannel(messagesSubscription);
+                    messagesSubscription = null;
+                }
+                
+                await getOrCreateConversation(currentUserEmail, selectedMessageType);
+                await loadMessages();
+                subscribeToMessages();
+                
+            } catch (error) {
+                console.error('Error switching message type:', error);
+            }
+        });
+    }
+
+    // Auto-resize textarea
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('input', function() {
+            if (this.value.length > 1000) {
+                this.value = this.value.slice(0, 1000);
+            }
+            
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+        });
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function(event) {
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const confirmationOverlay = document.getElementById('confirmation-overlay');
+        const stuOverlay = document.getElementById('stu-manager-overlay');
+        
+        if (event.target === settingsOverlay) {
+            closeSettings();
+        }
+        
+        if (event.target === confirmationOverlay) {
+            closeConfirmation();
+        }
+
+        if (event.target === stuOverlay) {
+            closeSTUManager();
+        }
+    });
+
+    // Escape key handlers
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const stuOverlay = document.getElementById('stu-manager-overlay');
+            if (stuOverlay && stuOverlay.classList.contains('open')) {
+                closeSTUManager();
+            }
+        }
+    });
+
+    // Initialize
+    checkAuth();
+    handleScrollAnimations();
+    handleParallax();
+});
+
+// Scroll event listeners with throttling
+let ticking = false;
+function requestTick() {
+    if (!ticking) {
+        requestAnimationFrame(() => {
+            handleScrollAnimations();
+            handleParallax();
+            handleNavbarShrink();
+            ticking = false;
+        });
+        ticking = true;
+    }
+}
+
+window.addEventListener('scroll', requestTick);
+
+// Auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+        window.location.href = '/';
+    }
+});
+
+// Periodic admin status check
+setInterval(checkAdminStatus, 60000);
+
+// Add flash animation for activation key
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes flash {
+        0%, 100% { background: #f8fafc; }
+        50% { background: #fef3c7; }
+    }
+`;
+document.head.appendChild(style);
     </script>
 </body>
 </html>

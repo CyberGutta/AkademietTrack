@@ -336,341 +336,533 @@
 </html>
 
     <script>
-        const SUPABASE_URL = 'https://eghxldvyyioolnithndr.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k';
-        const PRIVACY_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json';
-        const TERMS_JSON_URL = 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/terms-of-use.json';
+// ============================================
+// CONFIGURATION
+// ============================================
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CONFIG = {
+    SUPABASE_URL: 'https://eghxldvyyioolnithndr.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnaHhsZHZ5eWlvb2xuaXRobmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc2NjAyNzYsImV4cCI6MjA3MzIzNjI3Nn0.NAP799HhYrNkKRpSzXFXT0vyRd_OD-hkW8vH4VbOE8k',
+    PRIVACY_JSON_URL: 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/privacy-policy.json',
+    TERMS_JSON_URL: 'https://raw.githubusercontent.com/CyberGutta/AkademietTrack/main/terms-of-use.json',
+    ADMIN_EMAIL: 'cyberbrothershq@gmail.com'
+};
 
-        let currentPrivacyPolicy = null;
-        let currentTermsOfUse = null;
-        let userProfile = null;
-        let isReturningUser = false;
-        let hasPrivacyUpdate = false;
-        let hasTermsUpdate = false;
+// ============================================
+// STATE MANAGEMENT
+// ============================================
 
-        const privacyCheckbox = document.getElementById('privacy-checkbox');
-        const termsCheckbox = document.getElementById('terms-checkbox');
-        const acceptButton = document.getElementById('accept-button');
-        const privacyCheckboxWrapper = document.getElementById('privacy-checkbox-wrapper');
-        const termsCheckboxWrapper = document.getElementById('terms-checkbox-wrapper');
-        const loading = document.getElementById('loading');
-        const errorMessage = document.getElementById('error-message');
-        const content = document.getElementById('content');
-        const privacyVersionBadge = document.getElementById('privacy-version-badge');
-        const termsVersionBadge = document.getElementById('terms-version-badge');
-        const headerSubtitle = document.getElementById('header-subtitle');
-        const privacyCheckboxLabel = document.getElementById('privacy-checkbox-label');
-        const termsCheckboxLabel = document.getElementById('terms-checkbox-label');
+const state = {
+    currentPrivacyPolicy: null,
+    currentTermsOfUse: null,
+    userProfile: null,
+    isReturningUser: false,
+    hasPrivacyUpdate: false,
+    hasTermsUpdate: false,
+    userEmail: null
+};
 
-        async function fetchPrivacyPolicy() {
-            try {
-                const response = await fetch(PRIVACY_JSON_URL);
-                if (!response.ok) throw new Error('Kunne ikke laste personvernerklæring');
-                currentPrivacyPolicy = await response.json();
-                return currentPrivacyPolicy;
-            } catch (error) {
-                console.error('Error fetching privacy policy:', error);
-                showError('Kunne ikke laste personvernerklæring. Vennligst prøv igjen.');
-                return null;
-            }
+// ============================================
+// DOM ELEMENTS
+// ============================================
+
+const elements = {
+    privacyCheckbox: document.getElementById('privacy-checkbox'),
+    termsCheckbox: document.getElementById('terms-checkbox'),
+    acceptButton: document.getElementById('accept-button'),
+    privacyCheckboxWrapper: document.getElementById('privacy-checkbox-wrapper'),
+    termsCheckboxWrapper: document.getElementById('terms-checkbox-wrapper'),
+    loading: document.getElementById('loading'),
+    errorMessage: document.getElementById('error-message'),
+    content: document.getElementById('content'),
+    privacyVersionBadge: document.getElementById('privacy-version-badge'),
+    termsVersionBadge: document.getElementById('terms-version-badge'),
+    headerSubtitle: document.getElementById('header-subtitle'),
+    privacyCheckboxLabel: document.getElementById('privacy-checkbox-label'),
+    termsCheckboxLabel: document.getElementById('terms-checkbox-label')
+};
+
+// ============================================
+// SUPABASE INITIALIZATION
+// ============================================
+
+let supabase;
+try {
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+} catch (error) {
+    console.error('Failed to initialize Supabase:', error);
+    showError('Systemfeil. Kan ikke koble til databasen.');
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+function showError(message) {
+    if (!message || typeof message !== 'string') return;
+    
+    elements.errorMessage.textContent = message;
+    elements.errorMessage.classList.add('active');
+    
+    setTimeout(() => {
+        elements.errorMessage.classList.remove('active');
+    }, 5000);
+}
+
+function compareVersions(v1, v2) {
+    if (!v1 || !v2) return 0;
+    
+    const parts1 = v1.split('.').map(Number);
+    const parts2 = v2.split('.').map(Number);
+    
+    for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+        const part1 = parts1[i] || 0;
+        const part2 = parts2[i] || 0;
+        
+        if (part1 > part2) return 1;
+        if (part1 < part2) return -1;
+    }
+    return 0;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// ============================================
+// API FUNCTIONS
+// ============================================
+
+async function fetchPrivacyPolicy() {
+    try {
+        const response = await fetch(CONFIG.PRIVACY_JSON_URL);
+        if (!response.ok) {
+            console.error('Failed to fetch privacy policy, status:', response.status);
+        }
+        
+        const policy = await response.json();
+        state.currentPrivacyPolicy = policy;
+        return policy;
+    } catch (error) {
+        console.error('Error fetching privacy policy:', error);
+        return null;
+    }
+}
+
+async function fetchTermsOfUse() {
+    try {
+        const response = await fetch(CONFIG.TERMS_JSON_URL);
+        if (!response.ok) {
+            console.error('Failed to fetch terms of use, status:', response.status);
+        }
+        
+        const terms = await response.json();
+        state.currentTermsOfUse = terms;
+        return terms;
+    } catch (error) {
+        console.error('Error fetching terms of use:', error);
+        return null;
+    }
+}
+
+async function getUserProfile(email) {
+    if (!email || !validateEmail(email)) {
+        console.error('Invalid email provided to getUserProfile');
+        return null;
+    }
+    
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('privacy_policy_accepted, privacy_policy_version, privacy_policy_accepted_at, terms_of_use_accepted, terms_of_use_version, terms_of_use_accepted_at')
+            .eq('user_email', email)
+            .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+        
+        state.userProfile = data;
+        return data;
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+    }
+}
+
+async function saveConsent(email) {
+    if (!email || !validateEmail(email)) {
+        throw new Error('Invalid email address');
+    }
+    
+    if (!state.currentPrivacyPolicy || !state.currentTermsOfUse) {
+        throw new Error('Policy documents not loaded');
+    }
+    
+    const now = new Date().toISOString();
+    
+    try {
+        const { error } = await supabase
+            .from('user_profiles')
+            .upsert([{
+                user_email: email,
+                privacy_policy_accepted: true,
+                privacy_policy_accepted_at: now,
+                privacy_policy_version: state.currentPrivacyPolicy.version,
+                terms_of_use_accepted: true,
+                terms_of_use_accepted_at: now,
+                terms_of_use_version: state.currentTermsOfUse.version,
+                updated_at: now
+            }], { 
+                onConflict: 'user_email',
+                ignoreDuplicates: false 
+            });
+
+        if (error) {
+            throw error;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving consent:', error);
+        throw new Error('Kunne ikke lagre samtykke: ' + error.message);
+    }
+}
+
+// ============================================
+// UI RENDERING
+// ============================================
+
+function renderFirstTimeUser() {
+    const safePrivacyVersion = escapeHtml(state.currentPrivacyPolicy?.version || '1.0');
+    const safeTermsVersion = escapeHtml(state.currentTermsOfUse?.version || '1.0');
+    
+    elements.content.innerHTML = `
+        <div class="info-section">
+            <h3>📋 Personvern - Hva vi samler inn:</h3>
+            <ul>
+                <li><strong>Feide-pålogging:</strong> Brukernavn og passord (lagret kryptert lokalt)</li>
+                <li><strong>E-postadresse:</strong> For brukerkonto og kommunikasjon</li>
+                <li><strong>Studietidsdata:</strong> Automatiske registreringer fra iSkole.net</li>
+                <li><strong>Profilinformasjon:</strong> Valgfri data du legger til selv</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <h3>📜 Vilkår for bruk:</h3>
+            <ul>
+                <li><strong>Brukertilgang:</strong> Du må ha gyldig Feide-konto for å bruke tjenesten</li>
+                <li><strong>Automatisk registrering:</strong> AkademiTrack logger inn på iSkole.net på dine vegne</li>
+                <li><strong>Ansvarlig bruk:</strong> Du er ansvarlig for aktiviteter på din konto</li>
+                <li><strong>Dataeksport:</strong> Du kan når som helst eksportere eller slette dine data</li>
+            </ul>
+        </div>
+
+        <div class="info-section">
+            <h3>🔒 Dine rettigheter (GDPR):</h3>
+            <ul>
+                <li>Rett til innsyn i dine data</li>
+                <li>Rett til å rette eller slette dine data</li>
+                <li>Rett til å trekke tilbake samtykke når som helst</li>
+                <li>Rett til dataportabilitet</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Viktig:</strong> Ved å godta gir du AkademiTrack tillatelse til å logge inn på iSkole.net på dine vegne og automatisk registrere studietid. Du kan når som helst trekke tilbake samtykket ditt ved å slette kontoen din.
+        </div>
+    `;
+}
+
+function getChangesSummary(document, oldVersion, newVersion) {
+    if (!document || !oldVersion || !newVersion) {
+        return ['Oppdateringer og forbedringer', 'Les den fullstendige versjonen for alle detaljer'];
+    }
+    
+    if (document?.changelog?.[newVersion]) {
+        return document.changelog[newVersion];
+    }
+    
+    return ['Mindre oppdateringer og forbedringer', 'Les den fullstendige versjonen for alle detaljer'];
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Ukjent dato';
+    
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Ukjent dato';
+    }
+}
+
+function renderReturningUser(privacyOldVersion, privacyNewVersion, termsOldVersion, termsNewVersion) {
+    let htmlContent = '';
+
+    if (state.hasPrivacyUpdate) {
+        const privacyChanges = getChangesSummary(state.currentPrivacyPolicy, privacyOldVersion, privacyNewVersion);
+        const privacyAcceptedDate = formatDate(state.userProfile?.privacy_policy_accepted_at);
+
+        htmlContent += `
+            <div class="changes-section">
+                <h3>📝 Oppdatert Personvernerklæring</h3>
+                <div class="version-info">
+                    <span><strong>Din godkjente versjon:</strong> v${escapeHtml(privacyOldVersion)} (${escapeHtml(privacyAcceptedDate)})</span>
+                    <span><strong>Ny versjon:</strong> v${escapeHtml(privacyNewVersion)}</span>
+                </div>
+                <div class="changes-list">
+                    <ul>
+                        ${privacyChanges.map(change => `<li>${escapeHtml(change)}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+
+    if (state.hasTermsUpdate) {
+        const termsChanges = getChangesSummary(state.currentTermsOfUse, termsOldVersion, termsNewVersion);
+        const termsAcceptedDate = formatDate(state.userProfile?.terms_of_use_accepted_at);
+
+        htmlContent += `
+            <div class="changes-section">
+                <h3>📋 Oppdaterte Vilkår for Bruk</h3>
+                <div class="version-info">
+                    <span><strong>Din godkjente versjon:</strong> v${escapeHtml(termsOldVersion)} (${escapeHtml(termsAcceptedDate)})</span>
+                    <span><strong>Ny versjon:</strong> v${escapeHtml(termsNewVersion)}</span>
+                </div>
+                <div class="changes-list">
+                    <ul>
+                        ${termsChanges.map(change => `<li>${escapeHtml(change)}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+
+    htmlContent += `
+        <div class="info-section">
+            <h3>Viktig informasjon:</h3>
+            <ul>
+                <li>Du må godta de nye versjonene for å fortsette å bruke AkademiTrack</li>
+                <li>Vi behandler fortsatt dine data på samme sikre måte</li>
+                <li>Du kan når som helst trekke tilbake samtykket ved å slette kontoen din</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>💡 Tips:</strong> Les gjennom de fullstendige dokumentene for å se alle detaljene om endringene.
+        </div>
+    `;
+
+    elements.headerSubtitle.textContent = 'Vi har oppdatert våre dokumenter';
+    
+    if (state.hasPrivacyUpdate) {
+        elements.privacyCheckboxLabel.innerHTML = `Jeg har lest endringene og godtar den nye <a href="privacy-policy.html" target="_blank" rel="noopener noreferrer" style="color: #3b82f6;">personvernerklæringen (v${escapeHtml(privacyNewVersion)})</a>.`;
+    }
+    
+    if (state.hasTermsUpdate) {
+        elements.termsCheckboxLabel.innerHTML = `Jeg har lest endringene og godtar de nye <a href="terms-of-use.html" target="_blank" rel="noopener noreferrer" style="color: #3b82f6;">vilkårene (v${escapeHtml(termsNewVersion)})</a>.`;
+    }
+
+    elements.content.innerHTML = htmlContent;
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+async function initializePage() {
+    try {
+        // Check authentication
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+            console.error('Session error:', sessionError);
+            throw new Error('Kunne ikke hente økt');
+        }
+        
+        if (!session?.user?.email) {
+            console.log('No active session, redirecting to login');
+            window.location.href = 'index.html';
+            return;
         }
 
-        async function fetchTermsOfUse() {
-            try {
-                const response = await fetch(TERMS_JSON_URL);
-                if (!response.ok) throw new Error('Kunne ikke laste vilkår');
-                currentTermsOfUse = await response.json();
-                return currentTermsOfUse;
-            } catch (error) {
-                console.error('Error fetching terms of use:', error);
-                showError('Kunne ikke laste vilkår. Vennligst prøv igjen.');
-                return null;
-            }
+        state.userEmail = session.user.email.toLowerCase().trim();
+
+        // Admin redirect
+        if (state.userEmail === CONFIG.ADMIN_EMAIL) {
+            window.location.href = 'admin.html';
+            return;
         }
 
-        async function getUserProfile(email) {
-            try {
-                const { data, error } = await supabase
-                    .from('user_profiles')
-                    .select('privacy_policy_accepted, privacy_policy_version, privacy_policy_accepted_at, terms_of_use_accepted, terms_of_use_version, terms_of_use_accepted_at')
-                    .eq('user_email', email)
-                    .maybeSingle();
+        // Fetch policies in parallel
+        const [privacy, terms] = await Promise.all([
+            fetchPrivacyPolicy(),
+            fetchTermsOfUse()
+        ]);
 
-                if (error && error.code !== 'PGRST116') throw error;
-                return data;
-            } catch (error) {
-                console.error('Error fetching user profile:', error);
-                return null;
-            }
+        if (!privacy || !terms) {
+            showError('Kunne ikke laste nødvendige dokumenter. Vennligst prøv igjen.');
+            return;
         }
 
-        function compareVersions(v1, v2) {
-            const parts1 = v1.split('.').map(Number);
-            const parts2 = v2.split('.').map(Number);
+        // Update version badges
+        elements.privacyVersionBadge.textContent = `Personvern v${privacy.version}`;
+        elements.termsVersionBadge.textContent = `Vilkår v${terms.version}`;
+
+        // Get user profile
+        const userProfile = await getUserProfile(state.userEmail);
+
+        // Check if user has already accepted current versions
+        if (userProfile?.privacy_policy_accepted && userProfile?.terms_of_use_accepted) {
+            const userPrivacyVersion = userProfile.privacy_policy_version || '1.0';
+            const userTermsVersion = userProfile.terms_of_use_version || '1.0';
             
-            for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-                const part1 = parts1[i] || 0;
-                const part2 = parts2[i] || 0;
-                
-                if (part1 > part2) return 1;
-                if (part1 < part2) return -1;
-            }
-            return 0;
-        }
+            state.hasPrivacyUpdate = compareVersions(privacy.version, userPrivacyVersion) > 0;
+            state.hasTermsUpdate = compareVersions(terms.version, userTermsVersion) > 0;
 
-        function renderFirstTimeUser() {
-            content.innerHTML = `
-                <div class="info-section">
-                    <h3>📋 Personvern - Hva vi samler inn:</h3>
-                    <ul>
-                        <li><strong>Feide-pålogging:</strong> Brukernavn og passord (lagret kryptert lokalt)</li>
-                        <li><strong>E-postadresse:</strong> For brukerkonto og kommunikasjon</li>
-                        <li><strong>Studietidsdata:</strong> Automatiske registreringer fra iSkole.net</li>
-                        <li><strong>Profilinformasjon:</strong> Valgfri data du legger til selv</li>
-                    </ul>
-                </div>
-
-                <div class="info-section">
-                    <h3>📜 Vilkår for bruk:</h3>
-                    <ul>
-                        <li><strong>Brukertilgang:</strong> Du må ha gyldig Feide-konto for å bruke tjenesten</li>
-                        <li><strong>Automatisk registrering:</strong> AkademiTrack logger inn på iSkole.net på dine vegne</li>
-                        <li><strong>Ansvarlig bruk:</strong> Du er ansvarlig for aktiviteter på din konto</li>
-                        <li><strong>Dataeksport:</strong> Du kan når som helst eksportere eller slette dine data</li>
-                    </ul>
-                </div>
-
-                <div class="info-section">
-                    <h3>🔒 Dine rettigheter (GDPR):</h3>
-                    <ul>
-                        <li>Rett til innsyn i dine data</li>
-                        <li>Rett til å rette eller slette dine data</li>
-                        <li>Rett til å trekke tilbake samtykke når som helst</li>
-                        <li>Rett til dataportabilitet</li>
-                    </ul>
-                </div>
-
-                <div class="warning">
-                    <strong>⚠️ Viktig:</strong> Ved å godta gir du AkademiTrack tillatelse til å logge inn på iSkole.net på dine vegne og automatisk registrere studietid. Du kan når som helst trekke tilbake samtykket ditt ved å slette kontoen din.
-                </div>
-            `;
-        }
-
-        function getChangesSummary(document, oldVersion, newVersion) {
-            if (document?.changelog?.[newVersion]) {
-                return document.changelog[newVersion];
-            }
-            return ['Mindre oppdateringer og forbedringer', 'Les den fullstendige versjonen for alle detaljer'];
-        }
-
-        function renderReturningUser(privacyOldVersion, privacyNewVersion, termsOldVersion, termsNewVersion) {
-            let htmlContent = '';
-
-            if (hasPrivacyUpdate) {
-                const privacyChanges = getChangesSummary(currentPrivacyPolicy, privacyOldVersion, privacyNewVersion);
-                const privacyAcceptedDate = userProfile.privacy_policy_accepted_at 
-                    ? new Date(userProfile.privacy_policy_accepted_at).toLocaleDateString('nb-NO', {
-                        year: 'numeric', month: 'long', day: 'numeric'
-                    }) : 'Ukjent dato';
-
-                htmlContent += `
-                    <div class="changes-section">
-                        <h3>📝 Oppdatert Personvernerklæring</h3>
-                        <div class="version-info">
-                            <span><strong>Din godkjente versjon:</strong> v${privacyOldVersion} (${privacyAcceptedDate})</span>
-                            <span><strong>Ny versjon:</strong> v${privacyNewVersion}</span>
-                        </div>
-                        <div class="changes-list">
-                            <ul>
-                                ${privacyChanges.map(change => `<li>${change}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (hasTermsUpdate) {
-                const termsChanges = getChangesSummary(currentTermsOfUse, termsOldVersion, termsNewVersion);
-                const termsAcceptedDate = userProfile.terms_of_use_accepted_at 
-                    ? new Date(userProfile.terms_of_use_accepted_at).toLocaleDateString('nb-NO', {
-                        year: 'numeric', month: 'long', day: 'numeric'
-                    }) : 'Ukjent dato';
-
-                htmlContent += `
-                    <div class="changes-section">
-                        <h3>📋 Oppdaterte Vilkår for Bruk</h3>
-                        <div class="version-info">
-                            <span><strong>Din godkjente versjon:</strong> v${termsOldVersion} (${termsAcceptedDate})</span>
-                            <span><strong>Ny versjon:</strong> v${termsNewVersion}</span>
-                        </div>
-                        <div class="changes-list">
-                            <ul>
-                                ${termsChanges.map(change => `<li>${change}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-            }
-
-            htmlContent += `
-                <div class="info-section">
-                    <h3>Viktig informasjon:</h3>
-                    <ul>
-                        <li>Du må godta de nye versjonene for å fortsette å bruke AkademiTrack</li>
-                        <li>Vi behandler fortsatt dine data på samme sikre måte</li>
-                        <li>Du kan når som helst trekke tilbake samtykket ved å slette kontoen din</li>
-                    </ul>
-                </div>
-
-                <div class="warning">
-                    <strong>💡 Tips:</strong> Les gjennom de fullstendige dokumentene for å se alle detaljene om endringene.
-                </div>
-            `;
-
-            headerSubtitle.textContent = 'Vi har oppdatert våre dokumenter';
-            if (hasPrivacyUpdate) {
-                privacyCheckboxLabel.innerHTML = `Jeg har lest endringene og godtar den nye <a href="privacy-policy.html" target="_blank" style="color: #3b82f6;">personvernerklæringen (v${privacyNewVersion})</a>.`;
-            }
-            if (hasTermsUpdate) {
-                termsCheckboxLabel.innerHTML = `Jeg har lest endringene og godtar de nye <a href="terms-of-use.html" target="_blank" style="color: #3b82f6;">vilkårene (v${termsNewVersion})</a>.`;
-            }
-
-            content.innerHTML = htmlContent;
-        }
-
-        async function initializePage() {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                
-                if (!session || !session.user) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                const [privacy, terms] = await Promise.all([
-                    fetchPrivacyPolicy(),
-                    fetchTermsOfUse()
-                ]);
-
-                if (!privacy || !terms) return;
-
-                privacyVersionBadge.textContent = `Personvern v${privacy.version}`;
-                termsVersionBadge.textContent = `Vilkår v${terms.version}`;
-
-                userProfile = await getUserProfile(session.user.email);
-
-                if (userProfile && userProfile.privacy_policy_accepted && userProfile.terms_of_use_accepted) {
-                    const userPrivacyVersion = userProfile.privacy_policy_version || '1.0';
-                    const userTermsVersion = userProfile.terms_of_use_version || '1.0';
-                    
-                    hasPrivacyUpdate = compareVersions(privacy.version, userPrivacyVersion) > 0;
-                    hasTermsUpdate = compareVersions(terms.version, userTermsVersion) > 0;
-
-                    if (hasPrivacyUpdate || hasTermsUpdate) {
-                        isReturningUser = true;
-                        renderReturningUser(userPrivacyVersion, privacy.version, userTermsVersion, terms.version);
-                    } else {
-                        window.location.href = 'tutorial.html';
-                        return;
-                    }
-                } else {
-                    renderFirstTimeUser();
-                }
-
-            } catch (error) {
-                console.error('Error initializing page:', error);
-                showError('En feil oppstod. Vennligst last inn siden på nytt.');
-            }
-        }
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.add('active');
-            setTimeout(() => {
-                errorMessage.classList.remove('active');
-            }, 5000);
-        }
-
-        function updateAcceptButton() {
-            acceptButton.disabled = !(privacyCheckbox.checked && termsCheckbox.checked);
-        }
-
-        privacyCheckbox.addEventListener('change', function() {
-            updateAcceptButton();
-            if (this.checked) {
-                privacyCheckboxWrapper.classList.add('checked');
+            if (state.hasPrivacyUpdate || state.hasTermsUpdate) {
+                // Show updates
+                state.isReturningUser = true;
+                renderReturningUser(userPrivacyVersion, privacy.version, userTermsVersion, terms.version);
             } else {
-                privacyCheckboxWrapper.classList.remove('checked');
+                // Already accepted current versions - REDIRECT TO DASHBOARD
+                console.log('User has already accepted current versions, redirecting to dashboard');
+                window.location.href = 'dashboard.html';
+                return;
             }
-        });
+        } else {
+            // First time user
+            renderFirstTimeUser();
+        }
 
-        termsCheckbox.addEventListener('change', function() {
-            updateAcceptButton();
-            if (this.checked) {
-                termsCheckboxWrapper.classList.add('checked');
-            } else {
-                termsCheckboxWrapper.classList.remove('checked');
-            }
-        });
+    } catch (error) {
+        console.error('Error initializing page:', error);
+        showError('En feil oppstod. Vennligst last inn siden på nytt.');
+    }
+}
 
-        privacyCheckboxWrapper.addEventListener('click', function(e) {
-            if (e.target.tagName !== 'A') {
-                privacyCheckbox.checked = !privacyCheckbox.checked;
-                privacyCheckbox.dispatchEvent(new Event('change'));
-            }
-        });
+// ============================================
+// EVENT HANDLERS
+// ============================================
 
-        termsCheckboxWrapper.addEventListener('click', function(e) {
-            if (e.target.tagName !== 'A') {
-                termsCheckbox.checked = !termsCheckbox.checked;
-                termsCheckbox.dispatchEvent(new Event('change'));
-            }
-        });
+function updateAcceptButton() {
+    const bothChecked = elements.privacyCheckbox.checked && elements.termsCheckbox.checked;
+    elements.acceptButton.disabled = !bothChecked;
+}
 
-        acceptButton.addEventListener('click', async function() {
-            try {
-                loading.classList.add('active');
-                acceptButton.disabled = true;
+function handlePrivacyCheckboxChange() {
+    updateAcceptButton();
+    
+    if (elements.privacyCheckbox.checked) {
+        elements.privacyCheckboxWrapper.classList.add('checked');
+    } else {
+        elements.privacyCheckboxWrapper.classList.remove('checked');
+    }
+}
 
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                
-                if (sessionError || !session || !session.user) {
-                    throw new Error('Ingen aktiv økt. Vennligst logg inn på nytt.');
-                }
+function handleTermsCheckboxChange() {
+    updateAcceptButton();
+    
+    if (elements.termsCheckbox.checked) {
+        elements.termsCheckboxWrapper.classList.add('checked');
+    } else {
+        elements.termsCheckboxWrapper.classList.remove('checked');
+    }
+}
 
-                const userEmail = session.user.email;
-                const now = new Date().toISOString();
+function handlePrivacyWrapperClick(e) {
+    // Don't toggle if clicking on a link
+    if (e.target.tagName === 'A') {
+        return;
+    }
+    
+    elements.privacyCheckbox.checked = !elements.privacyCheckbox.checked;
+    elements.privacyCheckbox.dispatchEvent(new Event('change'));
+}
 
-                const { error: updateError } = await supabase
-                    .from('user_profiles')
-                    .upsert([{
-                        user_email: userEmail,
-                        privacy_policy_accepted: true,
-                        privacy_policy_accepted_at: now,
-                        privacy_policy_version: currentPrivacyPolicy.version,
-                        terms_of_use_accepted: true,
-                        terms_of_use_accepted_at: now,
-                        terms_of_use_version: currentTermsOfUse.version,
-                        updated_at: now
-                    }], { onConflict: 'user_email' });
+function handleTermsWrapperClick(e) {
+    // Don't toggle if clicking on a link
+    if (e.target.tagName === 'A') {
+        return;
+    }
+    
+    elements.termsCheckbox.checked = !elements.termsCheckbox.checked;
+    elements.termsCheckbox.dispatchEvent(new Event('change'));
+}
 
-                if (updateError) {
-                    throw new Error('Kunne ikke lagre samtykke: ' + updateError.message);
-                }
+async function handleAcceptClick() {
+    try {
+        // Disable button and show loading
+        elements.loading.classList.add('active');
+        elements.acceptButton.disabled = true;
 
-                window.location.href = 'tutorial.html';
+        // Verify session again
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session?.user?.email) {
+            throw new Error('Ingen aktiv økt. Vennligst logg inn på nytt.');
+        }
 
-            } catch (error) {
-                console.error('Error accepting policies:', error);
-                showError('Kunne ikke lagre samtykket ditt: ' + error.message);
-                loading.classList.remove('active');
-                acceptButton.disabled = false;
-            }
-        });
+        // Save consent
+        await saveConsent(session.user.email);
 
-        document.addEventListener('DOMContentLoaded', initializePage);
+        // REDIRECT TO DASHBOARD (NO TUTORIAL)
+        console.log('Consent saved, redirecting to dashboard');
+        window.location.href = 'dashboard.html';
+
+    } catch (error) {
+        console.error('Error accepting policies:', error);
+        showError(error.message || 'Kunne ikke lagre samtykket ditt. Prøv igjen.');
+        
+        // Re-enable button
+        elements.loading.classList.remove('active');
+        elements.acceptButton.disabled = false;
+    }
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+elements.privacyCheckbox.addEventListener('change', handlePrivacyCheckboxChange);
+elements.termsCheckbox.addEventListener('change', handleTermsCheckboxChange);
+elements.privacyCheckboxWrapper.addEventListener('click', handlePrivacyWrapperClick);
+elements.termsCheckboxWrapper.addEventListener('click', handleTermsWrapperClick);
+elements.acceptButton.addEventListener('click', handleAcceptClick);
+
+// ============================================
+// GLOBAL ERROR HANDLERS
+// ============================================
+
+window.addEventListener('error', (event) => {
+    console.error('Uncaught error:', event.error);
+    showError('En uventet feil oppstod. Vennligst last inn siden på nytt.');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    showError('En nettverksfeil oppstod. Sjekk internettforbindelsen din.');
+});
+
+// ============================================
+// INITIALIZATION ON DOM LOAD
+// ============================================
+
+document.addEventListener('DOMContentLoaded', initializePage);
     </script>
 </body>
 </html>
