@@ -433,22 +433,26 @@
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 8rem 2rem 8rem; /* Increased top padding for fixed navbar */
+            padding: 8rem 2rem 8rem;
         }
 
-        /* Welcome and Stats Section - Side by Side */
         .welcome-stats-section {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
             gap: 2rem;
             margin-bottom: 3rem;
             padding: 2rem 0;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .welcome-container {
-            max-width: none; /* Remove the max-width constraint */
+            max-width: none;
             width: 100%;
-            margin: 0; /* Remove auto margins */
+            margin: 0;
             padding: 2rem;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -2709,18 +2713,7 @@
                         Din akademiske reise fortsetter her. Spor fremgangen din, hold deg organisert, og oppnå målene dine med AkademiTrack.
                     </p>
                 </div>
-                
-                <!-- Stats Grid -->
-                <div class="stats-grid-compact">
-                    <div class="stat-card fade-in">
-                        <span class="stat-number" id="stu-sessions-count">--</span>
-                        <span class="stat-label">Dine STU Økter med AkademiTrack </span>
-                    </div>
-                    <div class="stat-card fade-in">
-                        <span class="stat-number" id="stu-hours-total">--</span>
-                        <span class="stat-label">Dine STU Timer med AkademiTrack</span>
-                    </div>
-                </div>
+                                
             </section>
 
             <section class="tutorial-download-section">
