@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AkademiTrack</title>
     <link rel="stylesheet" href="index.css">
+    <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
     <nav class="sidebar-nav">
@@ -80,25 +81,40 @@
         </div>
     </section> 
     <section id="contact" class="scroll-section">
-    <div class="contact-form-box">
-        <h2>Kontakt oss</h2>
-        <p class="subtitle">Har du spørsmål eller tilbakemeldinger? Send oss en melding!</p>
+    <div class="contact-container">
+        <div class="contact-box report-box">
+            <h2>📋 Rapporter feil eller gi tilbakemelding</h2>
+            <p class="subtitle">Fant du en bug? Har du en idé til en ny funksjon? La oss vite!</p>
+            <a href="https://forms.gle/HsHgvxYrZMgd9fyR7" target="_blank" class="download-btn primary">
+                Gå til skjema
+            </a>
+            <div class="report-types">
+                <div class="report-type">🐛 Bug rapport</div>
+                <div class="report-type">✨ Feature forslag</div>
+                <div class="report-type">💬 Generell tilbakemelding</div>
+            </div>
+        </div>
         
-        <form action="https://formspree.io/f/myzbpdzg" method="POST" class="contact-form">
-            <div class="form-group">
-                <input type="text" name="name" placeholder="Ditt navn" required>
-            </div>
-            <div class="form-group">
-                <input type="email" name="email" placeholder="Din e-post" required>
-            </div>
-            <div class="form-group">
-                <input type="text" name="subject" placeholder="Emne" required>
-            </div>
-            <div class="form-group">
-                <textarea name="message" placeholder="Din melding" rows="6" required></textarea>
-            </div>
-            <button type="submit" class="download-btn primary">Send melding</button>
-        </form>
+        <div class="contact-box contact-form-box">
+            <h2>✉️ Kontakt oss</h2>
+            <p class="subtitle">Har du spørsmål eller trenger støtte? Send oss en melding!</p>
+            
+            <form action="https://formspree.io/f/myzbpdzg" method="POST" class="contact-form">
+                <div class="form-group">
+                    <input type="text" name="name" placeholder="Ditt navn" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="Din e-post" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" name="subject" placeholder="Emne" required>
+                </div>
+                <div class="form-group">
+                    <textarea name="message" placeholder="Din melding" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="download-btn primary">Send melding</button>
+            </form>
+        </div>
     </div>
 </section>
 </div>
