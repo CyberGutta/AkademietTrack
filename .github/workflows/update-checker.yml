@@ -1,9 +1,8 @@
 name: Update Release JSON
-
 on:
-  release:
-    types: [published]
-  workflow_dispatch: # Allows manual trigger
+  schedule:
+    - cron: '*/6 * * * *'  # Every 6 minutes
+  workflow_dispatch: # Manual trigger for testing
 
 permissions:
   contents: write
@@ -20,11 +19,18 @@ jobs:
           
       - name: Fetch latest release info
         run: |
-          # Fetch latest release from GitHub API
-          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/CyberGutta/AkademiTrack/releases/latest")
+          echo "🔍 Checking for latest release..."
           
-          # Extract relevant information
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          
+          # Check if we got a valid response
+          if echo "$RESPONSE" | jq -e '.message' > /dev/null 2>&1; then
+            echo "⚠️ No releases found or API error"
+            echo "$RESPONSE" | jq .
+            exit 0
+          fi
+          
           VERSION=$(echo "$RESPONSE" | jq -r '.tag_name')
           DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.assets[0].browser_download_url // empty')
           NOTES=$(echo "$RESPONSE" | jq -r '.body // "No release notes available"')
@@ -32,13 +38,12 @@ jobs:
           
           echo "Found release: $VERSION"
           
-          # If no assets, use zipball_url as fallback
           if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
             DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.zipball_url')
             echo "Using zipball URL as fallback"
           fi
           
-          # Create JSON content with proper escaping
+          # Create update.json
           jq -n \
             --arg version "$VERSION" \
             --arg url "$DOWNLOAD_URL" \
@@ -51,21 +56,22 @@ jobs:
               published_at: $published
             }' > update.json
           
-          echo "✅ Generated update.json"
+          echo "Generated update.json:"
           cat update.json
           
-      - name: Commit and push
+      - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add update.json
           
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "🤖 Update release info to $(jq -r '.latest_version' update.json) [skip ci]"
-            git push
-            echo "✅ Release info updated"
+            echo "✅ No changes - update.json already up to date"
+            exit 0
           fi
+          
+          git commit -m "🤖 Update release info to $(jq -r '.latest_version' update.json)"
+          git push
+          
+          echo "✅ Updated update.json with latest release"
