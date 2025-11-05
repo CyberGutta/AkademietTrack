@@ -18,17 +18,17 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: Fetch latest release info
+      - name: Fetch latest release info from AkademiTrack
+        id: release
         run: |
-          echo "🔍 Checking for latest release..."
+          echo "🔍 Checking for latest release from CyberGutta/AkademiTrack..."
           
-          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          # Fetch from the OTHER repo (note the different repo name)
+          RESPONSE=$(curl -s "https://api.github.com/repos/CyberGutta/AkademiTrack/releases/latest")
           
-          # Check if we got a valid response
-          if echo "$RESPONSE" | jq -e '.message' > /dev/null 2>&1; then
-            echo "⚠️ No releases found or API error"
-            echo "$RESPONSE" | jq .
+          # Check if we got a 404 or error
+          if echo "$RESPONSE" | jq -e '.message == "Not Found"' > /dev/null 2>&1; then
+            echo "⚠️ No releases found in CyberGutta/AkademiTrack yet!"
             exit 0
           fi
           
@@ -37,14 +37,33 @@ jobs:
           NOTES=$(echo "$RESPONSE" | jq -r '.body // "No release notes available"')
           PUBLISHED_AT=$(echo "$RESPONSE" | jq -r '.published_at')
           
-          echo "Found release: $VERSION"
+          echo "✅ Found release: $VERSION"
+          echo "📦 Download URL: $DOWNLOAD_URL"
           
-          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ] || [ "$DOWNLOAD_URL" = "empty" ]; then
             DOWNLOAD_URL=$(echo "$RESPONSE" | jq -r '.zipball_url')
-            echo "Using zipball URL as fallback"
+            echo "Using zipball URL as fallback: $DOWNLOAD_URL"
           fi
           
-          # Create update.json
+          # Check if update.json exists and compare versions
+          if [ -f "update.json" ]; then
+            CURRENT_VERSION=$(jq -r '.latest_version' update.json 2>/dev/null || echo "none")
+            echo "Current version in update.json: $CURRENT_VERSION"
+            
+            if [ "$CURRENT_VERSION" = "$VERSION" ]; then
+              echo "✅ Already up to date with version $VERSION"
+              echo "needs_update=false" >> $GITHUB_OUTPUT
+              exit 0
+            else
+              echo "🆕 New version detected: $CURRENT_VERSION → $VERSION"
+              echo "needs_update=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "📝 update.json doesn't exist, creating it"
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # Create/update update.json
           jq -n \
             --arg version "$VERSION" \
             --arg url "$DOWNLOAD_URL" \
@@ -54,25 +73,23 @@ jobs:
               latest_version: $version,
               download_url: $url,
               notes: $notes,
-              published_at: $published
+              published_at: $published,
+              last_checked: (now | strftime("%Y-%m-%dT%H:%M:%SZ"))
             }' > update.json
           
           echo "Generated update.json:"
           cat update.json
           
       - name: Commit and push if changed
+        if: steps.release.outputs.needs_update == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if there are any changes (including untracked files)
-          if [[ -z $(git status -s) ]]; then
-            echo "✅ No changes - update.json already up to date"
-            exit 0
-          fi
-          
           git add update.json
-          git commit -m "🤖 Update release info to $(jq -r '.latest_version' update.json)"
-          git push
           
-          echo "✅ Updated update.json with latest release"
+          VERSION=$(jq -r '.latest_version' update.json)
+          git commit -m "🤖 Update release info to ${VERSION}"
+          git push origin main
+          
+          echo "✅ Updated update.json with latest release: ${VERSION}"
