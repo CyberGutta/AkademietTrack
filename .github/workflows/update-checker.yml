@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Fetch latest release info
         run: |
@@ -64,13 +65,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add update.json
-          
-          if git diff --staged --quiet; then
+          # Check if there are any changes (including untracked files)
+          if [[ -z $(git status -s) ]]; then
             echo "✅ No changes - update.json already up to date"
             exit 0
           fi
           
+          git add update.json
           git commit -m "🤖 Update release info to $(jq -r '.latest_version' update.json)"
           git push
           
