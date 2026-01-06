@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkademiTrack Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .dashboard-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 1400px;
+            padding: 30px;
+            animation: fadeIn 0.5s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #c33;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .user-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .logout-btn {
+            width: auto;
+            padding: 10px 20px;
+            background: #f44336;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .refresh-indicator {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px;
+            border-top: 1px solid #f0f0f0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            padding: 8px 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <h1>🔐 Admin Login</h1>
+        <p class="subtitle">AkademiTrack Dashboard</p>
+        
+        <div id="loginError" class="error hidden"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">E-postadresse</label>
+                <input type="email" id="email" placeholder="din@epost.com" required autocomplete="email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Passord</label>
+                <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            
+            <button type="submit" id="loginBtn">Logg inn</button>
+        </form>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="dashboard-container hidden">
+        <div class="header">
+            <div>
+                <h1>📊 AkademiTrack Dashboard</h1>
+                <p class="user-info">Logget inn som: <strong id="userEmail"></strong></p>
+                <p class="subtitle">Sanntidsdata fra Supabase</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logg ut</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalSessions">0</div>
+                <div class="stat-label">Totale økter</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalEvents">0</div>
+                <div class="stat-label">Totale hendelser</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="lastUpdate">—</div>
+                <div class="stat-label">Siste oppdatering</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                📱 Sessions
+                <span class="refresh-indicator">Oppdateres automatisk</span>
+            </div>
+            <div class="table-container">
+                <div id="sessionsLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Laster data...</p>
+                </div>
+                <table id="sessionsTable" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Startet</th>
+                            <th>Plattform</th>
+                            <th>App-versjon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionsBody"></tbody>
+                </table>
+                <div id="sessionsEmpty" class="empty-state hidden">
+                    <div class="empty-state-icon">📭</div>
+                    <p>Ingen økter registrert ennå</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                ⚡ Events
+                <span class="refresh-indicator">Oppdateres automatisk</span>
+            </div>
+            <div class="table-container">
+                <div id="eventsLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Laster data...</p>
+                </div>
+                <table id="eventsTable" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Økt-ID</th>
+                            <th>Hendelse</th>
+                            <th>Data</th>
+                            <th>Opprettet</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsBody"></tbody>
+                </table>
+                <div id="eventsEmpty" class="empty-state hidden">
+                    <div class="empty-state-icon">📭</div>
+                    <p>Ingen hendelser registrert ennå</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'https://zqqxqyxozyydhotfuurc.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_Th1YqJtb8sa7OD3PXvEDJQ_co1gdLby';
+        
+        let supabaseClient;
+        if (window.supabase && window.supabase.createClient) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.error('Supabase library not loaded');
+        }
+        const REFRESH_INTERVAL = 5000; // 5 seconds
+
+        let refreshTimer;
+        let currentUser = null;
+
+        // Check if user is already logged in
+        checkAuth();
+
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showDashboard();
+            }
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Clear previous errors
+            errorEl.classList.add('hidden');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logger inn...';
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                currentUser = data.user;
+                showDashboard();
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                let errorMessage = '❌ Kunne ikke logge inn. ';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage += 'Feil e-post eller passord.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage += 'E-posten er ikke bekreftet.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                errorEl.textContent = errorMessage;
+                errorEl.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Logg inn';
+            }
+        });
+
+        function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = currentUser.email;
+            loadData();
+            startAutoRefresh();
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            stopAutoRefresh();
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        async function loadData() {
+            try {
+                await Promise.all([loadSessions(), loadEvents()]);
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        async function loadSessions() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('sessions')
+                    .select('*')
+                    .order('started_at', { ascending: false });
+
+                if (error) throw error;
+                
+                document.getElementById('sessionsLoading').classList.add('hidden');
+                document.getElementById('totalSessions').textContent = data.length;
+
+                if (data.length === 0) {
+                    document.getElementById('sessionsTable').classList.add('hidden');
+                    document.getElementById('sessionsEmpty').classList.remove('hidden');
+                } else {
+                    document.getElementById('sessionsEmpty').classList.add('hidden');
+                    document.getElementById('sessionsTable').classList.remove('hidden');
+                    
+                    const tbody = document.getElementById('sessionsBody');
+                    tbody.innerHTML = data.map(session => `
+                        <tr>
+                            <td><span class="code-block">${session.id || '—'}</span></td>
+                            <td>${session.started_at ? new Date(session.started_at).toLocaleString('no-NO') : '—'}</td>
+                            <td><span class="badge badge-primary">${session.platform || '—'}</span></td>
+                            <td>${session.app_version || '—'}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+                document.getElementById('sessionsLoading').innerHTML = '<p style="color: #c33;">Feil ved lasting av data</p>';
+            }
+        }
+
+        async function loadEvents() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('events')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (error) throw error;
+                
+                document.getElementById('eventsLoading').classList.add('hidden');
+                document.getElementById('totalEvents').textContent = data.length;
+
+                if (data.length === 0) {
+                    document.getElementById('eventsTable').classList.add('hidden');
+                    document.getElementById('eventsEmpty').classList.remove('hidden');
+                } else {
+                    document.getElementById('eventsEmpty').classList.add('hidden');
+                    document.getElementById('eventsTable').classList.remove('hidden');
+                    
+                    const tbody = document.getElementById('eventsBody');
+                    tbody.innerHTML = data.map(event => `
+                        <tr>
+                            <td><span class="code-block">${event.id || '—'}</span></td>
+                            <td><span class="code-block">${event.session_id || '—'}</span></td>
+                            <td><span class="badge badge-primary">${event.event_name || '—'}</span></td>
+                            <td><span class="code-block">${event.event_data ? JSON.stringify(event.event_data).substring(0, 50) + '...' : '—'}</span></td>
+                            <td>${event.created_at ? new Date(event.created_at).toLocaleString('no-NO') : '—'}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+                document.getElementById('eventsLoading').innerHTML = '<p style="color: #c33;">Feil ved lasting av data</p>';
+            }
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('no-NO');
+        }
+
+        function startAutoRefresh() {
+            refreshTimer = setInterval(loadData, REFRESH_INTERVAL);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+            }
+        }
+    </script>
+</body>
+</html>
