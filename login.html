@@ -551,19 +551,19 @@
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-label">Total Sessions</span>
+                    <span class="stat-label">Total Users</span>
                     <div class="stat-icon">👥</div>
                 </div>
-                <div class="stat-value" id="totalSessions">0</div>
-                <div class="stat-description">Alle registrerte økter</div>
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-description">Alle registrerte brukere</div>
             </div>
         </div>
 
         <div class="content-card">
             <div class="tabs">
                 <button class="tab active" data-tab="sessions">Aktive Brukere</button>
+                <button class="tab" data-tab="all-users">Alle Brukere</button>
                 <button class="tab" data-tab="errors">Feillogger</button>
-                <button class="tab" data-tab="all-sessions">Alle Økter</button>
             </div>
 
             <div class="tab-content active" id="sessionsTab">
@@ -574,6 +574,14 @@
                 <div id="sessionsContent" class="hidden"></div>
             </div>
 
+            <div class="tab-content" id="all-usersTab">
+                <div id="allUsersLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Laster alle brukere...</p>
+                </div>
+                <div id="allUsersContent" class="hidden"></div>
+            </div>
+
             <div class="tab-content" id="errorsTab">
                 <div id="errorsLoading" class="loading">
                     <div class="spinner"></div>
@@ -581,21 +589,11 @@
                 </div>
                 <div id="errorsContent" class="hidden"></div>
             </div>
-
-            <div class="tab-content" id="allSessionsTab">
-                <div id="allSessionsLoading" class="loading">
-                    <div class="spinner"></div>
-                    <p>Laster alle økter...</p>
-                </div>
-                <div id="allSessionsContent" class="hidden"></div>
-            </div>
         </div>
     </div>
 
-    <!-- Use specific version to avoid the bug -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
     <script>
-        // Use window.supabase directly to avoid redeclaration
         let supabaseClient;
         
         function initializeSupabase() {
@@ -603,7 +601,6 @@
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxcXhxeXhvenl5ZGhvdGZ1dXJjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2NzkyNTcsImV4cCI6MjA4MzI1NTI1N30.AeCL4DFJzggZ68JGCgYai7XDniWIAUMt_5zAkjNe6OA';
             
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase client initialized:', supabaseClient);
             return supabaseClient;
         }
 
@@ -611,23 +608,20 @@
         const REFRESH_INTERVAL = 5000;
         let refreshTimer;
 
-        // Status calculation thresholds
         const THRESHOLDS = {
-            app_active: 11 * 60 * 1000,      // 11 minutes
-            automation_active: 6 * 60 * 1000  // 6 minutes
+            app_active: 11 * 60 * 1000,
+            automation_active: 6 * 60 * 1000
         };
 
-        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             initializeSupabase();
             checkAuth();
+            setupTabSwitching();
         });
 
         async function checkAuth() {
-            console.log('Checking existing auth...');
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                console.log('Current session:', session);
                 if (session) {
                     currentUser = session.user;
                     showDashboard();
@@ -646,41 +640,24 @@
             const errorText = document.getElementById('loginErrorText');
             const loginBtn = document.getElementById('loginBtn');
             
-            console.log('=== LOGIN ATTEMPT ===');
-            console.log('Email:', email);
-            console.log('Password length:', password.length);
-            
             errorEl.classList.add('hidden');
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logger inn...';
             
             try {
-                console.log('Calling supabase.auth.signInWithPassword...');
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
                 
-                console.log('=== SUPABASE RESPONSE ===');
-                console.log('Data:', data);
-                console.log('Error:', error);
-                
-                if (error) {
-                    console.log('Login failed with error:', error.message);
-                    throw error;
-                }
+                if (error) throw error;
                 
                 if (data.user) {
-                    console.log('Login successful! User:', data.user);
                     currentUser = data.user;
                     showDashboard();
-                } else {
-                    console.log('No user data returned');
-                    throw new Error('No user data returned');
                 }
                 
             } catch (error) {
-                console.error('=== LOGIN ERROR ===', error);
                 let errorMessage = 'Kunne ikke logge inn. ';
                 
                 if (error.message.includes('Invalid login credentials')) {
@@ -700,29 +677,15 @@
         });
 
         function showDashboard() {
-            console.log('=== SHOWING DASHBOARD ===');
-            console.log('Current user:', currentUser);
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = currentUser.email;
             
-            const loginScreen = document.getElementById('loginScreen');
-            const dashboardScreen = document.getElementById('dashboardScreen');
-            const userEmailEl = document.getElementById('userEmail');
-            
-            console.log('Login screen element:', loginScreen);
-            console.log('Dashboard screen element:', dashboardScreen);
-            
-            loginScreen.classList.add('hidden');
-            dashboardScreen.classList.remove('hidden');
-            userEmailEl.textContent = currentUser.email;
-            
-            console.log('Dashboard should now be visible');
-            
-            // Load dashboard data
             loadAllData();
             startAutoRefresh();
         }
 
         async function logout() {
-            console.log('Logging out...');
             try {
                 await supabaseClient.auth.signOut();
                 currentUser = null;
@@ -731,53 +694,29 @@
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('email').value = '';
                 document.getElementById('password').value = '';
-                console.log('Logged out successfully');
             } catch (error) {
                 console.error('Logout error:', error);
             }
         }
 
         function getUserStatus(session) {
-            console.log('Calculating status for session:', session);
             const now = Date.now();
             const lastActionTime = new Date(session.last_action_at).getTime();
             const timeDiff = now - lastActionTime;
 
-            console.log('Status calculation:', {
-                now: new Date(now).toISOString(),
-                lastActionTime: new Date(lastActionTime).toISOString(),
-                timeDiffMinutes: Math.round(timeDiff / (1000 * 60)),
-                lastAction: session.last_action,
-                thresholds: {
-                    app_active_minutes: THRESHOLDS.app_active / (1000 * 60),
-                    automation_active_minutes: THRESHOLDS.automation_active / (1000 * 60)
-                }
-            });
-
-            // Check based on last_action type according to your business rules
             switch (session.last_action) {
                 case 'automation_started':
                 case 'automation_active':
-                    // If automation heartbeat is within 6 minutes, user is actively automating
-                    const automationStatus = timeDiff <= THRESHOLDS.automation_active ? 'automation' : 'offline';
-                    console.log('Automation status:', automationStatus);
-                    return automationStatus;
+                    return timeDiff <= THRESHOLDS.automation_active ? 'automation' : 'offline';
                     
                 case 'app_opened':
                 case 'app_active':
-                    // If app heartbeat is within 11 minutes, user has app open (no automation)
-                    const appStatus = timeDiff <= THRESHOLDS.app_active ? 'online' : 'offline';
-                    console.log('App active status:', appStatus);
-                    return appStatus;
+                    return timeDiff <= THRESHOLDS.app_active ? 'online' : 'offline';
                     
                 case 'automation_stopped':
-                    // After automation stops, check if app is still active within 11 minutes
-                    const stoppedStatus = timeDiff <= THRESHOLDS.app_active ? 'online' : 'offline';
-                    console.log('Automation stopped status:', stoppedStatus);
-                    return stoppedStatus;
+                    return timeDiff <= THRESHOLDS.app_active ? 'online' : 'offline';
                     
                 default:
-                    console.log('Unknown action, defaulting to offline:', session.last_action);
                     return 'offline';
             }
         }
@@ -788,96 +727,64 @@
         }
 
         async function loadSessions() {
-            console.log('=== LOADING SESSIONS ===');
             try {
-                console.log('Querying sessions table...');
                 const { data, error } = await supabaseClient
                     .from('sessions')
                     .select('*')
                     .order('last_action_at', { ascending: false });
 
-                console.log('Sessions query result:', { data, error });
+                if (error) throw error;
 
-                if (error) {
-                    console.error('Sessions query error:', error);
-                    throw error;
-                }
-
-                console.log('Sessions data received:', data);
-                console.log('Number of sessions:', data ? data.length : 0);
-
-                // Calculate statistics
                 let automationCount = 0;
                 let appActiveCount = 0;
                 let offlineCount = 0;
 
                 const activeSessions = [];
-                const allSessionsWithStatus = [];
+                const userMap = new Map();
 
                 if (data && data.length > 0) {
-                    data.forEach((session, index) => {
-                        console.log(`Processing session ${index}:`, session);
+                    data.forEach(session => {
                         const status = getUserStatus(session);
-                        console.log(`Session ${index} status:`, status);
-                        
-                        // Add status to session for rendering
                         const sessionWithStatus = { ...session, status };
-                        allSessionsWithStatus.push(sessionWithStatus);
                         
-                        // Count statistics and collect active sessions
-                        if (status === 'automation') {
-                            automationCount++;
+                        // For "Alle Brukere" tab - only keep the first (most recent) session per user
+                        if (!userMap.has(session.user_id)) {
+                            userMap.set(session.user_id, sessionWithStatus);
+                            
+                            // Count statistics based on unique users
+                            if (status === 'automation') {
+                                automationCount++;
+                            } else if (status === 'online') {
+                                appActiveCount++;
+                            } else {
+                                offlineCount++;
+                            }
+                        }
+                        
+                        // Collect active sessions (can have multiple per user)
+                        if (status === 'automation' || status === 'online') {
                             activeSessions.push(sessionWithStatus);
-                        } else if (status === 'online') {
-                            appActiveCount++;
-                            activeSessions.push(sessionWithStatus);
-                        } else {
-                            offlineCount++;
                         }
                     });
-                } else {
-                    console.log('No sessions data received or empty array');
                 }
 
-                console.log('Final counts:', { 
-                    automationCount, 
-                    appActiveCount, 
-                    offlineCount, 
-                    activeSessions: activeSessions.length,
-                    totalSessions: data ? data.length : 0
-                });
+                const allUsers = Array.from(userMap.values());
 
-                // Update statistics display
                 document.getElementById('automationCount').textContent = automationCount;
                 document.getElementById('appActiveCount').textContent = appActiveCount;
                 document.getElementById('offlineCount').textContent = offlineCount;
-                document.getElementById('totalSessions').textContent = data ? data.length : 0;
+                document.getElementById('totalUsers').textContent = allUsers.length;
 
-                // Render tables
                 renderSessions(activeSessions);
-                renderAllSessions(allSessionsWithStatus);
+                renderAllUsers(allUsers);
 
             } catch (error) {
                 console.error('Error loading sessions:', error);
-                // Show error in UI
-                const container = document.getElementById('sessionsContent');
-                const loading = document.getElementById('sessionsLoading');
-                loading.classList.add('hidden');
-                container.classList.remove('hidden');
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">⚠️</div>
-                        <p>Error loading sessions: ${error.message}</p>
-                        <p style="font-size: 12px; margin-top: 10px;">Check console for details</p>
-                    </div>
-                `;
+                showError('sessionsContent', 'sessionsLoading', error.message);
             }
         }
 
         function renderSessions(sessions) {
-            console.log('=== RENDERING SESSIONS ===');
-            console.log('Sessions to render:', sessions);
-            
             const container = document.getElementById('sessionsContent');
             const loading = document.getElementById('sessionsLoading');
             
@@ -885,7 +792,6 @@
             container.classList.remove('hidden');
 
             if (!sessions || sessions.length === 0) {
-                console.log('No active sessions to display');
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">👤</div>
@@ -895,7 +801,6 @@
                 return;
             }
 
-            console.log('Rendering table with', sessions.length, 'sessions');
             container.innerHTML = `
                 <div class="table-container">
                     <table>
@@ -929,31 +834,25 @@
                     </table>
                 </div>
             `;
-            console.log('Sessions table rendered successfully');
         }
 
-        function renderAllSessions(sessions) {
-            console.log('=== RENDERING ALL SESSIONS ===');
-            console.log('All sessions to render:', sessions);
-            
-            const container = document.getElementById('allSessionsContent');
-            const loading = document.getElementById('allSessionsLoading');
+        function renderAllUsers(users) {
+            const container = document.getElementById('allUsersContent');
+            const loading = document.getElementById('allUsersLoading');
             
             loading.classList.add('hidden');
             container.classList.remove('hidden');
 
-            if (!sessions || sessions.length === 0) {
-                console.log('No sessions to display in all sessions');
+            if (!users || users.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">📭</div>
-                        <p>Ingen økter registrert</p>
+                        <div class="empty-icon">👤</div>
+                        <p>Ingen brukere registrert</p>
                     </div>
                 `;
                 return;
             }
 
-            console.log('Rendering all sessions table with', sessions.length, 'sessions');
             container.innerHTML = `
                 <div class="table-container">
                     <table>
@@ -963,37 +862,30 @@
                                 <th>Bruker-ID</th>
                                 <th>Plattform</th>
                                 <th>App-versjon</th>
-                                <th>Startet</th>
                                 <th>Siste handling</th>
                                 <th>Tidspunkt</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${sessions.map(session => {
-                                // Calculate status if not already present
-                                const status = session.status || getUserStatus(session);
-                                return `
-                                    <tr>
-                                        <td>
-                                            <span class="badge ${status}">
-                                                <span class="status-dot ${status}"></span>
-                                                ${status === 'automation' ? 'Automatisering' : status === 'online' ? 'App aktiv' : 'Offline'}
-                                            </span>
-                                        </td>
-                                        <td><span class="user-id">${session.user_id}</span></td>
-                                        <td><span class="platform-badge">${session.platform}</span></td>
-                                        <td>${session.app_version}</td>
-                                        <td class="timestamp">${formatTimestamp(session.started_at)}</td>
-                                        <td><span class="badge ${status}">${session.last_action}</span></td>
-                                        <td class="timestamp">${formatTimestamp(session.last_action_at)}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
+                            ${users.map(user => `
+                                <tr>
+                                    <td>
+                                        <span class="badge ${user.status}">
+                                            <span class="status-dot ${user.status}"></span>
+                                            ${user.status === 'automation' ? 'Automatisering' : user.status === 'online' ? 'App aktiv' : 'Offline'}
+                                        </span>
+                                    </td>
+                                    <td><span class="user-id">${user.user_id}</span></td>
+                                    <td><span class="platform-badge">${user.platform}</span></td>
+                                    <td>${user.app_version}</td>
+                                    <td><span class="badge ${user.status}">${user.last_action}</span></td>
+                                    <td class="timestamp">${formatTimestamp(user.last_action_at)}</td>
+                                </tr>
+                            `).join('')}
                         </tbody>
                     </table>
                 </div>
             `;
-            console.log('All sessions table rendered successfully');
         }
 
         async function loadErrors() {
@@ -1053,7 +945,21 @@
 
             } catch (error) {
                 console.error('Error loading error logs:', error);
+                showError('errorsContent', 'errorsLoading', error.message);
             }
+        }
+
+        function showError(containerId, loadingId, message) {
+            const container = document.getElementById(containerId);
+            const loading = document.getElementById(loadingId);
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">⚠️</div>
+                    <p>Error: ${message}</p>
+                </div>
+            `;
         }
 
         function formatTimestamp(timestamp) {
@@ -1084,22 +990,19 @@
             }
         }
 
-        // Tab switching
-        document.addEventListener('DOMContentLoaded', function() {
+        function setupTabSwitching() {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', function() {
                     const targetTab = this.getAttribute('data-tab');
                     
-                    // Remove active class from all tabs and contents
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     
-                    // Add active class to clicked tab and corresponding content
                     this.classList.add('active');
                     document.getElementById(targetTab + 'Tab').classList.add('active');
                 });
             });
-        });
+        }
     </script>
 </body>
 </html>
