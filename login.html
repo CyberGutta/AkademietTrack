@@ -566,6 +566,15 @@
                 <div class="stat-value" id="deletedUsers">0</div>
                 <div class="stat-description">Slettede brukerkontoer</div>
             </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Daily Active Users</span>
+                    <div class="stat-icon">📊</div>
+                </div>
+                <div class="stat-value" id="dailyActiveUsers">0</div>
+                <div class="stat-description">Gjennomsnitt aktive brukere per dag</div>
+            </div>
         </div>
 
         <div class="content-card">
@@ -731,7 +740,7 @@
         }
 
         async function loadAllData() {
-            await Promise.all([loadSessions(), loadErrors(), loadDeletedUsers()]);
+            await Promise.all([loadSessions(), loadErrors(), loadDeletedUsers(), loadDailyActiveUsers()]);
             updateTimestamp();
         }
 
@@ -987,6 +996,74 @@
             } catch (error) {
                 console.error('Exception loading deleted users:', error);
                 document.getElementById('deletedUsers').textContent = '—';
+            }
+        }
+
+        async function loadDailyActiveUsers() {
+            try {
+                console.log('=== LOADING DAILY ACTIVE USERS ===');
+                
+                // Calculate average daily active users over the last 7 days
+                const daysToCheck = 7;
+                const now = new Date();
+                const startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - daysToCheck);
+                startDate.setHours(0, 0, 0, 0);
+
+                console.log(`Checking from ${startDate.toISOString()} to ${now.toISOString()}`);
+
+                // Query the daily_activity table for the last 7 days
+                const { data, error } = await supabaseClient
+                    .from('daily_activity')
+                    .select('activity_date, user_id')
+                    .gte('activity_date', startDate.toISOString().split('T')[0])
+                    .order('activity_date', { ascending: false });
+
+                if (error) {
+                    console.error('Error loading daily activity:', error);
+                    // If table doesn't exist yet, show a helpful message
+                    if (error.message.includes('does not exist')) {
+                        console.warn('daily_activity table does not exist. Please run create-daily-activity-table.sql');
+                        document.getElementById('dailyActiveUsers').textContent = '—';
+                        return;
+                    }
+                    throw error;
+                }
+
+                console.log('Daily activity data:', data);
+
+                // Group by date and count unique users per day
+                const dailyUserCounts = {};
+                
+                data.forEach(record => {
+                    const date = record.activity_date;
+                    if (!dailyUserCounts[date]) {
+                        dailyUserCounts[date] = new Set();
+                    }
+                    dailyUserCounts[date].add(record.user_id);
+                });
+
+                // Convert to array of counts
+                const counts = Object.entries(dailyUserCounts).map(([date, users]) => {
+                    const count = users.size;
+                    console.log(`${date}: ${count} active users`);
+                    return count;
+                });
+
+                // Calculate average
+                const totalUsers = counts.reduce((sum, count) => sum + count, 0);
+                const averageUsers = counts.length > 0 
+                    ? Math.round(totalUsers / counts.length) 
+                    : 0;
+
+                console.log('Daily user counts:', counts);
+                console.log('Average daily active users:', averageUsers);
+                
+                document.getElementById('dailyActiveUsers').textContent = averageUsers;
+
+            } catch (error) {
+                console.error('Exception loading daily active users:', error);
+                document.getElementById('dailyActiveUsers').textContent = '—';
             }
         }
 
