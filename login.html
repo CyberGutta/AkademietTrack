@@ -557,6 +557,15 @@
                 <div class="stat-value" id="totalUsers">0</div>
                 <div class="stat-description">Alle registrerte brukere</div>
             </div>
+
+            <div class="stat-card danger">
+                <div class="stat-header">
+                    <span class="stat-label">Deleted Users</span>
+                    <div class="stat-icon">🗑️</div>
+                </div>
+                <div class="stat-value" id="deletedUsers">0</div>
+                <div class="stat-description">Slettede brukerkontoer</div>
+            </div>
         </div>
 
         <div class="content-card">
@@ -722,7 +731,7 @@
         }
 
         async function loadAllData() {
-            await Promise.all([loadSessions(), loadErrors()]);
+            await Promise.all([loadSessions(), loadErrors(), loadDeletedUsers()]);
             updateTimestamp();
         }
 
@@ -946,6 +955,38 @@
             } catch (error) {
                 console.error('Error loading error logs:', error);
                 showError('errorsContent', 'errorsLoading', error.message);
+            }
+        }
+
+        async function loadDeletedUsers() {
+            try {
+                console.log('=== LOADING DELETED USERS ===');
+                
+                // Count users with 'deleted' as their last action in sessions table
+                const { data, error } = await supabaseClient
+                    .from('sessions')
+                    .select('user_id')
+                    .eq('last_action', 'deleted');
+
+                console.log('Deleted users query result:', { data, error });
+
+                if (error) {
+                    console.error('Error loading deleted users:', error);
+                    console.error('Error details:', error.message, error.details, error.hint);
+                    document.getElementById('deletedUsers').textContent = '—';
+                    return;
+                }
+
+                // Count unique user_ids with deleted status
+                const uniqueDeletedUsers = new Set(data.map(session => session.user_id));
+                const deletedCount = uniqueDeletedUsers.size;
+
+                console.log('Deleted users count:', deletedCount);
+                document.getElementById('deletedUsers').textContent = deletedCount;
+
+            } catch (error) {
+                console.error('Exception loading deleted users:', error);
+                document.getElementById('deletedUsers').textContent = '—';
             }
         }
 
