@@ -760,7 +760,7 @@
                 const activeSessions = [];
                 const userMap = new Map();
 
-                if (data && data.length > 0) {
+               if (data && data.length > 0) {
                     data.forEach(session => {
                         const status = getUserStatus(session);
                         const sessionWithStatus = { ...session, status };
@@ -769,13 +769,16 @@
                         if (!userMap.has(session.user_id)) {
                             userMap.set(session.user_id, sessionWithStatus);
                             
-                            // Count statistics based on unique users
-                            if (status === 'automation') {
-                                automationCount++;
-                            } else if (status === 'online') {
-                                appActiveCount++;
-                            } else {
-                                offlineCount++;
+                            // Only count non-deleted users
+                            if (session.last_action !== 'deleted') {
+                                // Count statistics based on unique users
+                                if (status === 'automation') {
+                                    automationCount++;
+                                } else if (status === 'online') {
+                                    appActiveCount++;
+                                } else {
+                                    offlineCount++;
+                                }
                             }
                         }
                         
@@ -786,12 +789,14 @@
                     });
                 }
 
-                const allUsers = Array.from(userMap.values());
+                // Filter out deleted users from the total count
+                const allUsers = Array.from(userMap.values()).filter(user => user.last_action !== 'deleted');
+                const totalNonDeletedUsers = allUsers.length;
 
                 document.getElementById('automationCount').textContent = automationCount;
                 document.getElementById('appActiveCount').textContent = appActiveCount;
                 document.getElementById('offlineCount').textContent = offlineCount;
-                document.getElementById('totalUsers').textContent = allUsers.length;
+                document.getElementById('totalUsers').textContent = totalNonDeletedUsers;
 
                 renderSessions(activeSessions);
                 renderAllUsers(allUsers);
