@@ -84,15 +84,11 @@ let currentDownloadLink = '';
             const primaryDownloadEl = document.getElementById('primaryDownload');
             const otherDownloadsEl = document.getElementById('otherDownloads');
             
-            if (detectedOS) {
-                primaryDownloadEl.innerHTML = createDownloadButton(detectedOS, true);
-                const allOS = ['Windows', 'macOS', 'Linux'];
-                const otherOS = allOS.filter(os => os !== detectedOS);
-                otherDownloadsEl.innerHTML = otherOS.map(os => createDownloadButton(os)).join('');
-            } else {
-                const allOS = ['Windows', 'macOS', 'Linux'];
-                primaryDownloadEl.innerHTML = '';
-                otherDownloadsEl.innerHTML = allOS.map(os => createDownloadButton(os)).join('');
+            if (primaryDownloadEl) {
+                primaryDownloadEl.innerHTML = '<div class="download-unavailable"><div class="unavailable-icon">🔧</div><p class="unavailable-title">Nedlasting midlertidig utilgjengelig</p><p class="unavailable-text">Vi jobber med å oppdatere appen. Nedlasting er midlertidig deaktivert og vil være tilgjengelig igjen snart!</p></div>';
+            }
+            if (otherDownloadsEl) {
+                otherDownloadsEl.innerHTML = '';
             }
 
             const checkbox = document.getElementById('termsCheckbox');

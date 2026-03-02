@@ -891,3 +891,34 @@ h1 {
         font-size: 1rem;
     }
 }
+
+/* Download unavailable notice */
+.download-unavailable {
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 14px;
+    padding: 1.5rem 2rem;
+    margin: 1rem 0 1.5rem;
+    text-align: center;
+}
+
+.unavailable-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.unavailable-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 0.4rem;
+    opacity: 1 !important;
+}
+
+.unavailable-text {
+    font-size: 0.9rem;
+    color: #78350f;
+    opacity: 0.85;
+    line-height: 1.5;
+    margin: 0;
+}
