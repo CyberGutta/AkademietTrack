@@ -85,7 +85,7 @@ let currentDownloadLink = '';
             const otherDownloadsEl = document.getElementById('otherDownloads');
             
             if (primaryDownloadEl) {
-                primaryDownloadEl.innerHTML = '<div class="download-unavailable"><div class="unavailable-icon">🔧</div><p class="unavailable-title">Nedlasting midlertidig utilgjengelig</p><p class="unavailable-text">Vi jobber med å oppdatere appen. Nedlasting er midlertidig deaktivert og vil være tilgjengelig igjen snart!</p></div>';
+                primaryDownloadEl.innerHTML = '<div class="download-unavailable"><div class="unavailable-icon">💻</div><p class="unavailable-title">Appen er allerede installert</p><p class="unavailable-text">Hele skolen har allerede AkademiTrack installert på sine datamaskiner. Sjekk Applications-mappen din eller søk etter "AkademiTrack" på datamaskinen din!</p></div>';
             }
             if (otherDownloadsEl) {
                 otherDownloadsEl.innerHTML = '';
